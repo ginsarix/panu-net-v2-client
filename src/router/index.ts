@@ -1,10 +1,12 @@
+import { storeToRefs } from 'pinia';
 import { createRouter, createWebHashHistory } from 'vue-router';
 
-import AnalyticsTab from '@/components/DebtorsCreditors/AnalyticsTab.vue';
 import CreditorsTab from '@/components/DebtorsCreditors/CreditorsTab.vue';
 import DebtorsTab from '@/components/DebtorsCreditors/DebtorsTab.vue';
 import CompaniesTab from '@/components/Management/CompaniesTab.vue';
 import UsersTab from '@/components/Management/UsersTab.vue';
+import { pinia } from '@/plugins/pinia';
+import { useCurrentUserStore } from '@/stores/current-user';
 import DebtorsCreditorsView from '@/views/DebtorsCreditorsView.vue';
 import LoginView from '@/views/LoginView.vue';
 import ManagementView from '@/views/ManagementView.vue';
@@ -33,10 +35,6 @@ const router = createRouter({
         {
           path: 'creditors',
           component: CreditorsTab,
-        },
-        {
-          path: 'analytics',
-          component: AnalyticsTab,
         },
       ],
     },
@@ -95,6 +93,17 @@ const router = createRouter({
       ],
     },
   ],
+});
+
+const currentUserStore = useCurrentUserStore(pinia);
+const { currentUser } = storeToRefs(currentUserStore);
+
+await currentUserStore.loadCurrentUser();
+
+router.beforeEach(async (to) => {
+  if (to.path !== '/login' && !currentUser.value) {
+    return '/login';
+  }
 });
 
 export default router;

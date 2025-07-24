@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:debug": "node --inspect-brk --loader tsx/esm src/index.ts",
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "prepare": "cypress install",
@@ -16,6 +17,7 @@
   "dependencies": {
     "@date-io/date-fns": "^3.2.1",
     "@trpc/client": "^11.4.2",
+    "@vitejs/plugin-basic-ssl": "^2.1.0",
     "@vueuse/core": "^13.2.0",
     "@vueuse/motion": "^3.0.3",
     "date-fns": "^4.1.0",
@@ -28,8 +30,7 @@
     "vue": "^3.5.13",
     "vue-echarts": "^7.0.3",
     "vue-router": "^4.5.0",
-    "vuetify": "^3.8.12",
-    "zod": "^3.25.67"
+    "vuetify": "^3.8.12"
   },
   "devDependencies": {
     "@mdi/font": "^7.4.47",

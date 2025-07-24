@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia';
 import { computed, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 
 import RoleIconsInfo from '@/components/RoleIconsInfo.vue';
-import type { User } from '@/types/user.ts';
+import { useCurrentUserStore } from '@/stores/current-user';
 
 defineProps<{
   rail: boolean;
@@ -12,22 +14,27 @@ defineEmits<{
   (e: 'update:rail'): void;
 }>();
 
-const user = ref<User | null>(null);
+const router = useRouter();
+
+const currentUserStore = useCurrentUserStore();
+const { currentUser } = storeToRefs(currentUserStore);
 const dialog = ref(false);
 
-onMounted(() => {
-  user.value = { id: 1, name: 'John Doe', email: 'johndoe@example.com', role: 'superadmin' };
-});
+onMounted(async () => {
+  try {
+    await currentUserStore.loadCurrentUser();
 
-const userIcon = computed(() => {
-  if (user.value?.role === 'superadmin') {
-    return 'mdi-key-chain';
+    if (!currentUser) await router.push('/login');
+  } catch (error) {
+    console.error('Error occurred during getting login details :', error);
   }
-  if (user.value?.role === 'admin') {
-    return 'mdi-key';
-  }
-  return 'mdi-account';
 });
+const userIcon = computed(() => (currentUser.value?.role === 'admin' ? 'mdi-key' : 'mdi-account'));
+
+const loginout = async () => {
+  if (currentUser) await currentUserStore.logoutCurrentUser();
+  await router.push('/login');
+};
 </script>
 
 <template>
@@ -38,7 +45,7 @@ const userIcon = computed(() => {
     permanent
   >
     <v-list class="pa-2">
-      <v-list-item :prepend-icon="userIcon" :title="user?.name" nav>
+      <v-list-item :prepend-icon="userIcon" :title="currentUser?.name" nav>
         <template #append>
           <v-btn
             style="opacity: 60%"
@@ -49,7 +56,18 @@ const userIcon = computed(() => {
             aria-label="Rol ikonları bilgi menüsünü aç"
             @click="dialog = true"
           />
-          <v-btn variant="text" size="small" icon="mdi-logout" aria-label="Çıkış Yap" />
+          <v-tooltip :text="`${currentUser ? 'Çıkış' : 'Giriş'} Yap`" location="bottom">
+            <template #activator="{ props }">
+              <v-btn
+                v-bind="props"
+                @click="loginout"
+                variant="text"
+                size="small"
+                :icon="currentUser ? 'mdi-logout' : 'mdi-login'"
+                :aria-label="`${currentUser ? 'Çıkış' : 'Giriş'} Yap`"
+              />
+            </template>
+          </v-tooltip>
         </template>
       </v-list-item>
     </v-list>
@@ -79,12 +97,6 @@ const userIcon = computed(() => {
           prepend-icon="mdi-bank-transfer-in"
           title="Alacaklılar"
           to="/dbcr/creditors"
-        />
-        <v-list-item
-          rounded="xl"
-          prepend-icon="mdi-chart-pie"
-          title="B/A Grafik"
-          to="/dbcr/analytics"
         />
       </v-list-group>
 

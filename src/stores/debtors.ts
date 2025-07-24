@@ -10,7 +10,7 @@ export const useDebtorsStore = defineStore('debtors', () => {
   const loadDebtors = async (params: { companyCode: string; periodCode: string | number }) => {
     const result = await getDebtors(params);
 
-    debtors.value = result.payload.result.map(ac => ({
+    debtors.value = result.payload.result.map((ac) => ({
       code: ac.carikartkodu,
       debtorOrCreditor: ac.ba,
       name: ac.unvan,

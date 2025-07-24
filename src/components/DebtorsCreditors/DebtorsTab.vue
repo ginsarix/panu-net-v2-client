@@ -1,57 +1,48 @@
 <script setup lang="ts">
+import { TRPCClientError } from '@trpc/client';
 import { storeToRefs } from 'pinia';
 import { computed, ref, watch } from 'vue';
 
 import GixTogglerMenu from '@/components/GixTogglerMenu.vue';
-import emitter from '@/services/service-bus';
-import { useAsyncGateStore } from '@/stores/async-gate';
-import { useCompaniesStore } from '@/stores/companies.ts';
+import { useSelectedCompany } from '@/composables/useSelectedCompany';
 import { useDebtorsStore } from '@/stores/debtors.ts';
 import { useDisplayStore } from '@/stores/display.ts';
-import type { Company } from '@/types/company.ts';
+import { useSnackbarStore } from '@/stores/snackbar';
 import type { DataTableHeaders } from '@/types/data-table-headers.ts';
 
-const asyncGate = useAsyncGateStore();
+import DataTableInfo from '../DataTableInfo.vue';
 
 const { mobile } = storeToRefs(useDisplayStore());
 
 const debtorsStore = useDebtorsStore();
 const { debtors } = storeToRefs(debtorsStore);
-const loading = ref(true);
 
-const companiesStore = useCompaniesStore();
-const { selectedCompanyId, selectedCompanyIdLoaded } = storeToRefs(companiesStore);
-const selectedCompany = ref<Company | null>(null);
+const { selectedCompany, loading } = useSelectedCompany();
+
+const snackbarStore = useSnackbarStore();
+const { snackbar, snackbarError, snackbarText } = storeToRefs(snackbarStore);
+
+watch(selectedCompany, async (newValue) => {
+  if (newValue) await loadDebtors();
+});
 
 const loadDebtors = async () => {
   if (!selectedCompany.value) return;
 
-  await debtorsStore.loadDebtors({
-    companyCode: selectedCompany.value.code,
-    periodCode: selectedCompany.value.period,
-  });
-};
-
-watch(
-  [selectedCompanyId, selectedCompanyIdLoaded],
-  async ([, loaded]) => {
-    if (!loaded) return;
-    const instance = companiesStore.getSelectedCompanyInstance();
-
-    if (!instance) {
-      await asyncGate.promise;
-      loading.value = false;
-
-      emitter.emit('companyNotSelected');
-      return;
+  try {
+    await debtorsStore.loadDebtors({
+      companyCode: selectedCompany.value.code,
+      periodCode: selectedCompany.value.period,
+    });
+  } catch (error) {
+    console.error(error);
+    if (error instanceof TRPCClientError) {
+      snackbarError.value = true;
+      snackbarText.value = error.message;
+      snackbar.value = true;
     }
-
-    selectedCompany.value = instance;
-    await loadDebtors();
-    loading.value = false;
-  },
-  { immediate: true },
-);
+  }
+};
 
 const dataTableHeaders = ref<DataTableHeaders[]>([
   { title: 'Cari Kart Kodu', key: 'code', toggled: true, sortable: true },
@@ -61,14 +52,13 @@ const dataTableHeaders = ref<DataTableHeaders[]>([
 ]);
 
 const includedDataTableHeaders = computed(() =>
-  dataTableHeaders.value.filter(header => header.toggled),
+  dataTableHeaders.value.filter((header) => header.toggled),
 );
 </script>
 
 <template>
   <v-data-table
     :items="debtors"
-    item-value="name"
     :loading="loading"
     class="rounded-lg elevation-0 border"
     no-data-text="Borçlular bulunamadı."
@@ -91,6 +81,8 @@ const includedDataTableHeaders = computed(() =>
           menu-activator-btn-icon="mdi-filter-variant"
           v-model:toggle-items="dataTableHeaders"
         />
+
+        <DataTableInfo class="me-5" />
       </v-toolbar>
     </template>
   </v-data-table>

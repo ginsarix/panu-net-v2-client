@@ -40,7 +40,7 @@ const errorMessage = ref(props.errorMessage);
 
 watch(
   () => props.errorMessage,
-  val => {
+  (val) => {
     errorMessage.value = val;
   },
 );
@@ -50,14 +50,14 @@ const formSubmitted = ref(false);
 
 const updateInputsPropertiesValue = (value: string | number | boolean | null, id: string) => {
   const strVal = String(value ?? '');
-  const newInputsProperties = props.inputsProperties.map(input =>
+  const newInputsProperties = props.inputsProperties.map((input) =>
     input.id === id ? { ...input, value: strVal } : input,
   );
 
   emit('update:inputsProperties', newInputsProperties);
 };
 const updateInputsPropertiesShowPassword = (value: boolean, id: string) => {
-  const newInputsProperties = props.inputsProperties.map(input =>
+  const newInputsProperties = props.inputsProperties.map((input) =>
     input.id === id ? { ...input, showPassword: value } : input,
   );
 
@@ -66,9 +66,9 @@ const updateInputsPropertiesShowPassword = (value: boolean, id: string) => {
 
 const formValid = computed(() =>
   props.inputsProperties.every(
-    input =>
+    (input) =>
       !input.validationRules ||
-      input.validationRules.every(rule => rule(input.value || '') === true),
+      input.validationRules.every((rule) => rule(input.value || '') === true),
   ),
 );
 
@@ -88,7 +88,7 @@ const resetForm = () => {
   formSubmitted.value = false;
   errorMessage.value = '';
 
-  const newInputsProperties = props.inputsProperties.map(inputProps => {
+  const newInputsProperties = props.inputsProperties.map((inputProps) => {
     if (inputProps.neverResetValue) return inputProps;
 
     return {
@@ -135,7 +135,7 @@ const cardTitle = computed(() => {
 const textInputTypes = ['text', 'tel', 'email', 'password', 'url', 'search'];
 
 const updateDateInputValue = (newDate: Date, id: string) => {
-  const newInputsProperties = props.inputsProperties.map(inputProps =>
+  const newInputsProperties = props.inputsProperties.map((inputProps) =>
     inputProps.id === id
       ? {
           ...inputProps,
@@ -150,7 +150,7 @@ const updateDateInputValue = (newDate: Date, id: string) => {
 const defaultStepperProperties = computed(() => [
   {
     step: 1,
-    inputIds: props.inputsProperties.map(p => p.id),
+    inputIds: props.inputsProperties.map((p) => p.id),
     title: 'Alanlar',
   },
 ]);
@@ -182,7 +182,7 @@ const getRules = (inputProperties: InputProperties) =>
           <div v-if="isForm">
             <v-stepper
               editable
-              :items="stepperProperties?.map(p => p.title) ?? defaultStepperProperties"
+              :items="stepperProperties?.map((p) => p.title) ?? defaultStepperProperties"
               :hide-actions="!stepperProperties"
               rounded="lg"
               prev-text="Önceki"
@@ -194,22 +194,45 @@ const getRules = (inputProperties: InputProperties) =>
                 #[`item.${property.step}`]
               >
                 <div
-                  v-for="inputProperties in inputsProperties.filter(p =>
+                  v-for="inputProperties in inputsProperties.filter((p) =>
                     property.inputIds.includes(p.id),
                   )"
                   :key="inputProperties.id"
                   class="mt-1"
                 >
+                  <v-autocomplete
+                    v-if="inputProperties.type === 'select'"
+                    :label="inputProperties.label"
+                    :items="inputProperties.selectItems"
+                    no-data-text="Veri bulunamadı"
+                    @update:model-value="
+                      (value) => updateInputsPropertiesValue(value, inputProperties.id)
+                    "
+                  />
+                  <v-radio-group
+                    v-if="inputProperties.type === 'radio'"
+                    @update:model-value="
+                      (value) => updateInputsPropertiesValue(value as string, inputProperties.id)
+                    "
+                  >
+                    <v-radio
+                      v-for="radio in inputProperties.radios"
+                      :label="radio.label"
+                      :value="radio.value"
+                      :key="radio.id"
+                    />
+                  </v-radio-group>
+
                   <v-date-input
                     v-if="inputProperties.type === 'date'"
                     :display-format="(date: Date) => format(date, 'dd.MM.yyyy')"
-                    label="Lisans Tarihi"
+                    :label="inputProperties.label"
                     placeholder="gg.aa.yyyy"
                     variant="outlined"
                     rounded="lg"
                     :rules="getRules(inputProperties)"
                     @update:model-value="
-                      newDate => updateDateInputValue(new Date(newDate), inputProperties.id)
+                      (newDate) => updateDateInputValue(new Date(newDate), inputProperties.id)
                     "
                   />
 
@@ -218,7 +241,7 @@ const getRules = (inputProperties: InputProperties) =>
                     :label="inputProperties.label"
                     :model-value="inputProperties.value === 'true'"
                     @update:model-value="
-                      value => updateInputsPropertiesValue(value, inputProperties.id)
+                      (value) => updateInputsPropertiesValue(value, inputProperties.id)
                     "
                   />
 
@@ -230,7 +253,7 @@ const getRules = (inputProperties: InputProperties) =>
                     inset
                     :rules="getRules(inputProperties)"
                     @update:model-value="
-                      value => updateInputsPropertiesValue(value, inputProperties.id)
+                      (value) => updateInputsPropertiesValue(value, inputProperties.id)
                     "
                   />
 
@@ -270,7 +293,7 @@ const getRules = (inputProperties: InputProperties) =>
                             !formSubmitted
                               ? true
                               : inputProperties.validationRules?.every(
-                                  rule => rule(inputProperties.value) === true,
+                                  (rule) => rule(inputProperties.value) === true,
                                 ),
                             inputProperties.validationRules,
                           )
@@ -280,7 +303,7 @@ const getRules = (inputProperties: InputProperties) =>
                     variant="outlined"
                     rounded="lg"
                     @update:model-value="
-                      value => updateInputsPropertiesValue(value, inputProperties.id)
+                      (value) => updateInputsPropertiesValue(value, inputProperties.id)
                     "
                   />
                 </div>

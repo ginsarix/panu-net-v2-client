@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useMotion } from '@vueuse/motion';
+import { TRPCClientError } from '@trpc/client';
 import { storeToRefs } from 'pinia';
 import { v4 as uuidv4 } from 'uuid';
 import { computed, ref } from 'vue';
@@ -18,6 +18,7 @@ import {
 import { useCompaniesStore } from '@/stores/companies.ts';
 import { useDisplayStore } from '@/stores/display.ts';
 import { useAppOptionsStore } from '@/stores/options.ts';
+import { useSnackbarStore } from '@/stores/snackbar';
 import { ActionMode } from '@/types/action-mode.ts';
 import type { Company } from '@/types/company.ts';
 import type { DataTableHeaders } from '@/types/data-table-headers.ts';
@@ -26,6 +27,9 @@ import type { StepperProperties } from '@/types/stepper-properties.ts';
 import { noEmptyRule } from '@/types/validations.ts';
 import { formatDateTime } from '@/utils/formatting.ts';
 
+import DataTableInfo from '../DataTableInfo.vue';
+import GixRefreshButton from '../GixRefreshButton.vue';
+
 const appOptionsStore = useAppOptionsStore();
 const { appOptions } = storeToRefs(appOptionsStore);
 
@@ -33,6 +37,9 @@ const { mobile } = storeToRefs(useDisplayStore());
 
 const companiesStore = useCompaniesStore();
 const { companies, totalCompaniesCount } = storeToRefs(companiesStore);
+
+const snackbarStore = useSnackbarStore();
+const { snackbar, snackbarError, snackbarText } = storeToRefs(snackbarStore);
 
 const selectedCompany = ref<Company | null>(null);
 const selectedCompanyIds = ref<number[]>([]);
@@ -233,8 +240,8 @@ const dialogSubmit = async (inputProperties: InputProperties[]) => {
         const company = formCompany();
 
         const isValidCompany = Object.keys(company)
-          .filter(key => !['id', 'phone'].includes(key))
-          .every(key => Boolean(company[key as keyof Company]));
+          .filter((key) => !['id', 'phone'].includes(key))
+          .every((key) => Boolean(company[key as keyof Company]));
 
         if (isValidCompany) {
           await createCompany(company as Company);
@@ -250,18 +257,18 @@ const dialogSubmit = async (inputProperties: InputProperties[]) => {
         }
         break;
       case ActionMode.Edit:
-        let editedCompany = formCompany();
+        const editedCompany = formCompany();
 
         if (!selectedCompany.value?.id) return;
 
         await patchCompany(selectedCompany.value.id, editedCompany);
 
-        editedCompany = {
+        const displayedEditedCompany = {
           ...selectedCompany.value,
           ...Object.fromEntries(Object.entries(editedCompany).filter(([, v]) => v !== '')),
           updatedOn: willUpdateNextRefreshText,
         };
-        companiesStore.updateCompanyById(selectedCompany.value.id, editedCompany);
+        companiesStore.updateCompanyById(selectedCompany.value.id, displayedEditedCompany);
         break;
       case ActionMode.Delete:
         if (!selectedCompany.value?.id) return;
@@ -269,11 +276,19 @@ const dialogSubmit = async (inputProperties: InputProperties[]) => {
         await deleteCompany(selectedCompany.value.id);
         companiesStore.removeCompaniesById([selectedCompany.value.id]);
         break;
+      case ActionMode.Idle: {
+        throw new Error('Not implemented yet: ActionMode.Idle case');
+      }
       default:
         break;
     }
   } catch (error) {
     console.error(error);
+
+    snackbarError.value = true;
+    snackbarText.value =
+      error instanceof TRPCClientError ? error.message : 'Beklenmeyen bir hata ile karşılaşıldı.';
+    snackbar.value = true;
   }
 };
 
@@ -302,39 +317,14 @@ const dataTableHeaders = ref<DataTableHeaders[]>([
 ]);
 
 const includedDataTableHeaders = computed(() =>
-  dataTableHeaders.value.filter(header => header.toggled),
+  dataTableHeaders.value.filter((header) => header.toggled),
 );
-
-const refreshRotations = ref(1);
-
-const refreshing = ref(false);
-const refreshBtnTarget = ref<HTMLElement | null>(null);
-
-const { apply } = useMotion(refreshBtnTarget, {
-  initial: {
-    rotate: 0,
-  },
-});
-
-const toggleRefresh = async () => {
-  if (refreshing.value) return;
-  refreshing.value = true;
-  await apply({
-    rotate: 360 * refreshRotations.value,
-    transition: {
-      ease: 'easeOut',
-    },
-  });
-  refreshRotations.value++;
-  await loadCompanies();
-  refreshing.value = false;
-};
 </script>
 
 <template>
   <v-data-table-server
     v-model="selectedCompanyIds"
-    @update:options="options => loadCompanies(options, false)"
+    @update:options="(options) => loadCompanies(options, false)"
     :headers="includedDataTableHeaders"
     :items-length="totalCompaniesCount"
     :items="companies"
@@ -343,16 +333,16 @@ const toggleRefresh = async () => {
     fixed-header
     :mobile="mobile.value"
     hover
-    loading-text="Şirketler yükleniyor..."
-    no-data-text="Şirketler bulunamadı."
-    items-per-page-text="Sayfa başı şirketler"
+    loading-text="Firmalar yükleniyor..."
+    no-data-text="Firmalar bulunamadı."
+    items-per-page-text="Sayfa başı firmalar"
     show-select
   >
     <template #top>
       <v-toolbar flat rounded class="rounded-b-0">
         <v-toolbar-title>
           <v-icon color="medium-emphasis" icon="mdi-text" size="x-small" start />
-          Şirketler
+          Firmalar
         </v-toolbar-title>
 
         <GixTogglerMenu
@@ -371,14 +361,8 @@ const toggleRefresh = async () => {
           Ekle
         </v-btn>
 
-        <v-icon-btn
-          v-motion
-          ref="refreshBtnTarget"
-          @click="toggleRefresh"
-          variant="text"
-          class="me-3"
-          icon="mdi-refresh"
-        />
+        <GixRefreshButton :refresh-fn="() => loadCompanies()" />
+        <DataTableInfo class="me-5" />
       </v-toolbar>
     </template>
     <template #[`item.status`]="{ item }">
@@ -420,7 +404,7 @@ const toggleRefresh = async () => {
   <GixCrudDialog
     v-model:show-dialog="showCrudDialog"
     v-model:current-mode="currentMode"
-    delete-text="Silinen şirketler geri alınamaz, devam etmek istediğinize emin misiniz?"
+    delete-text="Silinen firmalar geri alınamaz, devam etmek istediğinize emin misiniz?"
     v-model:inputs-properties="companyInputProperties"
     :stepper-properties="companyInputSteppers"
     @submit="dialogSubmit"

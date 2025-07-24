@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
-import { getUsers, type UserServerDataTableOptions } from '@/services/api/users';
+import { type UserServerDataTableOptions, getUsers } from '@/services/api/users';
 import type { User } from '@/types/user.ts';
 
 export const useUsersStore = defineStore('users', () => {
@@ -17,22 +17,29 @@ export const useUsersStore = defineStore('users', () => {
 
   const addUserToList = (user: User, addToStart = false) => {
     if (addToStart) {
-      users.value.unshift(user);
+      users.value = [user, ...users.value];
       return;
     }
 
-    users.value.push(user);
+    users.value = [...users.value, user];
   };
 
   const updateUserById = (id: string | number, data: Partial<User>) => {
-    users.value = users.value.map(user => (user.id === id ? { ...user, ...data } : user));
+    users.value = users.value.map((u) => (u.id === id ? { ...u, ...data } : u));
   };
 
   const removeUsersById = (ids: Array<string | number>) => {
     const idSet = new Set(ids);
 
-    users.value = users.value.filter(user => !idSet.has(user.id ?? -1));
+    users.value = users.value.filter((u) => !idSet.has(u.id ?? -1));
   };
 
-  return { users, totalUsersCount, loadUsers, addUserToList, updateUserById, removeUsersById };
+  return {
+    users,
+    totalUsersCount,
+    loadUsers,
+    addUserToList,
+    updateUserById,
+    removeUsersById,
+  };
 });

@@ -10,24 +10,31 @@ import GixSnackbar from '@/components/GixSnackbar.vue';
 import NavigationDrawer from '@/components/NavigationDrawer.vue';
 import { useSnackbarStore } from '@/stores/snackbar.ts';
 
+import { useCurrentUserStore } from './stores/current-user';
+
+const currentUserStore = useCurrentUserStore();
+const { currentUser } = storeToRefs(currentUserStore);
+
 const router = useRouter();
 
 const rail = ref(true);
 
-const { snackbar, snackbarText, snackbarError } = storeToRefs(useSnackbarStore());
+const snackbarStore = useSnackbarStore();
+const { snackbar, snackbarText, snackbarError } = storeToRefs(snackbarStore);
 </script>
 
 <template>
   <v-app>
     <v-layout>
-      <NavigationDrawer :rail="rail" @update:rail="rail = false" />
+      <NavigationDrawer v-if="currentUser" :rail="rail" @update:rail="rail = false" />
 
       <v-app-bar>
         <v-icon-btn
+          v-if="currentUser"
           class="mr-3"
           :icon="rail ? 'mdi-menu-close' : 'mdi-menu-open'"
           @click="rail = !rail"
-          aria-label="Rol ikon bilgi menüsünü aç"
+          aria-label="Navigasyon menüsünü aç"
         />
         <v-app-bar-title @click="router.push('/')" class="cursor-pointer">
           <span class="panu-font">Panu</span
@@ -37,7 +44,7 @@ const { snackbar, snackbarText, snackbarError } = storeToRefs(useSnackbarStore()
 
         <v-spacer />
 
-        <CompanySelect />
+        <CompanySelect v-if="currentUser" />
       </v-app-bar>
       <v-main>
         <v-container>

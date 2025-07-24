@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { TRPCClientError } from '@trpc/client';
 import { storeToRefs } from 'pinia';
 import { onMounted, ref, watch } from 'vue';
 
@@ -21,7 +22,7 @@ const { snackbar, snackbarText, snackbarError } = storeToRefs(snackbarStore);
 
 const menu = ref(false);
 const selectCompanyLoading = ref(false);
-const noDataText = ref('');
+const noDataText = ref('Şirketler bulunamadı');
 
 const skipWatch = ref(false);
 
@@ -56,6 +57,7 @@ const loadSelectedCompanyId = async () => {
 onMounted(async () => {
   await loadCompanies(false);
   await loadSelectedCompanyId();
+  selectedCompanyIdPassthrough.value = selectedCompanyId.value;
 });
 
 emitter.on('companyNotSelected', () => {
@@ -68,21 +70,34 @@ emitter.on('companyNotSelected', () => {
   menu.value = true;
 });
 
-watch(selectedCompanyId, async newValue => {
+// this is so that failed selections dont affect the original state
+// not even for a little bit because of the emitter above, the error messages overlap.
+const selectedCompanyIdPassthrough = ref<number | null>(null);
+
+watch(selectedCompanyIdPassthrough, async (newValue) => {
   if (newValue === null || skipWatch.value) return;
 
   selectCompanyLoading.value = true;
 
   try {
     await setSelectedCompany(newValue);
+    selectedCompanyId.value = newValue;
   } catch (error) {
     console.error(error);
 
+    selectedCompanyId.value = null;
+    selectedCompanyIdPassthrough.value = null;
+
+    const errorText =
+      error instanceof TRPCClientError
+        ? error.message
+        : 'Şirket seçilemedi, daha sonra tekrar deneyiniz.';
+
     snackbarError.value = true;
-    snackbarText.value = 'Şirket seçilemedi, daha sonra tekrar deneyiniz.';
+    snackbarText.value = errorText;
     snackbar.value = true;
   } finally {
-    await new Promise(resolve => setTimeout(resolve, 800));
+    await new Promise((resolve) => setTimeout(resolve, 800));
     selectCompanyLoading.value = false;
   }
 });
@@ -92,14 +107,14 @@ watch(selectedCompanyId, async newValue => {
   <v-select
     :loading="selectCompanyLoading"
     append-inner-icon="mdi-domain"
-    v-model="selectedCompanyId"
+    v-model="selectedCompanyIdPassthrough"
     v-model:menu="menu"
     :items="companies"
     item-title="name"
     item-value="id"
     clearable
-    label="Şirket"
-    no-data-text="Şirketler bulunamadı"
+    label="Firma"
+    :no-data-text="noDataText"
     class="mt-4 me-5"
     variant="underlined"
     max-width="300"

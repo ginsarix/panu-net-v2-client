@@ -1,30 +1,37 @@
 <script setup lang="ts">
-import { useMotion } from '@vueuse/motion';
+import { TRPCClientError } from '@trpc/client';
 import { storeToRefs } from 'pinia';
-import { v4 as uuidv4 } from 'uuid';
-import { computed, ref } from 'vue';
-import { VIconBtn } from 'vuetify/labs/components';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
+import { VIconBtn, VMaskInput } from 'vuetify/labs/components';
 
-import GixCrudDialog from '@/components/GixCrudDialog.vue';
 import GixSelectionInfoBar from '@/components/GixSelectionInfoBar.vue';
 import GixTogglerMenu from '@/components/GixTogglerMenu.vue';
 import {
+  type UserServerDataTableOptions,
   createUser,
   deleteUser,
   deleteUsers,
   patchUser,
-  type UserServerDataTableOptions
 } from '@/services/api/users.ts';
+import { useCompaniesStore } from '@/stores/companies';
 import { useDisplayStore } from '@/stores/display.ts';
 import { useAppOptionsStore } from '@/stores/options.ts';
+import { useSnackbarStore } from '@/stores/snackbar';
 import { useUsersStore } from '@/stores/users.ts';
 import { ActionMode } from '@/types/action-mode.ts';
 import type { DataTableHeaders } from '@/types/data-table-headers.ts';
-import type { InputProperties } from '@/types/input-properties.ts';
 import type { User } from '@/types/user.ts';
-import { emailRules, noEmptyRule, passwordRules } from '@/types/validations.ts';
+import {
+  emailRules,
+  noEmptyArrayRule,
+  noEmptyRule,
+  passwordRules,
+  phoneRules,
+} from '@/types/validations.ts';
 import { formatDateTime } from '@/utils/formatting.ts';
-import type { WithRequiredProperty } from '@/types/with-required-property.ts';
+
+import DataTableInfo from '../DataTableInfo.vue';
+import GixRefreshButton from '../GixRefreshButton.vue';
 
 const { mobile } = storeToRefs(useDisplayStore());
 
@@ -33,6 +40,22 @@ const { appOptions } = storeToRefs(appOptionsStore);
 
 const usersStore = useUsersStore();
 const { users, totalUsersCount } = storeToRefs(usersStore);
+
+const companiesStore = useCompaniesStore();
+const { companies } = storeToRefs(companiesStore);
+
+const snackbarStore = useSnackbarStore();
+const { snackbar, snackbarError, snackbarText } = storeToRefs(snackbarStore);
+
+onMounted(async () => {
+  if (!companies.value.length) {
+    try {
+      await companiesStore.loadCompanies();
+    } catch (error) {
+      console.error(error);
+    }
+  }
+});
 
 const selectedUser = ref<User | null>(null);
 const selectedUserIds = ref<number[]>([]);
@@ -43,43 +66,8 @@ const showCrudDialog = computed(() => {
 
   if (currentMode.value === ActionMode.Create) return true;
 
-  return !!(selectedUser.value || selectedUserIds.value.length > 0);
+  return !!(selectedUser.value || selectedUserIds.value.length);
 });
-
-const userInputPropertiesIds = {
-  name: uuidv4(),
-  email: uuidv4(),
-  password: uuidv4(),
-};
-
-const userInputProperties = ref<InputProperties[]>([
-  {
-    id: userInputPropertiesIds.name,
-    label: 'Ad',
-    type: 'text',
-    validationRules: [noEmptyRule],
-    value: '',
-  },
-  {
-    id: userInputPropertiesIds.email,
-    label: 'E-posta',
-    type: 'email',
-    icon: 'mdi-email',
-    validationRules: emailRules,
-    value: '',
-  },
-  {
-    id: userInputPropertiesIds.password,
-    label: 'Parola',
-    type: 'password',
-    showPassword: false,
-    icon: 'mdi-lock',
-    validationRules: passwordRules,
-    value: '',
-  },
-]);
-
-const dialogErrorMessage = ref('');
 
 const usersLoaded = ref(false);
 
@@ -97,18 +85,21 @@ const loadUsers = async (options?: UserServerDataTableOptions, giveCacheFeedback
   }
 };
 
-const dialogSubmit = async (inputProperties: InputProperties[]) => {
-  if (selectedUserIds.value.length > 0 && currentMode.value === ActionMode.Delete) {
+const dialogSubmit = async () => {
+  isSubmitting.value = true;
+
+  if (selectedUserIds.value.length && currentMode.value === ActionMode.Delete) {
     await batchDelete();
     return;
   }
 
-  const formUser = (): Partial<User> => {
+  const formUser = () => {
     return {
-      name: inputProperties[0].value,
-      email: inputProperties[1].value,
-      password: inputProperties[2].value,
-      role: 'user',
+      name: userForm.name.value,
+      email: userForm.email.value,
+      password: userForm.password.value,
+      role: userForm.role.value,
+      companies: userForm.userCompanies.value,
     };
   };
 
@@ -119,14 +110,14 @@ const dialogSubmit = async (inputProperties: InputProperties[]) => {
       case ActionMode.Create:
         const user = formUser();
 
-        const isValidUser = Object.values(user).every(Boolean);
-        if (isValidUser) {
-          await createUser(user as WithRequiredProperty<User, 'password'>);
+        const createPasswordConfirmed = user.password === userForm.passwordAgain.value;
+        if (createPasswordConfirmed) {
+          await createUser(user);
 
           const latestUserId = users.value[0].id;
 
           const displayUser = {
-            ...(user as User),
+            ...user,
             id: latestUserId ? latestUserId + 1 : latestUserId,
             creationDate: willUpdateNextRefreshText,
           };
@@ -134,18 +125,21 @@ const dialogSubmit = async (inputProperties: InputProperties[]) => {
         }
         break;
       case ActionMode.Edit:
-        let editedUser = formUser();
-
         if (!selectedUser.value?.id) return;
+        const editedUser = formUser();
+
+        const editPasswordConfirmed = editedUser.password === userForm.passwordAgain.value;
+
+        if (!editPasswordConfirmed) return;
 
         await patchUser(selectedUser.value.id, editedUser);
 
-        editedUser = {
+        const displayedEditedUser = {
           ...selectedUser.value,
           ...Object.fromEntries(Object.entries(editedUser).filter(([, v]) => v !== '')),
           updatedOn: willUpdateNextRefreshText,
         };
-        usersStore.updateUserById(selectedUser.value.id, editedUser);
+        usersStore.updateUserById(selectedUser.value.id, displayedEditedUser);
         break;
       case ActionMode.Delete:
         if (!selectedUser.value?.id) return;
@@ -153,16 +147,29 @@ const dialogSubmit = async (inputProperties: InputProperties[]) => {
         await deleteUser(selectedUser.value.id);
         usersStore.removeUsersById([selectedUser.value.id]);
         break;
+      case ActionMode.Idle: {
+        throw new Error('Not implemented yet: ActionMode.Idle case');
+      }
       default:
         break;
     }
   } catch (error) {
     console.error(error);
+
+    const errorText =
+      error instanceof TRPCClientError ? error.message : 'Beklenmeyen bir hata ile karşılaşıldı.';
+
+    snackbarError.value = true;
+    snackbarText.value = errorText;
+    snackbar.value = true;
+  } finally {
+    isSubmitting.value = false;
+    currentMode.value = ActionMode.Idle;
   }
 };
 
 const batchDelete = async () => {
-  if (selectedUserIds.value.length === 0) return;
+  if (!selectedUserIds.value.length) return;
 
   try {
     await deleteUsers(selectedUserIds.value);
@@ -177,46 +184,103 @@ const dataTableHeaders = ref<DataTableHeaders[]>([
   { title: 'Ad', key: 'name', sortable: true, toggled: true },
   { title: 'E-posta', key: 'email', sortable: false, toggled: true },
   { title: 'Rol', key: 'role', sortable: true, toggled: true },
-  { title: 'Telefon', key: 'phone', sortable: false, toggled: false },
+  { title: 'Telefon', key: 'phone', sortable: false, toggled: true },
   { title: 'Oluşturulma Tarihi', key: 'creationDate', sortable: true, toggled: true },
   { title: 'Düzenlenme Tarihi', key: 'updatedOn', sortable: true, toggled: true },
   { title: 'İşlemler', key: 'actions', sortable: false, toggled: true },
 ]);
 
 const includedDataTableHeaders = computed(() =>
-  dataTableHeaders.value.filter(header => header.toggled),
+  dataTableHeaders.value.filter((header) => header.toggled),
 );
 
-const refreshRotations = ref(1);
-
-const refreshing = ref(false);
-const refreshBtnTarget = ref<HTMLElement | null>(null);
-
-const { apply } = useMotion(refreshBtnTarget, {
-  initial: {
-    rotate: 0,
-  },
+const userForm = reactive({
+  name: { rules: [noEmptyRule], value: '' },
+  email: { rules: emailRules, value: '' },
+  password: { rules: passwordRules, value: '' },
+  passwordAgain: { rules: passwordRules, value: '' },
+  phone: { rules: phoneRules, value: '' },
+  role: { rules: [noEmptyRule], value: 'user' },
+  userCompanies: { rules: [noEmptyArrayRule], value: [] as number[] },
 });
 
-const toggleRefresh = async () => {
-  if (refreshing.value) return;
-  refreshing.value = true;
-  await apply({
-    rotate: 360 * refreshRotations.value,
-    transition: {
-      ease: 'easeOut',
-    },
+const resetForm = () => {
+  Object.values(userForm).forEach((field) => {
+    if (typeof field.value === 'string') field.value = '';
+    else if (Array.isArray(field.value)) field.value = [];
   });
-  refreshRotations.value++;
-  await loadUsers();
-  refreshing.value = false;
 };
+
+const companySelectHidden = ref(false);
+const showPassword = ref(false);
+const showPasswordAgain = ref(false);
+
+watch(
+  () => userForm.role.value,
+  (newValue) => {
+    const isAdmin = newValue === 'admin';
+    companySelectHidden.value = isAdmin;
+    userForm.userCompanies.rules = isAdmin ? [] : [noEmptyArrayRule];
+  },
+);
+
+const passwordAgainErrorMessage = computed(() =>
+  userForm.passwordAgain.value !== userForm.password.value ? 'Parolalar eşleşmiyor.' : '',
+);
+
+const isSubmitting = ref(false);
+
+const formActionModes = [ActionMode.Create, ActionMode.Edit];
+
+const isForm = computed(() => formActionModes.includes(currentMode.value));
+
+const cardIcon = computed(() => {
+  switch (currentMode.value) {
+    case ActionMode.Create:
+      return 'mdi-plus';
+    case ActionMode.Edit:
+      return 'mdi-pencil';
+    case ActionMode.Delete:
+      return 'mdi-trash-can';
+    default:
+      return undefined;
+  }
+});
+const cardTitle = computed(() => {
+  switch (currentMode.value) {
+    case ActionMode.Create:
+      return 'Oluştur';
+    case ActionMode.Edit:
+      return 'Düzenle';
+    case ActionMode.Delete:
+      return 'Sil';
+    case ActionMode.Idle:
+      return '👋';
+    default:
+      return currentMode.value;
+  }
+});
+
+const validateField = (field: (typeof userForm)[keyof typeof userForm]) =>
+  //                                             fuck you typescript
+  field.rules.every((rule) => rule(field.value as never) === true);
+
+const formValid = computed(
+  () =>
+    Object.values(userForm).every((field) => validateField(field)) &&
+    passwordAgainErrorMessage.value === '',
+);
+const editFormValid = computed(
+  () =>
+    Object.values(userForm).some((field) => validateField(field)) &&
+    passwordAgainErrorMessage.value === '',
+);
 </script>
 
 <template>
   <v-data-table-server
     v-model="selectedUserIds"
-    @update:options="options => loadUsers(options, false)"
+    @update:options="(options) => loadUsers(options, false)"
     :headers="includedDataTableHeaders"
     :items-length="totalUsersCount"
     :items="users"
@@ -253,15 +317,12 @@ const toggleRefresh = async () => {
           Ekle
         </v-btn>
 
-        <v-icon-btn
-          v-motion
-          ref="refreshBtnTarget"
-          @click="toggleRefresh"
-          variant="text"
-          class="me-3"
-          icon="mdi-refresh"
-        />
+        <GixRefreshButton :refresh-fn="() => loadUsers()" />
+        <DataTableInfo class="me-5" />
       </v-toolbar>
+    </template>
+    <template #[`item.role`]="{ item }">
+      {{ item.role === 'admin' ? 'Admin' : 'Kullanıcı' }}
     </template>
     <template #[`item.creationDate`]="{ item }">
       {{ item.creationDate ? formatDateTime(item.creationDate) : '' }}
@@ -293,14 +354,123 @@ const toggleRefresh = async () => {
     </template>
   </v-data-table-server>
 
-  <GixCrudDialog
-    v-model:show-dialog="showCrudDialog"
-    v-model:current-mode="currentMode"
-    delete-text="Silinen kullanıcılar geri alınamaz, devam etmek istediğinize emin misiniz?"
-    v-model:inputs-properties="userInputProperties"
-    @submit="dialogSubmit"
-    :error-message="dialogErrorMessage"
-  />
+  <v-dialog max-width="450" v-model="showCrudDialog">
+    <v-card rounded="lg">
+      <v-card-title>
+        <v-icon size="small" :icon="cardIcon" />
+        {{ cardTitle }}
+      </v-card-title>
+      <v-form @submit.prevent="dialogSubmit">
+        <v-card-text>
+          <template v-if="isForm">
+            <v-text-field
+              class="mb-2"
+              variant="outlined"
+              rounded="lg"
+              label="Ad"
+              :rules="userForm.name.rules"
+              v-model="userForm.name.value"
+            />
+            <v-text-field
+              class="mb-2"
+              variant="outlined"
+              rounded="lg"
+              label="E-posta"
+              type="email"
+              :rules="userForm.email.rules"
+              v-model="userForm.email.value"
+            />
+            <v-mask-input
+              class="mb-2"
+              mask="phone"
+              placeholder="(###) ### - ####"
+              variant="outlined"
+              rounded="lg"
+              label="Telefon"
+              :rules="userForm.phone.rules"
+              v-model="userForm.phone.value"
+            />
+            <v-card class="mt-2 mb-6" rounded="lg" border>
+              <v-card-text class="pb-0">
+                <v-radio-group label="Yetki" v-model="userForm.role.value">
+                  <v-radio value="user" label="Kullanıcı" />
+                  <v-radio value="admin" label="Admin" />
+                </v-radio-group>
+
+                <v-expand-transition class="mb-2">
+                  <v-autocomplete
+                    v-model="userForm.userCompanies.value"
+                    v-show="!companySelectHidden"
+                    variant="outlined"
+                    multiple
+                    chips
+                    label="Firmalar"
+                    :items="companies"
+                    :rules="userForm.userCompanies.rules"
+                    item-title="name"
+                    item-value="id"
+                  />
+                </v-expand-transition>
+              </v-card-text>
+            </v-card>
+
+            <v-text-field
+              class="mb-2"
+              variant="outlined"
+              rounded="lg"
+              label="Parola"
+              :type="showPassword ? 'text' : 'password'"
+              :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
+              @click:append-inner="showPassword = !showPassword"
+              :rules="userForm.password.rules"
+              v-model="userForm.password.value"
+            />
+            <v-text-field
+              class="mb-2"
+              variant="outlined"
+              rounded="lg"
+              label="Tekrardan Parola"
+              :type="showPasswordAgain ? 'text' : 'password'"
+              :append-inner-icon="showPasswordAgain ? 'mdi-eye-off' : 'mdi-eye'"
+              @click:append-inner="showPasswordAgain = !showPasswordAgain"
+              :rules="userForm.passwordAgain.rules"
+              :error-messages="passwordAgainErrorMessage"
+              v-model="userForm.passwordAgain.value"
+            />
+          </template>
+          <template v-else-if="currentMode === ActionMode.Delete">
+            Silinen kullanıcılar geri alınamaz, devam etmek istediğinize emin misiniz?
+          </template>
+          <template v-else> 🧑‍💻 </template>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+
+          <v-btn
+            @click="
+              () => {
+                currentMode = ActionMode.Idle;
+                resetForm();
+              }
+            "
+            text="İptal"
+            rounded="lg"
+          />
+          <v-btn
+            type="submit"
+            :loading="isSubmitting"
+            :disabled="
+              (currentMode === ActionMode.Create && !formValid) ||
+              (currentMode === ActionMode.Edit && !editFormValid)
+            "
+            :text="isForm ? 'Kaydet' : 'Evet'"
+            :color="isForm ? 'primary' : 'error'"
+            rounded="lg"
+          />
+        </v-card-actions>
+      </v-form>
+    </v-card>
+  </v-dialog>
 
   <GixSelectionInfoBar
     @submit="currentMode = ActionMode.Delete"

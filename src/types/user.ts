@@ -7,4 +7,5 @@ export interface User extends Partial<CreateUpdateDate> {
   password?: string;
   role?: string;
   phone?: string;
+  companies: number[];
 }
