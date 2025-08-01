@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { watchDebounced } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
-import { computed, watch } from 'vue';
+import { computed } from 'vue';
 import { ref } from 'vue';
 
 import { setSelectedPeriod } from '@/services/api/companies';
@@ -9,15 +10,19 @@ import { useCompaniesStore } from '@/stores/companies';
 const companiesStore = useCompaniesStore();
 const { periods, selectedPeriodCode } = storeToRefs(companiesStore);
 
-watch(selectedPeriodCode, async (newValue) => {
-  try {
-    if (newValue === undefined) return;
+watchDebounced(
+  selectedPeriodCode,
+  async (newValue) => {
+    try {
+      if (newValue === undefined) return;
 
-    await setSelectedPeriod(newValue);
-  } catch (error) {
-    console.error(error);
-  }
-});
+      await setSelectedPeriod(newValue);
+    } catch (error) {
+      console.error(error);
+    }
+  },
+  { debounce: 300 },
+);
 
 const periodSelectorText = computed(() =>
   !selectedPeriodCode.value ? 'Dönem Seç' : `Dönem: ${selectedPeriodCode.value}`,

@@ -223,6 +223,29 @@ const getRules = (inputProperties: InputProperties) =>
                     />
                   </v-radio-group>
 
+                  <v-autocomplete
+                    v-if="inputProperties.type === 'select'"
+                    :label="inputProperties.label"
+                    :items="inputProperties.selectItems"
+                    no-data-text="Veri bulunamadı"
+                    @update:model-value="
+                      (value) => updateInputsPropertiesValue(value, inputProperties.id)
+                    "
+                  />
+                  <v-radio-group
+                    v-if="inputProperties.type === 'radio'"
+                    @update:model-value="
+                      (value) => updateInputsPropertiesValue(value as string, inputProperties.id)
+                    "
+                  >
+                    <v-radio
+                      v-for="radio in inputProperties.radios"
+                      :label="radio.label"
+                      :value="radio.value"
+                      :key="radio.id"
+                    />
+                  </v-radio-group>
+
                   <v-date-input
                     v-if="inputProperties.type === 'date'"
                     :display-format="(date: Date) => format(date, 'dd.MM.yyyy')"
