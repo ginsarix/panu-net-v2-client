@@ -11,22 +11,15 @@ export const useUsersStore = defineStore('users', () => {
   const loadUsers = async (params?: UserServerDataTableOptions) => {
     const response = await getUsers(params);
 
-    users.value = response.users;
+    users.value = response.users.map((u) => ({ ...u, companies: [] }));
     totalUsersCount.value = response.total;
   };
 
-  const addUserToList = (user: User, addToStart = false) => {
-    if (addToStart) {
-      users.value = [user, ...users.value];
-      return;
-    }
+  const addUserToList = (user: User, addToStart = false) =>
+    (users.value = addToStart ? [user, ...users.value] : [...users.value, user]);
 
-    users.value = [...users.value, user];
-  };
-
-  const updateUserById = (id: string | number, data: Partial<User>) => {
-    users.value = users.value.map((u) => (u.id === id ? { ...u, ...data } : u));
-  };
+  const updateUserById = (id: string | number, data: Partial<User>) =>
+    (users.value = users.value.map((u) => (u.id === id ? { ...u, ...data } : u)));
 
   const removeUsersById = (ids: Array<string | number>) => {
     const idSet = new Set(ids);

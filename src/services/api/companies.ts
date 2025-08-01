@@ -1,9 +1,11 @@
 import type { Company } from '@/types/company.ts';
-
-import { cleanPayload, trpc } from '../trpc.ts';
 import type { ServerDataTableOptions } from '@/types/server-data-table-options.ts';
 
-export type CompanyServerDataTableOptions = ServerDataTableOptions<"code" | "status" | "creationDate" | "updatedOn" | "name" | "licenseDate" | "period">;
+import { cleanPayload, trpc } from '../trpc.ts';
+
+export type CompanyServerDataTableOptions = ServerDataTableOptions<
+  'code' | 'status' | 'creationDate' | 'updatedOn' | 'name' | 'licenseDate'
+>;
 
 export const getCompanies = async (params?: CompanyServerDataTableOptions) => {
   return await trpc.company.getCompanies.query(params ?? {});
@@ -35,4 +37,16 @@ export const setSelectedCompany = async (id: number) => {
 
 export const getSelectedCompany = async () => {
   return await trpc.company.getSelectedCompany.query();
+};
+
+export const setSelectedPeriod = async (periodCode: number) => {
+  return await trpc.company.setPeriod.query({ periodCode });
+};
+
+export const getSelectedPeriod = async () => {
+  return await trpc.company.getSelectedPeriod.query();
+};
+
+export const getPeriods = async (companyCode: number) => {
+  return await trpc.company.getPeriods.query({ companyCode });
 };

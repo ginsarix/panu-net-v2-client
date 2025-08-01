@@ -3,19 +3,15 @@ import type { ServerDataTableOptions } from '@/types/server-data-table-options.t
 import type { User } from '@/types/user.ts';
 import type { WithRequiredProperty } from '@/types/with-required-property.ts';
 
-export type UserServerDataTableOptions = ServerDataTableOptions<
-  'creationDate' | 'updatedOn' | 'name' | 'email'
->;
+export type UserSortKeys = 'creationDate' | 'updatedOn' | 'name' | 'email';
 
-export const getUsers = async (
-  params?: UserServerDataTableOptions,
-) => {
+export type UserServerDataTableOptions = ServerDataTableOptions<UserSortKeys>;
+
+export const getUsers = async (params?: UserServerDataTableOptions) => {
   return await trpc.user.getUsers.query(params ?? {});
 };
 
-export const createUser = async (
-  data: WithRequiredProperty<User, 'password'>,
-) => {
+export const createUser = async (data: WithRequiredProperty<User, 'password'>) => {
   return await trpc.user.createUser.mutate(data);
 };
 

@@ -5,25 +5,27 @@ import { computed, ref, watch } from 'vue';
 
 import GixTogglerMenu from '@/components/GixTogglerMenu.vue';
 import { useSelectedCompany } from '@/composables/useSelectedCompany';
+import { useCompaniesStore } from '@/stores/companies';
 import { useDebtorsStore } from '@/stores/debtors.ts';
 import { useDisplayStore } from '@/stores/display.ts';
 import { useSnackbarStore } from '@/stores/snackbar';
 import type { DataTableHeaders } from '@/types/data-table-headers.ts';
-
-import DataTableInfo from '../DataTableInfo.vue';
 
 const { mobile } = storeToRefs(useDisplayStore());
 
 const debtorsStore = useDebtorsStore();
 const { debtors } = storeToRefs(debtorsStore);
 
+const companiesStore = useCompaniesStore();
+const { selectedPeriodCode } = storeToRefs(companiesStore);
+
 const { selectedCompany, loading } = useSelectedCompany();
 
 const snackbarStore = useSnackbarStore();
 const { snackbar, snackbarError, snackbarText } = storeToRefs(snackbarStore);
 
-watch(selectedCompany, async (newValue) => {
-  if (newValue) await loadDebtors();
+watch([selectedCompany, selectedPeriodCode], async ([newSelectedCompany, newSelectedPeriod]) => {
+  if (newSelectedCompany || newSelectedPeriod) await loadDebtors();
 });
 
 const loadDebtors = async () => {
@@ -32,7 +34,6 @@ const loadDebtors = async () => {
   try {
     await debtorsStore.loadDebtors({
       companyCode: selectedCompany.value.code,
-      periodCode: selectedCompany.value.period,
     });
   } catch (error) {
     console.error(error);
@@ -49,6 +50,7 @@ const dataTableHeaders = ref<DataTableHeaders[]>([
   { title: 'Ünvan', key: 'name', toggled: true, sortable: true },
   { title: 'Bakiye', key: 'balance', toggled: true, sortable: true },
   { title: 'Döviz Türü', key: 'currency', toggled: true, sortable: true },
+  { title: '', key: 'actions', toggled: true, sortable: false },
 ]);
 
 const includedDataTableHeaders = computed(() =>
@@ -67,6 +69,7 @@ const includedDataTableHeaders = computed(() =>
     :mobile="mobile.value"
     fixed-header
     :headers="includedDataTableHeaders"
+    hover
   >
     <template #top>
       <v-toolbar flat rounded class="rounded-b-0">
@@ -77,12 +80,10 @@ const includedDataTableHeaders = computed(() =>
 
         <GixTogglerMenu
           menu-activator-btn-text="Filtrele"
-          menu-activator-btn-class="rounded-lg border me-3"
+          menu-activator-btn-class="rounded-lg border me-5"
           menu-activator-btn-icon="mdi-filter-variant"
           v-model:toggle-items="dataTableHeaders"
         />
-
-        <DataTableInfo class="me-5" />
       </v-toolbar>
     </template>
   </v-data-table>

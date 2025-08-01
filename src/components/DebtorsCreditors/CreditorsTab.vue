@@ -4,12 +4,12 @@ import { storeToRefs } from 'pinia';
 import { computed, ref, watch } from 'vue';
 
 import { useSelectedCompany } from '@/composables/useSelectedCompany';
+import { useCompaniesStore } from '@/stores/companies';
 import { useCreditorsStore } from '@/stores/creditors.ts';
 import { useDisplayStore } from '@/stores/display';
 import { useSnackbarStore } from '@/stores/snackbar';
 import type { DataTableHeaders } from '@/types/data-table-headers';
 
-import DataTableInfo from '../DataTableInfo.vue';
 import GixTogglerMenu from '../GixTogglerMenu.vue';
 
 const { mobile } = storeToRefs(useDisplayStore());
@@ -17,13 +17,16 @@ const { mobile } = storeToRefs(useDisplayStore());
 const creditorsStore = useCreditorsStore();
 const { creditors } = storeToRefs(creditorsStore);
 
+const companiesStore = useCompaniesStore();
+const { selectedPeriodCode } = storeToRefs(companiesStore);
+
 const { selectedCompany, loading } = useSelectedCompany();
 
 const snackbarStore = useSnackbarStore();
 const { snackbar, snackbarError, snackbarText } = storeToRefs(snackbarStore);
 
-watch(selectedCompany, async (newValue) => {
-  if (newValue) await loadCreditors();
+watch([selectedCompany, selectedPeriodCode], async ([newSelectedCompany, newSelectedPeriod]) => {
+  if (newSelectedCompany || newSelectedPeriod) await loadCreditors();
 });
 
 const loadCreditors = async () => {
@@ -32,7 +35,6 @@ const loadCreditors = async () => {
   try {
     await creditorsStore.loadCreditors({
       companyCode: selectedCompany.value.code,
-      periodCode: selectedCompany.value.period,
     });
   } catch (error) {
     console.error(error);
@@ -78,12 +80,10 @@ const includedDataTableHeaders = computed(() =>
 
         <GixTogglerMenu
           menu-activator-btn-text="Filtrele"
-          menu-activator-btn-class="rounded-lg border me-3"
+          menu-activator-btn-class="rounded-lg border me-5"
           menu-activator-btn-icon="mdi-filter-variant"
           v-model:toggle-items="dataTableHeaders"
         />
-
-        <DataTableInfo class="me-5" />
       </v-toolbar>
     </template>
   </v-data-table>

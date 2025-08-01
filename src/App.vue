@@ -11,9 +11,13 @@ import NavigationDrawer from '@/components/NavigationDrawer.vue';
 import { useSnackbarStore } from '@/stores/snackbar.ts';
 
 import { useCurrentUserStore } from './stores/current-user';
+import { useDisplayStore } from './stores/display';
 
 const currentUserStore = useCurrentUserStore();
 const { currentUser } = storeToRefs(currentUserStore);
+
+const displayStore = useDisplayStore();
+const { mobile } = storeToRefs(displayStore);
 
 const router = useRouter();
 
@@ -36,13 +40,11 @@ const { snackbar, snackbarText, snackbarError } = storeToRefs(snackbarStore);
           @click="rail = !rail"
           aria-label="Navigasyon menüsünü aç"
         />
-        <v-app-bar-title @click="router.push('/')" class="cursor-pointer">
+        <v-app-bar-title v-show="!mobile.value" @click="router.push('/')" class="cursor-pointer">
           <span class="panu-font">Panu</span
           ><span class="panu-font font-italic" style="color: var(--color-panu)">Net</span>
           <strong class="pa-2 rounded-pill version-text">V2</strong>
         </v-app-bar-title>
-
-        <v-spacer />
 
         <CompanySelect v-if="currentUser" />
       </v-app-bar>

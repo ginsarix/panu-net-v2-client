@@ -30,7 +30,6 @@ import {
 } from '@/types/validations.ts';
 import { formatDateTime } from '@/utils/formatting.ts';
 
-import DataTableInfo from '../DataTableInfo.vue';
 import GixRefreshButton from '../GixRefreshButton.vue';
 
 const { mobile } = storeToRefs(useDisplayStore());
@@ -67,6 +66,10 @@ const showCrudDialog = computed(() => {
   if (currentMode.value === ActionMode.Create) return true;
 
   return !!(selectedUser.value || selectedUserIds.value.length);
+});
+
+watch(currentMode, (newValue) => {
+  if (newValue === ActionMode.Idle) resetForm();
 });
 
 const usersLoaded = ref(false);
@@ -180,10 +183,10 @@ const batchDelete = async () => {
 };
 
 const dataTableHeaders = ref<DataTableHeaders[]>([
-  { title: 'ID', key: 'id', sortable: true, toggled: true },
+  { title: 'ID', key: 'id', sortable: false, toggled: true },
   { title: 'Ad', key: 'name', sortable: true, toggled: true },
-  { title: 'E-posta', key: 'email', sortable: false, toggled: true },
-  { title: 'Rol', key: 'role', sortable: true, toggled: true },
+  { title: 'E-posta', key: 'email', sortable: true, toggled: true },
+  { title: 'Rol', key: 'role', sortable: false, toggled: true },
   { title: 'Telefon', key: 'phone', sortable: false, toggled: true },
   { title: 'Oluşturulma Tarihi', key: 'creationDate', sortable: true, toggled: true },
   { title: 'Düzenlenme Tarihi', key: 'updatedOn', sortable: true, toggled: true },
@@ -200,8 +203,11 @@ const userForm = reactive({
   password: { rules: passwordRules, value: '' },
   passwordAgain: { rules: passwordRules, value: '' },
   phone: { rules: phoneRules, value: '' },
-  role: { rules: [noEmptyRule], value: 'user' },
-  userCompanies: { rules: [noEmptyArrayRule], value: [] as number[] },
+  role: { rules: [noEmptyRule], value: selectedUser.value?.role ?? 'user' },
+  userCompanies: {
+    rules: [noEmptyArrayRule],
+    value: selectedUser.value?.companies ?? ([] as number[]),
+  },
 });
 
 const resetForm = () => {
@@ -317,8 +323,7 @@ const editFormValid = computed(
           Ekle
         </v-btn>
 
-        <GixRefreshButton :refresh-fn="() => loadUsers()" />
-        <DataTableInfo class="me-5" />
+        <GixRefreshButton class="me-5" :refresh-fn="() => loadUsers()" />
       </v-toolbar>
     </template>
     <template #[`item.role`]="{ item }">
@@ -370,23 +375,27 @@ const editFormValid = computed(
               label="Ad"
               :rules="userForm.name.rules"
               v-model="userForm.name.value"
+              :placeholder="selectedUser?.name"
             />
             <v-text-field
               class="mb-2"
               variant="outlined"
               rounded="lg"
               label="E-posta"
+              append-inner-icon="mdi-email"
               type="email"
               :rules="userForm.email.rules"
               v-model="userForm.email.value"
+              :placeholder="selectedUser?.email"
             />
             <v-mask-input
               class="mb-2"
               mask="phone"
-              placeholder="(###) ### - ####"
+              :placeholder="selectedUser?.phone ?? '(###) ### - ####'"
               variant="outlined"
               rounded="lg"
               label="Telefon"
+              append-inner-icon="mdi-phone"
               :rules="userForm.phone.rules"
               v-model="userForm.phone.value"
             />
@@ -405,6 +414,7 @@ const editFormValid = computed(
                     multiple
                     chips
                     label="Firmalar"
+                    append-inner-icon="mdi-domain"
                     :items="companies"
                     :rules="userForm.userCompanies.rules"
                     item-title="name"
@@ -446,16 +456,7 @@ const editFormValid = computed(
         <v-card-actions>
           <v-spacer />
 
-          <v-btn
-            @click="
-              () => {
-                currentMode = ActionMode.Idle;
-                resetForm();
-              }
-            "
-            text="İptal"
-            rounded="lg"
-          />
+          <v-btn @click="currentMode = ActionMode.Idle" text="İptal" rounded="lg" />
           <v-btn
             type="submit"
             :loading="isSubmitting"

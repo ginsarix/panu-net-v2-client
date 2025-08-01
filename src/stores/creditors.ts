@@ -7,7 +7,7 @@ import type { AccountCard } from '@/types/account-card.ts';
 export const useCreditorsStore = defineStore('creditors', () => {
   const creditors = ref<AccountCard[]>([]);
 
-  const loadCreditors = async (params: { companyCode: string; periodCode: string | number }) => {
+  const loadCreditors = async (params: { companyCode: number }) => {
     const result = await getCreditors(params);
 
     creditors.value = result.payload.result.map((ac) => ({

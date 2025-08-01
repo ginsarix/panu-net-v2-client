@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia';
 import { computed, onMounted, ref, watch } from 'vue';
 
 import AnalyticsTab from '@/components/DebtorsCreditors/AnalyticsTab.vue';
@@ -14,6 +15,9 @@ const debtorsStore = useDebtorsStore();
 const creditorsStore = useCreditorsStore();
 
 const mounting = ref(false);
+
+const { selectedPeriodCode } = storeToRefs(companiesStore);
+
 const { selectedCompany, loading } = useSelectedCompany();
 const allLoaded = computed(() => !mounting.value && !loading.value);
 
@@ -23,16 +27,35 @@ onMounted(async () => {
   loading.value = false;
 });
 
-watch(selectedCompany, async (newValue) => {
-  if (!newValue) return;
-
-  const companyParams = { companyCode: newValue.code, periodCode: newValue.period };
-
-  await Promise.all([
-    debtorsStore.loadDebtors(companyParams),
-    creditorsStore.loadCreditors(companyParams),
-  ]);
+watch([selectedCompany, selectedPeriodCode], async ([newSelectedCompany, newSelectedPeriod]) => {
+  if (newSelectedCompany || newSelectedPeriod) {
+    await Promise.all([loadDebtors(), loadCreditors()]);
+  }
 });
+
+const loadCreditors = async () => {
+  if (!selectedCompany.value) return;
+
+  try {
+    await creditorsStore.loadCreditors({
+      companyCode: selectedCompany.value.code,
+    });
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const loadDebtors = async () => {
+  if (!selectedCompany.value) return;
+
+  try {
+    await debtorsStore.loadDebtors({
+      companyCode: selectedCompany.value.code,
+    });
+  } catch (error) {
+    console.error(error);
+  }
+};
 
 const totalCompanies = computed(() => companiesStore.companies.length);
 const totalUsers = computed(() => usersStore.users.length);

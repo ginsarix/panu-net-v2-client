@@ -1,19 +1,38 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
 import {
   type CompanyServerDataTableOptions,
   getCompanies,
+  getPeriods,
   getSelectedCompany,
 } from '@/services/api/companies.ts';
 import type { Company } from '@/types/company.ts';
+import type { Period } from '@/types/period';
 
 export const useCompaniesStore = defineStore('companies', () => {
   const companies = ref<Company[]>([]);
+  const periods = ref<Period[]>([]);
+  const selectedPeriodCode = ref<number>(0);
+
   const totalCompaniesCount = ref(0);
 
   const selectedCompanyId = ref<number | null>(null);
   const selectedCompanyIdLoaded = ref(false);
+
+  watch(selectedCompanyId, async (newValue) => {
+    if (!newValue) return;
+    const instance = getSelectedCompanyInstance();
+    const companyCode = instance?.code;
+
+    if (companyCode === undefined) return;
+
+    periods.value = (await getPeriods(companyCode)).map((p) => ({
+      code: p.donemkodu,
+      startDate: p.baslangic,
+      endDate: p.bitis,
+    }));
+  });
 
   const getSelectedCompanyInstance = () =>
     companies.value.find((c) => c.id === selectedCompanyId.value);
@@ -33,14 +52,8 @@ export const useCompaniesStore = defineStore('companies', () => {
     totalCompaniesCount.value = result.total;
   };
 
-  const addCompanyToList = (company: Company, addToStart = false) => {
-    if (addToStart) {
-      companies.value = [company, ...companies.value];
-      return;
-    }
-
-    companies.value = [...companies.value, company];
-  };
+  const addCompanyToList = (company: Company, addToStart = false) =>
+    (companies.value = addToStart ? [company, ...companies.value] : [...companies.value, company]);
 
   const updateCompanyById = (id: string | number, data: Partial<Company>) => {
     companies.value = companies.value.map((c) => (c.id === id ? { ...c, ...data } : c));
@@ -56,6 +69,8 @@ export const useCompaniesStore = defineStore('companies', () => {
     totalCompaniesCount,
     selectedCompanyId,
     selectedCompanyIdLoaded,
+    periods,
+    selectedPeriodCode,
     loadCompanies,
     addCompanyToList,
     updateCompanyById,

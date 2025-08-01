@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { TRPCClientError } from '@trpc/client';
+import { watchDebounced } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref } from 'vue';
 
 import { setSelectedCompany } from '@/services/api/companies.ts';
 import emitter from '@/services/service-bus.ts';
@@ -9,6 +10,8 @@ import { useAsyncGateStore } from '@/stores/async-gate';
 import { useCompaniesStore } from '@/stores/companies.ts';
 import { useAppOptionsStore } from '@/stores/options.ts';
 import { useSnackbarStore } from '@/stores/snackbar.ts';
+
+import PeriodSelector from './PeriodSelector.vue';
 
 const asyncGate = useAsyncGateStore();
 
@@ -74,33 +77,37 @@ emitter.on('companyNotSelected', () => {
 // not even for a little bit because of the emitter above, the error messages overlap.
 const selectedCompanyIdPassthrough = ref<number | null>(null);
 
-watch(selectedCompanyIdPassthrough, async (newValue) => {
-  if (newValue === null || skipWatch.value) return;
+watchDebounced(
+  selectedCompanyIdPassthrough,
+  async (newValue) => {
+    if (newValue === null || skipWatch.value) return;
 
-  selectCompanyLoading.value = true;
+    selectCompanyLoading.value = true;
 
-  try {
-    await setSelectedCompany(newValue);
-    selectedCompanyId.value = newValue;
-  } catch (error) {
-    console.error(error);
+    try {
+      await setSelectedCompany(newValue);
+      selectedCompanyId.value = newValue;
+    } catch (error) {
+      console.error(error);
 
-    selectedCompanyId.value = null;
-    selectedCompanyIdPassthrough.value = null;
+      selectedCompanyId.value = null;
+      selectedCompanyIdPassthrough.value = null;
 
-    const errorText =
-      error instanceof TRPCClientError
-        ? error.message
-        : 'Şirket seçilemedi, daha sonra tekrar deneyiniz.';
+      const errorText =
+        error instanceof TRPCClientError
+          ? error.message
+          : 'Şirket seçilemedi, daha sonra tekrar deneyiniz.';
 
-    snackbarError.value = true;
-    snackbarText.value = errorText;
-    snackbar.value = true;
-  } finally {
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    selectCompanyLoading.value = false;
-  }
-});
+      snackbarError.value = true;
+      snackbarText.value = errorText;
+      snackbar.value = true;
+    } finally {
+      await new Promise((resolve) => setTimeout(resolve, 700));
+      selectCompanyLoading.value = false;
+    }
+  },
+  { debounce: 300 },
+);
 </script>
 
 <template>
@@ -113,10 +120,18 @@ watch(selectedCompanyIdPassthrough, async (newValue) => {
     item-title="name"
     item-value="id"
     clearable
+    @click:clear="selectedCompanyIdPassthrough = null"
     label="Firma"
     :no-data-text="noDataText"
-    class="mt-4 me-5"
+    class="mt-4 me-4"
     variant="underlined"
-    max-width="300"
-  />
+    max-width="250"
+  >
+    <template #item="{ props: itemProps, item }">
+      <v-list-item v-bind="itemProps" :subtitle="item.raw.code" /> </template
+  ></v-select>
+
+  <v-expand-x-transition v-show="selectedCompanyIdPassthrough">
+    <PeriodSelector class="mt-1 me-3" />
+  </v-expand-x-transition>
 </template>

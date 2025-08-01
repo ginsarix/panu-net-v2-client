@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { format } from 'date-fns';
 import { computed, ref, watch } from 'vue';
-import { VDateInput } from 'vuetify/labs/components';
+import { VDateInput, VMaskInput } from 'vuetify/labs/components';
 
 import { useValidationError } from '@/composables/useValidationError.ts';
 import { ActionMode } from '@/types/action-mode.ts';
@@ -132,7 +132,7 @@ const cardTitle = computed(() => {
   }
 });
 
-const textInputTypes = ['text', 'tel', 'email', 'password', 'url', 'search'];
+const textInputTypes = ['text', 'email', 'password', 'url', 'search'];
 
 const updateDateInputValue = (newDate: Date, id: string) => {
   const newInputsProperties = props.inputsProperties.map((inputProps) =>
@@ -251,6 +251,19 @@ const getRules = (inputProperties: InputProperties) =>
                     variant="outlined"
                     rounded="lg"
                     inset
+                    :rules="getRules(inputProperties)"
+                    @update:model-value="
+                      (value) => updateInputsPropertiesValue(value, inputProperties.id)
+                    "
+                  />
+
+                  <v-mask-input
+                    v-if="inputProperties.type === 'tel'"
+                    :label="inputProperties.label"
+                    variant="outlined"
+                    rounded="lg"
+                    :mask="inputProperties.mask"
+                    :placeholder="inputProperties.placeholder"
                     :rules="getRules(inputProperties)"
                     @update:model-value="
                       (value) => updateInputsPropertiesValue(value, inputProperties.id)

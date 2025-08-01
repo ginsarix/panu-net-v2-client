@@ -1,6 +1,6 @@
 export interface ServerDataTableOptions<T extends string> {
   page?: number;
   itemsPerPage?: number;
-  sort?: T;
+  sortBy?: { key: T; order: 'asc' | 'desc' }[];
   search?: string;
 }

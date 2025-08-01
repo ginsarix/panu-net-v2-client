@@ -24,6 +24,7 @@ export interface InputProperties {
     | 'radio'
     | 'select';
   label: string;
+  placeholder?: string;
   hidden?: boolean;
   icon?: string;
   hint?: string;
@@ -32,6 +33,7 @@ export interface InputProperties {
   value: string;
   radios?: RadioProperties[];
   selectItems?: SelectProperties[];
+  mask?: string;
   validationRules?: ((v: string) => true | string)[];
   neverResetValue?: boolean;
 }

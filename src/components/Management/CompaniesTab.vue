@@ -24,10 +24,9 @@ import type { Company } from '@/types/company.ts';
 import type { DataTableHeaders } from '@/types/data-table-headers.ts';
 import type { InputProperties } from '@/types/input-properties.ts';
 import type { StepperProperties } from '@/types/stepper-properties.ts';
-import { noEmptyRule } from '@/types/validations.ts';
+import { noEmptyRule, phoneRules } from '@/types/validations.ts';
 import { formatDateTime } from '@/utils/formatting.ts';
 
-import DataTableInfo from '../DataTableInfo.vue';
 import GixRefreshButton from '../GixRefreshButton.vue';
 
 const appOptionsStore = useAppOptionsStore();
@@ -50,7 +49,7 @@ const showCrudDialog = computed(() => {
 
   if (currentMode.value === ActionMode.Create) return true;
 
-  return !!(selectedCompany.value || selectedCompanyIds.value.length > 0);
+  return !!(selectedCompany.value || selectedCompanyIds.value.length);
 });
 
 const companyInputPropertiesIds = {
@@ -62,7 +61,6 @@ const companyInputPropertiesIds = {
   wsSource: uuidv4(),
   wsUsername: uuidv4(),
   serverName: uuidv4(),
-  period: uuidv4(),
   apiKey: uuidv4(),
   apiSecret: uuidv4(),
   status: uuidv4(),
@@ -95,6 +93,9 @@ const companyInputProperties = ref<InputProperties[]>([
     label: 'Telefon',
     type: 'tel',
     value: '',
+    mask: 'phone',
+    placeholder: '(###) ### - ####',
+    validationRules: phoneRules,
   },
   {
     id: companyInputPropertiesIds.licenseDate,
@@ -121,13 +122,6 @@ const companyInputProperties = ref<InputProperties[]>([
     id: companyInputPropertiesIds.serverName,
     label: 'Sunucu Adı',
     type: 'text',
-    validationRules: [noEmptyRule],
-    value: '',
-  },
-  {
-    id: companyInputPropertiesIds.period,
-    label: 'Dönem',
-    type: 'number',
     validationRules: [noEmptyRule],
     value: '',
   },
@@ -179,7 +173,6 @@ const companyInputSteppers: StepperProperties[] = [
       companyInputPropertiesIds.wsSource,
       companyInputPropertiesIds.wsUsername,
       companyInputPropertiesIds.serverName,
-      companyInputPropertiesIds.period,
     ],
   },
   {
@@ -214,10 +207,8 @@ const dialogSubmit = async (inputProperties: InputProperties[]) => {
   }
 
   const formCompany = (): Partial<Company> => {
-    const periodVal = parseInt(inputProperties[8].value, 10);
-
     return {
-      code: inputProperties[0].value,
+      code: Number(inputProperties[0].value),
       name: inputProperties[1].value,
       manager: inputProperties[2].value,
       phone: inputProperties[3].value,
@@ -225,10 +216,9 @@ const dialogSubmit = async (inputProperties: InputProperties[]) => {
       webServiceSource: inputProperties[5].value,
       webServiceUsername: inputProperties[6].value,
       serverName: inputProperties[7].value,
-      period: isNaN(periodVal) ? undefined : periodVal,
-      apiKey: inputProperties[9].value,
-      apiSecret: inputProperties[10].value,
-      status: inputProperties[11].value.toLowerCase() === 'true',
+      apiKey: inputProperties[8].value,
+      apiSecret: inputProperties[9].value,
+      status: inputProperties[10].value.toLowerCase() === 'true',
     };
   };
 
@@ -246,7 +236,7 @@ const dialogSubmit = async (inputProperties: InputProperties[]) => {
         if (isValidCompany) {
           await createCompany(company as Company);
 
-          const latestCompanyId = companies.value[0].id;
+          const latestCompanyId = companies.value[0].id ?? 0;
 
           const displayCompany = {
             ...(company as Company),
@@ -293,7 +283,7 @@ const dialogSubmit = async (inputProperties: InputProperties[]) => {
 };
 
 const batchDelete = async () => {
-  if (selectedCompanyIds.value.length === 0) return;
+  if (!selectedCompanyIds.value.length) return;
 
   try {
     await deleteCompanies(selectedCompanyIds.value);
@@ -319,6 +309,8 @@ const dataTableHeaders = ref<DataTableHeaders[]>([
 const includedDataTableHeaders = computed(() =>
   dataTableHeaders.value.filter((header) => header.toggled),
 );
+
+const infoDialog = ref(false);
 </script>
 
 <template>
@@ -361,8 +353,7 @@ const includedDataTableHeaders = computed(() =>
           Ekle
         </v-btn>
 
-        <GixRefreshButton :refresh-fn="() => loadCompanies()" />
-        <DataTableInfo class="me-5" />
+        <GixRefreshButton class="me-5" :refresh-fn="() => loadCompanies()" />
       </v-toolbar>
     </template>
     <template #[`item.status`]="{ item }">
@@ -378,7 +369,7 @@ const includedDataTableHeaders = computed(() =>
       {{ item.updatedOn ? formatDateTime(item.updatedOn) : 'Düzenlenmedi' }}
     </template>
     <template #[`item.actions`]="{ item }">
-      <div class="d-flex justify-end">
+      <div class="d-flex justify-center">
         <v-icon-btn
           icon="mdi-pencil"
           color="secondary"
@@ -397,9 +388,112 @@ const includedDataTableHeaders = computed(() =>
             currentMode = ActionMode.Delete;
           "
         />
+
+        <v-icon-btn
+          icon="mdi-eye"
+          variant="text"
+          color="success"
+          @click.stop="
+            selectedCompany = item;
+            infoDialog = true;
+          "
+        />
       </div>
     </template>
   </v-data-table-server>
+
+  <v-dialog v-model="infoDialog" max-width="500">
+    <v-card rounded="lg">
+      <v-card-title class="text-h6 text-center">
+        {{ selectedCompany?.name }}
+      </v-card-title>
+
+      <v-divider />
+
+      <v-card-text>
+        <v-list density="compact">
+          <v-list-item>
+            <v-row>
+              <v-col cols="6" class="text-body-2 font-weight-medium">Kod:</v-col>
+              <v-col cols="6" class="text-body-2 text-right">{{ selectedCompany?.code }}</v-col>
+            </v-row>
+
+            <v-row>
+              <v-col cols="6" class="text-body-2 font-weight-medium">Yönetici:</v-col>
+              <v-col cols="6" class="text-body-2 text-right">{{ selectedCompany?.manager }}</v-col>
+            </v-row>
+
+            <v-row>
+              <v-col cols="6" class="text-body-2 font-weight-medium">Telefon:</v-col>
+              <v-col cols="6" class="text-body-2 text-right">{{ selectedCompany?.phone }}</v-col>
+            </v-row>
+
+            <v-row>
+              <v-col cols="6" class="text-body-2 font-weight-medium">Oluşturulma:</v-col>
+              <v-col cols="6" class="text-body-2 text-right">
+                {{
+                  selectedCompany?.creationDate ? formatDateTime(selectedCompany.creationDate) : ''
+                }}
+              </v-col>
+            </v-row>
+
+            <v-row>
+              <v-col cols="6" class="text-body-2 font-weight-medium">Güncellenme:</v-col>
+              <v-col cols="6" class="text-body-2 text-right">
+                {{ selectedCompany?.updatedOn ? formatDateTime(selectedCompany.updatedOn) : '' }}
+              </v-col>
+            </v-row>
+
+            <v-divider class="my-3" />
+
+            <v-row>
+              <v-col cols="6" class="text-body-2 font-weight-medium">Durum:</v-col>
+              <v-col cols="6" class="text-body-2 text-right">
+                {{ selectedCompany?.status ? '✅' : '❌' }}
+              </v-col>
+            </v-row>
+
+            <v-row>
+              <v-col cols="6" class="text-body-2 font-weight-medium">Lisans Tarihi:</v-col>
+              <v-col cols="6" class="text-body-2 text-right">
+                {{
+                  selectedCompany?.licenseDate
+                    ? formatDateTime(selectedCompany.licenseDate, 'dd.MM.yyyy')
+                    : ''
+                }}
+              </v-col>
+            </v-row>
+
+            <v-divider class="my-3" />
+
+            <v-row>
+              <v-col cols="12" class="text-body-2 font-weight-medium text-center">
+                {{ selectedCompany?.webServiceSource }}
+              </v-col>
+            </v-row>
+
+            <v-row>
+              <v-col cols="6" class="text-body-2 font-weight-medium">Kullanıcı Adı:</v-col>
+              <v-col cols="6" class="text-body-2 text-right">
+                {{ selectedCompany?.webServiceUsername }}
+              </v-col>
+            </v-row>
+
+            <v-row>
+              <v-col cols="6" class="text-body-2 font-weight-medium">API Key:</v-col>
+              <v-col cols="6" class="text-body-2 text-right">
+                {{ selectedCompany?.apiKey }}
+              </v-col>
+            </v-row>
+          </v-list-item>
+        </v-list>
+      </v-card-text>
+
+      <v-card-actions class="justify-end">
+        <v-btn @click="infoDialog = false" color="primary" variant="text">Tamam</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 
   <GixCrudDialog
     v-model:show-dialog="showCrudDialog"
