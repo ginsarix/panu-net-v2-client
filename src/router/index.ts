@@ -5,13 +5,11 @@ import CreditorsTab from '@/components/DebtorsCreditors/CreditorsTab.vue';
 import DebtorsTab from '@/components/DebtorsCreditors/DebtorsTab.vue';
 import CompaniesTab from '@/components/Management/CompaniesTab.vue';
 import UsersTab from '@/components/Management/UsersTab.vue';
-import MovingStocksTab from '@/components/Stock/MovingStocksTab.vue';
 import { pinia } from '@/plugins/pinia';
 import { useCurrentUserStore } from '@/stores/current-user';
 import DebtorsCreditorsView from '@/views/DebtorsCreditorsView.vue';
 import LoginView from '@/views/LoginView.vue';
 import ManagementView from '@/views/ManagementView.vue';
-import StockView from '@/views/StockView.vue';
 
 import HomeView from '../views/HomeView.vue';
 
@@ -37,28 +35,6 @@ const router = createRouter({
         {
           path: 'creditors',
           component: CreditorsTab,
-        },
-      ],
-    },
-    {
-      path: '/stock',
-      component: StockView,
-      children: [
-        {
-          path: 'moving-stock',
-          component: MovingStocksTab,
-        },
-        {
-          path: 'idle-stock',
-          component: HomeView,
-        },
-        {
-          path: 'stock-profitability',
-          component: HomeView,
-        },
-        {
-          path: 'physical-stock',
-          component: HomeView,
         },
       ],
     },

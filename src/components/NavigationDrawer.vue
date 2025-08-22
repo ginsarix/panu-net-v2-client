@@ -100,36 +100,6 @@ const loginout = async () => {
         />
       </v-list-group>
 
-      <v-list-group value="Stock">
-        <template #activator="{ props }">
-          <v-list-item v-bind="props" rounded="xl" prepend-icon="mdi-cube" title="Stok" />
-        </template>
-
-        <v-list-item rounded="xl" prepend-icon="mdi-truck" to="/stock/moving-stock">
-          <v-list-item-title
-            >Hareket <br />
-            Görenler
-          </v-list-item-title>
-        </v-list-item>
-        <v-list-item rounded="xl" prepend-icon="mdi-clock" to="/stock/idle-stock">
-          <v-list-item-title
-            >Hareket <br />
-            Görmeyenler
-          </v-list-item-title>
-        </v-list-item>
-        <v-list-item rounded="xl" prepend-icon="mdi-chart-line" to="/stock/stock-profitability">
-          <v-list-item-title
-            >Stok Bazlı <br />
-            Karlılık
-          </v-list-item-title>
-        </v-list-item>
-        <v-list-item
-          rounded="xl"
-          prepend-icon="mdi-cube-outline"
-          title="Fiili Stok"
-          to="/stock/physical-stock"
-        />
-      </v-list-group>
       <v-list-group value="Orders">
         <template #activator="{ props }">
           <v-list-item
@@ -154,6 +124,18 @@ const loginout = async () => {
             Edilenler
           </v-list-item-title>
         </v-list-item>
+      </v-list-group>
+
+      <v-list-group value="TaskTracking">
+        <template #activator="{ props }">
+          <v-list-item
+            v-bind="props"
+            rounded="xl"
+            prepend-icon="mdi-table-network"
+            title="Görev Takibi"
+          />
+        </template>
+        <v-list-item rounded="xl" prepend-icon="mdi-web" title="Domain" />
       </v-list-group>
 
       <v-list-group value="Management">
