@@ -6,9 +6,9 @@ import { computed, ref, watch } from 'vue';
 import { useSelectedCompany } from '@/composables/useSelectedCompany';
 import { useAsyncGateStore } from '@/stores/async-gate';
 import { useCompaniesStore } from '@/stores/companies';
-import { useCreditorsStore } from '@/stores/creditors.ts';
 import { useDisplayStore } from '@/stores/display';
 import { useSnackbarStore } from '@/stores/snackbar';
+import { useStocksStore } from '@/stores/stocks';
 import type { DataTableHeaders } from '@/types/data-table-headers';
 
 import GixTogglerMenu from '../GixTogglerMenu.vue';
@@ -17,8 +17,8 @@ const asyncGateStore = useAsyncGateStore();
 
 const { mobile } = storeToRefs(useDisplayStore());
 
-const creditorsStore = useCreditorsStore();
-const { creditors } = storeToRefs(creditorsStore);
+const stocksStore = useStocksStore();
+const { stocks } = storeToRefs(stocksStore);
 
 const companiesStore = useCompaniesStore();
 const { selectedPeriodCode } = storeToRefs(companiesStore);
@@ -33,22 +33,18 @@ watch(
   async ([newSelectedCompany, newSelectedPeriod]) => {
     if (newSelectedCompany || newSelectedPeriod) {
       await asyncGateStore.promise;
-      await loadCreditors();
+      await loadStocks();
     }
   },
   { immediate: true },
 );
 
-const loadCreditors = async () => {
+const loadStocks = async () => {
   if (!selectedCompany.value) return;
 
   try {
-    await creditorsStore.loadCreditors({
-      companyCode: selectedCompany.value.code,
-    });
   } catch (error) {
     console.error(error);
-
     if (error instanceof TRPCClientError) {
       snackbarError.value = true;
       snackbarText.value = error.message;
@@ -58,10 +54,10 @@ const loadCreditors = async () => {
 };
 
 const dataTableHeaders = ref<DataTableHeaders[]>([
-  { title: 'Cari Kart Kodu', key: 'code', toggled: true, sortable: true },
-  { title: 'Ünvan', key: 'name', toggled: true, sortable: true },
-  { title: 'Bakiye', key: 'balance', toggled: true, sortable: true },
-  { title: 'Döviz Türü', key: 'currency', toggled: true, sortable: true },
+  { title: 'Stok Kodu', key: 'code', toggled: true, sortable: true },
+  { title: 'Ad', key: 'name', toggled: true, sortable: true },
+  { title: 'Birim Adı', key: 'balance', toggled: true, sortable: true },
+  { title: '', key: 'actions', toggled: true, sortable: false },
 ]);
 
 const includedDataTableHeaders = computed(() =>
@@ -71,21 +67,22 @@ const includedDataTableHeaders = computed(() =>
 
 <template>
   <v-data-table
-    :items="creditors"
+    :items="stocks"
     :loading="loading"
     class="rounded-lg elevation-0 border"
-    no-data-text="Alacaklılar bulunamadı."
-    loading-text="Alacaklılar yükleniyor..."
-    items-per-page-text="Sayfa başı alacaklılar"
+    no-data-text="Stoklar bulunamadı."
+    loading-text="Stoklar yükleniyor..."
+    items-per-page="Sayfa başı stoklar"
     :mobile="mobile.value"
     fixed-header
     :headers="includedDataTableHeaders"
+    hover
   >
     <template #top>
       <v-toolbar flat rounded class="rounded-b-0">
         <v-toolbar-title>
           <v-icon color="medium-emphasis" icon="mdi-text" size="x-small" start />
-          Borçlular
+          Hareket Gören Stoklar
         </v-toolbar-title>
 
         <GixTogglerMenu

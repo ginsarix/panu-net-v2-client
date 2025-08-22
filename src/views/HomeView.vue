@@ -1,37 +1,61 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, watch } from 'vue';
 
 import AnalyticsTab from '@/components/DebtorsCreditors/AnalyticsTab.vue';
 import { useSelectedCompany } from '@/composables/useSelectedCompany';
+import { useAsyncGateStore } from '@/stores/async-gate';
 import { useCompaniesStore } from '@/stores/companies';
 import { useCreditorsStore } from '@/stores/creditors';
 import { useDebtorsStore } from '@/stores/debtors';
 import { useUsersStore } from '@/stores/users';
 
+const asyncGateStore = useAsyncGateStore();
+
 const companiesStore = useCompaniesStore();
 const usersStore = useUsersStore();
+
+onMounted(async () => {
+  if (!totalCompanies.value) await loadCompanies();
+  if (!totalUsers.value) await loadUsers();
+});
+
+const loadCompanies = async () => {
+  try {
+    await companiesStore.loadCompanies();
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const loadUsers = async () => {
+  try {
+    await usersStore.loadUsers();
+  } catch (error) {
+    console.error(error);
+  }
+};
+
 const debtorsStore = useDebtorsStore();
 const creditorsStore = useCreditorsStore();
-
-const mounting = ref(false);
 
 const { selectedPeriodCode } = storeToRefs(companiesStore);
 
 const { selectedCompany, loading } = useSelectedCompany();
-const allLoaded = computed(() => !mounting.value && !loading.value);
 
-onMounted(async () => {
-  loading.value = true;
-  await Promise.all([companiesStore.loadCompanies(), usersStore.loadUsers()]);
-  loading.value = false;
-});
+watch(
+  [selectedCompany, selectedPeriodCode],
+  async ([newSelectedCompany, newSelectedPeriod]) => {
+    if (newSelectedCompany || newSelectedPeriod) {
+      await asyncGateStore.promise;
 
-watch([selectedCompany, selectedPeriodCode], async ([newSelectedCompany, newSelectedPeriod]) => {
-  if (newSelectedCompany || newSelectedPeriod) {
-    await Promise.all([loadDebtors(), loadCreditors()]);
-  }
-});
+      loading.value = true;
+      await Promise.all([loadDebtors(), loadCreditors()]);
+      loading.value = false;
+    }
+  },
+  { immediate: true },
+);
 
 const loadCreditors = async () => {
   if (!selectedCompany.value) return;
@@ -94,7 +118,7 @@ const quickLinks = [
         <v-card :color="kpi.theme" class="kpi-card text-center py-6" elevation="8">
           <v-icon :icon="kpi.icon" size="48" class="mb-2" />
           <div class="kpi-value">
-            <span v-if="allLoaded">{{ kpi.value }}</span>
+            <span v-if="!loading">{{ kpi.value }}</span>
             <template v-else>
               <v-progress-circular indeterminate />
             </template>
@@ -107,7 +131,7 @@ const quickLinks = [
     <v-row class="mb-8" align="center" justify="center">
       <v-col cols="12" md="8">
         <v-card class="pa-4 analytics-card" elevation="10">
-          <AnalyticsTab :loading="!allLoaded" />
+          <AnalyticsTab :loading="loading" />
         </v-card>
       </v-col>
       <v-col cols="12" md="4">

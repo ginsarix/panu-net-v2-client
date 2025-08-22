@@ -4,21 +4,33 @@ import { ref, watch } from 'vue';
 import {
   type CompanyServerDataTableOptions,
   getCompanies,
+  getCreditCount,
   getPeriods,
   getSelectedCompany,
 } from '@/services/api/companies.ts';
+import emitter from '@/services/service-bus';
 import type { Company } from '@/types/company.ts';
 import type { Period } from '@/types/period';
 
 export const useCompaniesStore = defineStore('companies', () => {
   const companies = ref<Company[]>([]);
   const periods = ref<Period[]>([]);
-  const selectedPeriodCode = ref<number>(0);
+  const selectedPeriodCode = ref(0);
 
   const totalCompaniesCount = ref(0);
 
   const selectedCompanyId = ref<number | null>(null);
   const selectedCompanyIdLoaded = ref(false);
+
+  const creditCount = ref<number | null>(null);
+  const creditCountLoading = ref(false);
+  emitter.on('creditsMaybeChanged', async () => {
+    if (selectedCompanyId.value) {
+      creditCountLoading.value = true;
+      creditCount.value = await getCreditCount();
+      creditCountLoading.value = false;
+    }
+  });
 
   watch(selectedCompanyId, async (newValue) => {
     if (!newValue) return;
@@ -38,7 +50,7 @@ export const useCompaniesStore = defineStore('companies', () => {
     companies.value.find((c) => c.id === selectedCompanyId.value);
   const loadSelectedCompanyId = async () => {
     try {
-      selectedCompanyId.value = Number((await getSelectedCompany()).id) ?? null;
+      selectedCompanyId.value = (await getSelectedCompany()).id ?? null;
     } catch {
       selectedCompanyId.value = null;
     } finally {
@@ -67,6 +79,8 @@ export const useCompaniesStore = defineStore('companies', () => {
   return {
     companies,
     totalCompaniesCount,
+    creditCount,
+    creditCountLoading,
     selectedCompanyId,
     selectedCompanyIdLoaded,
     periods,

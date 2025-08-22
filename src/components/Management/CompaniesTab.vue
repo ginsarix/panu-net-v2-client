@@ -201,14 +201,14 @@ const loadCompanies = async (options?: CompanyServerDataTableOptions, giveCacheF
 };
 
 const dialogSubmit = async (inputProperties: InputProperties[]) => {
-  if (selectedCompanyIds.value.length > 0 && currentMode.value === ActionMode.Delete) {
+  if (selectedCompanyIds.value.length && currentMode.value === ActionMode.Delete) {
     await batchDelete();
     return;
   }
 
   const formCompany = (): Partial<Company> => {
     return {
-      code: Number(inputProperties[0].value),
+      code: inputProperties[0].value,
       name: inputProperties[1].value,
       manager: inputProperties[2].value,
       phone: inputProperties[3].value,

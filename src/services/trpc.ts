@@ -3,13 +3,17 @@ import { createTRPCProxyClient, httpBatchLink } from '@trpc/client';
 import type { AppRouter } from '@/../../server/src/trpc/router';
 import { API_CONFIG } from '@/config/api.ts';
 
+import emitter from './service-bus';
+
 export const trpc = createTRPCProxyClient<AppRouter>({
   links: [
     httpBatchLink({
       url: API_CONFIG.baseURL,
       fetch: async (input, init) => {
+        if (!String(input).includes('company.getCreditCount')) emitter.emit('creditsMaybeChanged');
+
         return fetch(input, {
-          ...init,
+          ...(init as RequestInit),
           credentials: 'include',
         });
       },

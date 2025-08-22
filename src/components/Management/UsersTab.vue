@@ -203,7 +203,7 @@ const userForm = reactive({
   password: { rules: passwordRules, value: '' },
   passwordAgain: { rules: passwordRules, value: '' },
   phone: { rules: phoneRules, value: '' },
-  role: { rules: [noEmptyRule], value: selectedUser.value?.role ?? 'user' },
+  role: { rules: [noEmptyRule], value: selectedUser.value?.role || 'user' },
   userCompanies: {
     rules: [noEmptyArrayRule],
     value: selectedUser.value?.companies ?? ([] as number[]),

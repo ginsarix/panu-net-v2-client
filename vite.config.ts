@@ -5,6 +5,7 @@ import { URL, fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import vueDevTools from 'vite-plugin-vue-devtools';
 import vuetify from 'vite-plugin-vuetify';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,7 +16,11 @@ export default defineConfig({
     vue(),
     vuetify({ autoImport: true }),
     vueDevTools(),
+    visualizer({ open: true }),
   ],
+    build: {
+    target: 'esnext', // <-- this enables top-level await
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

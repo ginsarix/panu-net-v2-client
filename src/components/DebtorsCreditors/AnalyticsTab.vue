@@ -5,11 +5,9 @@ import { use } from 'echarts/core';
 import { CanvasRenderer } from 'echarts/renderers';
 import type { ECBasicOption } from 'echarts/types/dist/shared';
 import { storeToRefs } from 'pinia';
-import { computed, provide, ref, watch } from 'vue';
+import { computed, provide, ref } from 'vue';
 import VChart, { THEME_KEY } from 'vue-echarts';
 
-import { useSelectedCompany } from '@/composables/useSelectedCompany';
-import { useCompaniesStore } from '@/stores/companies';
 import { useCreditorsStore } from '@/stores/creditors.ts';
 import { useDebtorsStore } from '@/stores/debtors.ts';
 
@@ -25,39 +23,6 @@ const creditorsStore = useCreditorsStore();
 
 const { debtors } = storeToRefs(debtorsStore);
 const { creditors } = storeToRefs(creditorsStore);
-
-const companiesStore = useCompaniesStore();
-const { selectedPeriodCode } = storeToRefs(companiesStore);
-
-const { selectedCompany, loading: companyLoading } = useSelectedCompany();
-
-watch([selectedCompany, selectedPeriodCode], async ([newSelectedCompany, newSelectedPeriod]) => {
-  if (newSelectedCompany || newSelectedPeriod) await Promise.all([loadCreditors(), loadDebtors()]);
-});
-
-const loadCreditors = async () => {
-  if (!selectedCompany.value) return;
-
-  try {
-    await creditorsStore.loadCreditors({
-      companyCode: selectedCompany.value.code,
-    });
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-const loadDebtors = async () => {
-  if (!selectedCompany.value) return;
-
-  try {
-    await debtorsStore.loadDebtors({
-      companyCode: selectedCompany.value.code,
-    });
-  } catch (error) {
-    console.error(error);
-  }
-};
 
 const totalDebtorBalance = computed(() =>
   debtors.value.map((d) => d.balance).reduce((a, b) => a + b, 0),
@@ -105,7 +70,7 @@ const option = ref<ECBasicOption>({
 </script>
 
 <template>
-  <v-chart :loading="loading || companyLoading" class="chart" :option="option" />
+  <v-chart :loading="loading" class="chart" :option="option" />
 </template>
 
 <style scoped>

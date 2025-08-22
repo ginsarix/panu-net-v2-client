@@ -5,11 +5,14 @@ import { computed, ref, watch } from 'vue';
 
 import GixTogglerMenu from '@/components/GixTogglerMenu.vue';
 import { useSelectedCompany } from '@/composables/useSelectedCompany';
+import { useAsyncGateStore } from '@/stores/async-gate';
 import { useCompaniesStore } from '@/stores/companies';
 import { useDebtorsStore } from '@/stores/debtors.ts';
 import { useDisplayStore } from '@/stores/display.ts';
 import { useSnackbarStore } from '@/stores/snackbar';
 import type { DataTableHeaders } from '@/types/data-table-headers.ts';
+
+const asyncGateStore = useAsyncGateStore();
 
 const { mobile } = storeToRefs(useDisplayStore());
 
@@ -24,9 +27,16 @@ const { selectedCompany, loading } = useSelectedCompany();
 const snackbarStore = useSnackbarStore();
 const { snackbar, snackbarError, snackbarText } = storeToRefs(snackbarStore);
 
-watch([selectedCompany, selectedPeriodCode], async ([newSelectedCompany, newSelectedPeriod]) => {
-  if (newSelectedCompany || newSelectedPeriod) await loadDebtors();
-});
+watch(
+  [selectedCompany, selectedPeriodCode],
+  async ([newSelectedCompany, newSelectedPeriod]) => {
+    if (newSelectedCompany || newSelectedPeriod) {
+      await asyncGateStore.promise;
+      await loadDebtors();
+    }
+  },
+  { immediate: true },
+);
 
 const loadDebtors = async () => {
   if (!selectedCompany.value) return;

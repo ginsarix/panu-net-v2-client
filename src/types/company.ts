@@ -2,7 +2,7 @@ import type { CreateUpdateDate } from '@/types/create-update-date.ts';
 
 export interface Company extends Partial<CreateUpdateDate> {
   id?: number;
-  code: number;
+  code: string;
   name: string;
   manager: string;
   phone?: string | null;

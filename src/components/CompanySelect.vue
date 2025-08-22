@@ -15,10 +15,12 @@ import PeriodSelector from './PeriodSelector.vue';
 
 const asyncGate = useAsyncGateStore();
 
-const { appOptions } = storeToRefs(useAppOptionsStore());
+const appOptionsStore = useAppOptionsStore();
+const { appOptions } = storeToRefs(appOptionsStore);
 
 const companiesStore = useCompaniesStore();
-const { companies, selectedCompanyId } = storeToRefs(companiesStore);
+const { companies, creditCount, creditCountLoading, selectedCompanyId } =
+  storeToRefs(companiesStore);
 
 const snackbarStore = useSnackbarStore();
 const { snackbar, snackbarText, snackbarError } = storeToRefs(snackbarStore);
@@ -128,10 +130,20 @@ watchDebounced(
     max-width="250"
   >
     <template #item="{ props: itemProps, item }">
-      <v-list-item v-bind="itemProps" :subtitle="item.raw.code" /> </template
+      <v-list-item
+        v-bind="itemProps"
+        :subtitle="`${item.raw.webServiceSource.replace('https://', '')}`"
+      /> </template
   ></v-select>
 
   <v-expand-x-transition v-show="selectedCompanyIdPassthrough">
     <PeriodSelector class="mt-1 me-3" />
+  </v-expand-x-transition>
+  <v-expand-x-transition v-show="selectedCompanyIdPassthrough">
+    <span class="text-overline mt-3 me-3 text-no-wrap">
+      Kontör:
+      <v-progress-circular v-if="creditCountLoading" size="20" indeterminate />
+      <span v-else>{{ creditCount }}</span>
+    </span>
   </v-expand-x-transition>
 </template>

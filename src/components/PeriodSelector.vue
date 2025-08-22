@@ -1,28 +1,28 @@
 <script setup lang="ts">
-import { watchDebounced } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import { ref } from 'vue';
 
 import { setSelectedPeriod } from '@/services/api/companies';
+import { useAsyncGateStore } from '@/stores/async-gate';
 import { useCompaniesStore } from '@/stores/companies';
+
+const asyncGateStore = useAsyncGateStore();
 
 const companiesStore = useCompaniesStore();
 const { periods, selectedPeriodCode } = storeToRefs(companiesStore);
 
-watchDebounced(
-  selectedPeriodCode,
-  async (newValue) => {
-    try {
-      if (newValue === undefined) return;
+watch(selectedPeriodCode, async (newValue) => {
+  try {
+    asyncGateStore.reset();
 
-      await setSelectedPeriod(newValue);
-    } catch (error) {
-      console.error(error);
-    }
-  },
-  { debounce: 300 },
-);
+    await setSelectedPeriod(newValue);
+
+    asyncGateStore.markReady();
+  } catch (error) {
+    console.error(error);
+  }
+});
 
 const periodSelectorText = computed(() =>
   !selectedPeriodCode.value ? 'Dönem Seç' : `Dönem: ${selectedPeriodCode.value}`,
@@ -38,25 +38,29 @@ const dialog = ref(false);
       periodSelectorText
     }}</v-btn>
 
-    <v-dialog v-model="dialog" max-width="600">
+    <v-dialog v-model="dialog" max-width="500">
       <v-card rounded="lg">
         <v-card-text>
           <v-item-group v-model="selectedPeriodCode" selected-class="bg-primary" mandatory>
             <v-container>
               <v-row>
-                <v-col cols="6" v-for="period in periods" :key="period.code">
+                <v-col cols="12" sm="6" v-for="period in periods" :key="period.code">
                   <v-item v-slot="{ selectedClass, toggle }" :value="period.code">
                     <v-card
                       :class="['d-flex align-center mb-3', selectedClass]"
-                      height="200"
+                      height="120"
                       rounded="lg"
                       variant="outlined"
                       @click="toggle"
                     >
                       <div class="flex-grow-1 text-center">
-                        <span class="text-h4"> Dönem {{ period.code }} </span>
+                        <span class="text-h6"> Dönem {{ period.code }} </span>
                         <v-spacer />
-                        <span> {{ period.startDate }} — {{ period.endDate }} </span>
+                        <span class="text-body-2">
+                          {{ period.startDate }}
+                          —
+                          {{ period.endDate }}
+                        </span>
                       </div>
                     </v-card>
                   </v-item>
