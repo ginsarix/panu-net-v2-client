@@ -17,7 +17,6 @@ import {
 } from '@/services/api/companies.ts';
 import { useCompaniesStore } from '@/stores/companies.ts';
 import { useDisplayStore } from '@/stores/display.ts';
-import { useAppOptionsStore } from '@/stores/options.ts';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { ActionMode } from '@/types/action-mode.ts';
 import type { Company } from '@/types/company.ts';
@@ -28,9 +27,6 @@ import { noEmptyRule, phoneRules } from '@/types/validations.ts';
 import { formatDateTime } from '@/utils/formatting.ts';
 
 import GixRefreshButton from '../GixRefreshButton.vue';
-
-const appOptionsStore = useAppOptionsStore();
-const { appOptions } = storeToRefs(appOptionsStore);
 
 const { mobile } = storeToRefs(useDisplayStore());
 
@@ -186,17 +182,13 @@ const dialogErrorMessage = ref('');
 
 const companiesLoaded = ref(false);
 
-const loadCompanies = async (options?: CompanyServerDataTableOptions, giveCacheFeedback = true) => {
-  const cacheFeedbackPreference = appOptions.value.giveCacheFeedback;
-  appOptions.value.giveCacheFeedback = giveCacheFeedback;
+const loadCompanies = async (options?: CompanyServerDataTableOptions) => {
   try {
     await companiesStore.loadCompanies(options);
   } catch (error) {
     console.error(error);
   } finally {
     companiesLoaded.value = true;
-
-    appOptions.value.giveCacheFeedback = cacheFeedbackPreference;
   }
 };
 
@@ -316,7 +308,7 @@ const infoDialog = ref(false);
 <template>
   <v-data-table-server
     v-model="selectedCompanyIds"
-    @update:options="(options) => loadCompanies(options, false)"
+    @update:options="loadCompanies"
     :headers="includedDataTableHeaders"
     :items-length="totalCompaniesCount"
     :items="companies"

@@ -135,7 +135,19 @@ const loginout = async () => {
             title="Görev Takibi"
           />
         </template>
-        <v-list-item rounded="xl" prepend-icon="mdi-web" title="Domain" />
+
+        <v-list-item
+          rounded="xl"
+          prepend-icon="mdi-cash-multiple"
+          title="Abonelikler"
+          to="/task-tracking/subscriptions"
+        />
+        <v-list-item
+          rounded="xl"
+          prepend-icon="mdi-account-cash"
+          title="Müşteriler"
+          to="/task-tracking/customers"
+        />
       </v-list-group>
 
       <v-list-group value="Management">

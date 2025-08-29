@@ -8,15 +8,11 @@ import { setSelectedCompany } from '@/services/api/companies.ts';
 import emitter from '@/services/service-bus.ts';
 import { useAsyncGateStore } from '@/stores/async-gate';
 import { useCompaniesStore } from '@/stores/companies.ts';
-import { useAppOptionsStore } from '@/stores/options.ts';
 import { useSnackbarStore } from '@/stores/snackbar.ts';
 
 import PeriodSelector from './PeriodSelector.vue';
 
 const asyncGate = useAsyncGateStore();
-
-const appOptionsStore = useAppOptionsStore();
-const { appOptions } = storeToRefs(appOptionsStore);
 
 const companiesStore = useCompaniesStore();
 const { companies, creditCount, creditCountLoading, selectedCompanyId } =
@@ -31,18 +27,12 @@ const noDataText = ref('Şirketler bulunamadı');
 
 const skipWatch = ref(false);
 
-const loadCompanies = async (giveCacheFeedback = true) => {
-  const cacheFeedbackPreference = appOptions.value.giveCacheFeedback;
-  appOptions.value.giveCacheFeedback = giveCacheFeedback;
-
+const loadCompanies = async () => {
   try {
-    appOptions.value.giveCacheFeedback = false;
     await companiesStore.loadCompanies();
   } catch (error) {
     noDataText.value = 'Beklenmedik birşey oldu.';
     console.error(error);
-  } finally {
-    appOptions.value.giveCacheFeedback = cacheFeedbackPreference;
   }
 };
 
@@ -60,7 +50,7 @@ const loadSelectedCompanyId = async () => {
 };
 
 onMounted(async () => {
-  await loadCompanies(false);
+  await loadCompanies();
   await loadSelectedCompanyId();
   selectedCompanyIdPassthrough.value = selectedCompanyId.value;
 });

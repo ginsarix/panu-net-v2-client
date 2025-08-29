@@ -15,7 +15,6 @@ import {
 } from '@/services/api/users.ts';
 import { useCompaniesStore } from '@/stores/companies';
 import { useDisplayStore } from '@/stores/display.ts';
-import { useAppOptionsStore } from '@/stores/options.ts';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useUsersStore } from '@/stores/users.ts';
 import { ActionMode } from '@/types/action-mode.ts';
@@ -33,9 +32,6 @@ import { formatDateTime } from '@/utils/formatting.ts';
 import GixRefreshButton from '../GixRefreshButton.vue';
 
 const { mobile } = storeToRefs(useDisplayStore());
-
-const appOptionsStore = useAppOptionsStore();
-const { appOptions } = storeToRefs(appOptionsStore);
 
 const usersStore = useUsersStore();
 const { users, totalUsersCount } = storeToRefs(usersStore);
@@ -74,17 +70,13 @@ watch(currentMode, (newValue) => {
 
 const usersLoaded = ref(false);
 
-const loadUsers = async (options?: UserServerDataTableOptions, giveCacheFeedback = true) => {
-  const cacheFeedbackPreference = appOptions.value.giveCacheFeedback;
-  appOptions.value.giveCacheFeedback = giveCacheFeedback;
+const loadUsers = async (options?: UserServerDataTableOptions) => {
   try {
     await usersStore.loadUsers(options);
   } catch (error) {
     console.error(error);
   } finally {
     usersLoaded.value = true;
-
-    appOptions.value.giveCacheFeedback = cacheFeedbackPreference;
   }
 };
 
@@ -106,8 +98,6 @@ const dialogSubmit = async () => {
     };
   };
 
-  const willUpdateNextRefreshText = 'Sonraki güncellemede yenilenecektir';
-
   try {
     switch (currentMode.value) {
       case ActionMode.Create:
@@ -115,14 +105,12 @@ const dialogSubmit = async () => {
 
         const createPasswordConfirmed = user.password === userForm.passwordAgain.value;
         if (createPasswordConfirmed) {
-          await createUser(user);
-
-          const latestUserId = users.value[0].id;
+          const response = await createUser(user);
 
           const displayUser = {
             ...user,
-            id: latestUserId ? latestUserId + 1 : latestUserId,
-            creationDate: willUpdateNextRefreshText,
+            id: response.id,
+            creationDate: response.creationDate,
           };
           usersStore.addUserToList(displayUser, true);
         }
@@ -135,12 +123,12 @@ const dialogSubmit = async () => {
 
         if (!editPasswordConfirmed) return;
 
-        await patchUser(selectedUser.value.id, editedUser);
+        const { updatedOn } = await patchUser(selectedUser.value.id, editedUser);
 
         const displayedEditedUser = {
           ...selectedUser.value,
           ...Object.fromEntries(Object.entries(editedUser).filter(([, v]) => v !== '')),
-          updatedOn: willUpdateNextRefreshText,
+          updatedOn,
         };
         usersStore.updateUserById(selectedUser.value.id, displayedEditedUser);
         break;
@@ -286,7 +274,7 @@ const editFormValid = computed(
 <template>
   <v-data-table-server
     v-model="selectedUserIds"
-    @update:options="(options) => loadUsers(options, false)"
+    @update:options="loadUsers"
     :headers="includedDataTableHeaders"
     :items-length="totalUsersCount"
     :items="users"

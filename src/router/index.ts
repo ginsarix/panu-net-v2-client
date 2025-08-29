@@ -5,11 +5,14 @@ import CreditorsTab from '@/components/DebtorsCreditors/CreditorsTab.vue';
 import DebtorsTab from '@/components/DebtorsCreditors/DebtorsTab.vue';
 import CompaniesTab from '@/components/Management/CompaniesTab.vue';
 import UsersTab from '@/components/Management/UsersTab.vue';
+import CustomersTab from '@/components/TaskTracking/CustomersTab.vue';
+import SubscriptionsTab from '@/components/TaskTracking/SubscriptionsTab.vue';
 import { pinia } from '@/plugins/pinia';
 import { useCurrentUserStore } from '@/stores/current-user';
 import DebtorsCreditorsView from '@/views/DebtorsCreditorsView.vue';
 import LoginView from '@/views/LoginView.vue';
 import ManagementView from '@/views/ManagementView.vue';
+import TaskTrackingView from '@/views/TaskTrackingView.vue';
 
 import HomeView from '../views/HomeView.vue';
 
@@ -35,6 +38,20 @@ const router = createRouter({
         {
           path: 'creditors',
           component: CreditorsTab,
+        },
+      ],
+    },
+    {
+      path: '/task-tracking',
+      component: TaskTrackingView,
+      children: [
+        {
+          path: 'subscriptions',
+          component: SubscriptionsTab,
+        },
+        {
+          path: 'customers',
+          component: CustomersTab,
         },
       ],
     },
