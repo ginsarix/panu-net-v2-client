@@ -32,3 +32,5 @@ coverage
 *.csr
 *.key
 *.crt
+
+stats.html

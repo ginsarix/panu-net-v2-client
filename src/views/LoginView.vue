@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { TRPCClientError } from '@trpc/client';
+import { storeToRefs } from 'pinia';
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { VIconBtn } from 'vuetify/labs/components';
 
-import { login, verifyEmail } from '@/services/api/auth';
+import GixCountdown from '@/components/GixCountdown.vue';
+import { login, resetPassword, verifyEmail, verifyPasswordReset } from '@/services/api/auth';
 import { useCurrentUserStore } from '@/stores/current-user';
+import { useSnackbarStore } from '@/stores/snackbar';
 import { emailRules, passwordRules } from '@/types/validations.ts';
 
 const currentUserStore = useCurrentUserStore();
@@ -14,6 +17,7 @@ const email = ref('');
 const password = ref('');
 const otpIdentifier = ref('');
 const otp = ref('');
+const otpTtl = ref(0);
 const otpValidating = ref(false);
 const otpErrorMessage = ref('');
 
@@ -21,6 +25,11 @@ const showPassword = ref(false);
 const loginSubmitting = ref(false);
 const errorMessage = ref('');
 const formSubmitted = ref(false);
+
+const snackbarStore = useSnackbarStore();
+const { snackbar, snackbarText, snackbarError } = storeToRefs(snackbarStore);
+
+const showPasswordResetModal = ref(false);
 
 const isEmailValid = computed(() => {
   if (!formSubmitted.value && !email.value) return true;
@@ -51,8 +60,10 @@ const submit = async () => {
   try {
     const result = await login(email.value, password.value);
 
-    if ('otpIdentifier' in result) otpIdentifier.value = result.otpIdentifier;
-    else if ('success' in result) {
+    if ('otpIdentifier' in result) {
+      otpIdentifier.value = result.otpIdentifier;
+      otpTtl.value = result.ttl;
+    } else if ('success' in result) {
       await currentUserStore.loadCurrentUser();
 
       await new Promise((resolve) => setTimeout(resolve, 500));
@@ -92,6 +103,55 @@ const resetOtp = () => {
   otp.value = '';
   otpValidating.value = false;
   otpErrorMessage.value = '';
+};
+
+const passwordResetEmail = ref('');
+const newPassword = ref('');
+const showNewPassword = ref(false);
+const passwordResetOtpIdentifier = ref('');
+const passwordResetOtp = ref('');
+const passwordResetOtpTtl = ref(0);
+const passwordResetOtpValidating = ref(false);
+const passwordResetOtpErrorMessage = ref('');
+
+const resetPasswordSubmit = () => {
+  resetPassword(passwordResetEmail.value, newPassword.value)
+    .then(({ otpIdentifier, ttl }) => {
+      passwordResetOtpIdentifier.value = otpIdentifier;
+      passwordResetOtpTtl.value = ttl;
+    })
+    .catch((error) => console.error(error));
+};
+
+const resetPasswordOtpSubmit = async () => {
+  if (!passwordResetOtpIdentifier.value) return;
+
+  try {
+    passwordResetOtpValidating.value = true;
+
+    await verifyPasswordReset(passwordResetOtpIdentifier.value, passwordResetOtp.value);
+
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    resetPasswordResetOtp();
+    showPasswordResetModal.value = false;
+
+    snackbarError.value = false;
+    snackbarText.value = 'Parolanız başarıyla değiştirildi.';
+    snackbar.value = true;
+  } catch (error) {
+    console.error('Password reset OTP submit failed: ', error);
+    if (error instanceof TRPCClientError) passwordResetOtpErrorMessage.value = error.message;
+  } finally {
+    passwordResetOtpValidating.value = false;
+  }
+};
+
+const resetPasswordResetOtp = () => {
+  passwordResetOtpIdentifier.value = '';
+  passwordResetOtp.value = '';
+  passwordResetOtpValidating.value = false;
+  passwordResetOtpErrorMessage.value = '';
 };
 </script>
 
@@ -139,6 +199,9 @@ const resetOtp = () => {
             @click:append-inner="showPassword = !showPassword"
             required
           />
+          <v-btn @click="showPasswordResetModal = true" variant="text" color="blue-lighten-2"
+            >Şifremi unuttum</v-btn
+          >
 
           <div class="d-flex justify-end mt-4">
             <v-btn
@@ -154,6 +217,8 @@ const resetOtp = () => {
           </div>
         </v-form>
         <template v-else>
+          <GixCountdown v-model="otpTtl" />
+
           <v-row no-gutters>
             <v-col cols="12">
               <v-otp-input
@@ -177,4 +242,63 @@ const resetOtp = () => {
       </v-card-text>
     </v-card>
   </div>
+
+  <v-dialog v-model="showPasswordResetModal" max-width="450">
+    <v-form @submit.prevent="resetPasswordSubmit">
+      <v-card prepend-icon="mdi-lock-reset" :title="'Parolanı sıfırla'" rounded="lg">
+        <v-card-text>
+          <template v-if="!passwordResetOtpIdentifier">
+            <v-text-field
+              v-model="passwordResetEmail"
+              variant="outlined"
+              prepend-inner-icon="mdi-email"
+              label="E-posta"
+              class="mb-3"
+              :rules="emailRules"
+              autocomplete="email"
+              required
+            />
+
+            <v-text-field
+              v-model="newPassword"
+              variant="outlined"
+              prepend-inner-icon="mdi-lock"
+              :append-inner-icon="showNewPassword ? 'mdi-eye-off' : 'mdi-eye'"
+              :type="showNewPassword ? 'text' : 'password'"
+              label="Yeni Şifre"
+              :rules="passwordRules"
+              autocomplete="current-password"
+              @click:append-inner="showNewPassword = !showNewPassword"
+              required
+            />
+          </template>
+          <template v-else>
+            <GixCountdown v-model="passwordResetOtpTtl" />
+
+            <v-row no-gutters>
+              <v-col cols="12">
+                <v-otp-input
+                  v-model="passwordResetOtp"
+                  @finish="resetPasswordOtpSubmit"
+                  :loading="passwordResetOtpValidating"
+                  :error="!!passwordResetOtpErrorMessage"
+                />
+              </v-col>
+              <v-col cols="12" class="text-center">
+                <span class="text-h6 text-error">{{ passwordResetOtpErrorMessage }}</span>
+              </v-col>
+            </v-row>
+            <p class="text-medium-emphasis">
+              E-postanıza 6 haneli bir kod gönderildi, parolanızı sıfırlamaya devam etmek için gelen
+              kutunuza veya spam klasörüne gelen kodu doğrulayınız.
+            </p>
+          </template>
+        </v-card-text>
+
+        <v-card-actions>
+          <v-btn type="submit" append-icon="mdi-chevron-right">Devam</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-form>
+  </v-dialog>
 </template>

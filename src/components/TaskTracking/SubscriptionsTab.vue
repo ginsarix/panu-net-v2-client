@@ -154,7 +154,7 @@ const editFormValid = computed(() =>
 const dialogSubmit = async () => {
   isSubmitting.value = true;
 
-  // Only local remove for now
+  // only local remove for now
   if (selectedSubscriptionIds.value.length && currentMode.value === ActionMode.Delete) {
     subscriptionsStore.removeSubscriptionsById(selectedSubscriptionIds.value);
     await loadSubscriptions();

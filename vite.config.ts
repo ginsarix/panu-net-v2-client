@@ -5,21 +5,15 @@ import { URL, fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import vueDevTools from 'vite-plugin-vue-devtools';
 import vuetify from 'vite-plugin-vuetify';
-import { visualizer } from 'rollup-plugin-visualizer';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [
-    vue(),
-    vuetify({ autoImport: true }),
-    vueDevTools(),
-    visualizer({ open: true }),
-  ],
-    build: {
-    target: 'esnext', // <-- this enables top-level await
+  plugins: [vue(), vuetify({ autoImport: true }), vueDevTools()],
+  build: {
+    target: 'esnext',
   },
   resolve: {
     alias: {
