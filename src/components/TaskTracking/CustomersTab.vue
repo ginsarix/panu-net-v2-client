@@ -39,13 +39,12 @@ const loadCustomers = async (options?: SubscriptionCustomerServerDataTableOption
 };
 
 const selectedCustomer = ref<SubscriptionCustomer | null>(null);
-const selectedCustomerIds = ref<number[]>([]);
 
 const currentMode = ref(ActionMode.Idle);
 const showCrudDialog = computed(() => {
   if (currentMode.value === ActionMode.Idle) return false;
   if (currentMode.value === ActionMode.Create) return true;
-  return !!(selectedCustomer.value || selectedCustomerIds.value.length);
+  return !!selectedCustomer.value;
 });
 
 watch(currentMode, (newValue) => {
@@ -134,15 +133,6 @@ const editFormValid = computed(() =>
 
 const dialogSubmit = async () => {
   isSubmitting.value = true;
-
-  // only local remove for now
-  if (selectedCustomerIds.value.length && currentMode.value === ActionMode.Delete) {
-    subscriptionCustomersStore.removeSubscriptionCustomersById(selectedCustomerIds.value);
-    await loadCustomers();
-    isSubmitting.value = false;
-    currentMode.value = ActionMode.Idle;
-    return;
-  }
 
   const formCustomer = () => ({
     customerCode: customerForm.customerCode.value,

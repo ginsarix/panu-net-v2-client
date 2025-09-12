@@ -52,13 +52,12 @@ const loadSubscriptions = async (options?: SubscriptionServerDataTableOptions) =
 };
 
 const selectedSubscription = ref<Subscription | null>(null);
-const selectedSubscriptionIds = ref<number[]>([]);
 
 const currentMode = ref(ActionMode.Idle);
 const showCrudDialog = computed(() => {
   if (currentMode.value === ActionMode.Idle) return false;
   if (currentMode.value === ActionMode.Create) return true;
-  return !!(selectedSubscription.value || selectedSubscriptionIds.value.length);
+  return !!selectedSubscription.value;
 });
 
 watch(currentMode, (newValue) => {
@@ -157,15 +156,6 @@ const editFormValid = computed(() =>
 
 const dialogSubmit = async () => {
   isSubmitting.value = true;
-
-  // only local remove for now
-  if (selectedSubscriptionIds.value.length && currentMode.value === ActionMode.Delete) {
-    subscriptionsStore.removeSubscriptionsById(selectedSubscriptionIds.value);
-    await loadSubscriptions();
-    isSubmitting.value = false;
-    currentMode.value = ActionMode.Idle;
-    return;
-  }
 
   const formSubscription = () => ({
     startDate: subscriptionForm.startDate.value,
