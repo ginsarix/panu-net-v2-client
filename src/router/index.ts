@@ -1,20 +1,20 @@
 import { storeToRefs } from 'pinia';
 import { createRouter, createWebHashHistory } from 'vue-router';
 
-import CreditorsTab from '@/components/DebtorsCreditors/CreditorsTab.vue';
-import DebtorsTab from '@/components/DebtorsCreditors/DebtorsTab.vue';
-import CompaniesTab from '@/components/Management/CompaniesTab.vue';
-import UsersTab from '@/components/Management/UsersTab.vue';
-import CustomersTab from '@/components/TaskTracking/CustomersTab.vue';
-import SubscriptionsTab from '@/components/TaskTracking/SubscriptionsTab.vue';
 import { pinia } from '@/plugins/pinia';
 import { useCurrentUserStore } from '@/stores/current-user';
-import DebtorsCreditorsView from '@/views/DebtorsCreditorsView.vue';
-import LoginView from '@/views/LoginView.vue';
-import ManagementView from '@/views/ManagementView.vue';
-import TaskTrackingView from '@/views/TaskTrackingView.vue';
 
-import HomeView from '../views/HomeView.vue';
+const CreditorsTab = () => import('@/components/DebtorsCreditors/CreditorsTab.vue');
+const DebtorsTab = () => import('@/components/DebtorsCreditors/DebtorsTab.vue');
+const CompaniesTab = () => import('@/components/Management/CompaniesTab.vue');
+const UsersTab = () => import('@/components/Management/UsersTab.vue');
+const CustomersTab = () => import('@/components/TaskTracking/CustomersTab.vue');
+const SubscriptionsTab = () => import('@/components/TaskTracking/SubscriptionsTab.vue');
+const DebtorsCreditorsView = () => import('@/views/DebtorsCreditorsView.vue');
+const LoginView = () => import('@/views/LoginView.vue');
+const ManagementView = () => import('@/views/ManagementView.vue');
+const TaskTrackingView = () => import('@/views/TaskTrackingView.vue');
+const HomeView = () => import('../views/HomeView.vue');
 
 const router = createRouter({
   history: createWebHashHistory(),
