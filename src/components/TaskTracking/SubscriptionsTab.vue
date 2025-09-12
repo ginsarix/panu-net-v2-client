@@ -7,7 +7,11 @@ import { reactive } from 'vue';
 import { VDateInput, VIconBtn } from 'vuetify/labs/components';
 
 import type { SubscriptionServerDataTableOptions } from '@/services/api/subscriptions';
-import { createSubscription } from '@/services/api/subscriptions';
+import {
+  createSubscription,
+  deleteSubscription,
+  patchSubscription,
+} from '@/services/api/subscriptions';
 import { useDisplayStore } from '@/stores/display';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useSubscriptionCustomersStore } from '@/stores/subscription-customers';
@@ -174,25 +178,41 @@ const dialogSubmit = async () => {
     switch (currentMode.value) {
       case ActionMode.Create:
         const subscription = formSubscription();
-        const response = await createSubscription(subscription);
+        const createResponse = await createSubscription(subscription);
 
-        const displaySubscription = {
+        const displaySubscription: Subscription = {
           ...subscription,
-          id: response.id,
-          creationDate: response.creationDate,
+          id: createResponse.id,
+          creationDate: createResponse.creationDate,
         };
 
         subscriptionsStore.addSubscriptionToList(displaySubscription, true);
         break;
       case ActionMode.Edit:
         if (!selectedSubscription.value?.id) return;
+
+        const editSubscription = formSubscription();
+
+        const editResponse = await patchSubscription(
+          selectedSubscription.value.id,
+          editSubscription,
+        );
+
+        const displayEditedSubscription: Omit<Subscription, 'id'> = {
+          ...editSubscription,
+          updatedOn: editResponse.updatedOn,
+        };
+
         subscriptionsStore.updateSubscriptionById(
           selectedSubscription.value.id,
-          formSubscription(),
+          displayEditedSubscription,
         );
         break;
       case ActionMode.Delete:
         if (!selectedSubscription.value?.id) return;
+
+        await deleteSubscription(selectedSubscription.value.id);
+
         subscriptionsStore.removeSubscriptionsById([selectedSubscription.value.id]);
         break;
       case ActionMode.Idle:

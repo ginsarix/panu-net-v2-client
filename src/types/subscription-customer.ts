@@ -1,4 +1,6 @@
-export interface SubscriptionCustomer {
+import type { CreateUpdateDate } from './create-update-date';
+
+export interface SubscriptionCustomer extends Partial<CreateUpdateDate> {
   id: number;
   customerCode: number | null;
   title: string;
@@ -7,5 +9,4 @@ export interface SubscriptionCustomer {
   address: string | null;
   status: boolean;
   manager: string | null;
-  creationDate: string;
 }

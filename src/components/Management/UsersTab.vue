@@ -124,7 +124,7 @@ const dialogSubmit = async () => {
 
         const { updatedOn } = await patchUser(selectedUser.value.id, editedUser);
 
-        const displayedEditedUser = {
+        const displayedEditedUser: User = {
           ...selectedUser.value,
           ...Object.fromEntries(Object.entries(editedUser).filter(([, v]) => v !== '')),
           updatedOn,

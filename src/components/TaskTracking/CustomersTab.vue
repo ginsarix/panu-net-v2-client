@@ -4,7 +4,11 @@ import { computed, reactive, ref, watch } from 'vue';
 import { VIconBtn, VMaskInput } from 'vuetify/labs/components';
 
 import type { SubscriptionCustomerServerDataTableOptions } from '@/services/api/subscription-customers';
-import { createSubscriptionCustomer } from '@/services/api/subscription-customers';
+import {
+  createSubscriptionCustomer,
+  deleteSubscriptionCustomer,
+  patchSubscriptionCustomer,
+} from '@/services/api/subscription-customers';
 import { useDisplayStore } from '@/stores/display';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useSubscriptionCustomersStore } from '@/stores/subscription-customers';
@@ -157,7 +161,7 @@ const dialogSubmit = async () => {
 
         const response = await createSubscriptionCustomer(customer);
 
-        const displaySubscriptionCustomer = {
+        const displaySubscriptionCustomer: SubscriptionCustomer = {
           ...customer,
           id: response.id,
           creationDate: response.creationDate,
@@ -167,13 +171,29 @@ const dialogSubmit = async () => {
         break;
       case ActionMode.Edit:
         if (!selectedCustomer.value?.id) return;
+
+        const editCustomer = formCustomer();
+
+        const editResponse = await patchSubscriptionCustomer(
+          selectedCustomer.value.id,
+          editCustomer,
+        );
+
+        const displayEditedSubscriptionCustomer: Omit<SubscriptionCustomer, 'id'> = {
+          ...editCustomer,
+          updatedOn: editResponse.updatedOn,
+        };
+
         subscriptionCustomersStore.updateSubscriptionCustomerById(
           selectedCustomer.value.id,
-          formCustomer(),
+          displayEditedSubscriptionCustomer,
         );
         break;
       case ActionMode.Delete:
         if (!selectedCustomer.value?.id) return;
+
+        await deleteSubscriptionCustomer(selectedCustomer.value.id);
+
         subscriptionCustomersStore.removeSubscriptionCustomersById([selectedCustomer.value.id]);
         break;
       case ActionMode.Idle:

@@ -14,14 +14,21 @@ export type SubscriptionCustomerServerDataTableOptions =
 
 export const getSubscriptionCustomers = async (
   options?: SubscriptionCustomerServerDataTableOptions,
-) => {
-  return await trpc.subscriptionCustomer.getSubscriptionCustomers.query(options ?? {});
-};
+) => await trpc.subscriptionCustomer.getSubscriptionCustomers.query(options ?? {});
 
 export type CreateSubscriptionCustomerInput = Parameters<
   typeof trpc.subscriptionCustomer.createSubscriptionCustomer.mutate
 >[0];
 
-export const createSubscriptionCustomer = async (input: CreateSubscriptionCustomerInput) => {
-  return await trpc.subscriptionCustomer.createSubscriptionCustomer.mutate(input);
-};
+export const createSubscriptionCustomer = async (input: CreateSubscriptionCustomerInput) =>
+  await trpc.subscriptionCustomer.createSubscriptionCustomer.mutate(input);
+
+export type UpdateSubscriptionCustomerInput = Partial<CreateSubscriptionCustomerInput>;
+
+export const patchSubscriptionCustomer = async (
+  id: number,
+  input: UpdateSubscriptionCustomerInput,
+) => await trpc.subscriptionCustomer.updateSubscriptionCustomer.mutate({ id, data: input });
+
+export const deleteSubscriptionCustomer = async (id: number) =>
+  await trpc.subscriptionCustomer.deleteSubscriptionCustomer.mutate({ id });
