@@ -12,6 +12,7 @@ import {
   deleteSubscription,
   patchSubscription,
 } from '@/services/api/subscriptions';
+import { cleanPayload } from '@/services/trpc';
 import { useDisplayStore } from '@/stores/display';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useSubscriptionCustomersStore } from '@/stores/subscription-customers';
@@ -20,6 +21,7 @@ import { ActionMode } from '@/types/action-mode';
 import type { DataTableHeaders } from '@/types/data-table-headers';
 import type { Subscription } from '@/types/subscription';
 import { noEmptyRule } from '@/types/validations';
+import { formatDateTime } from '@/utils/formatting';
 
 import GixRefreshButton from '../GixRefreshButton.vue';
 import GixTogglerMenu from '../GixTogglerMenu.vue';
@@ -189,7 +191,8 @@ const dialogSubmit = async () => {
         );
 
         const displayEditedSubscription: Omit<Subscription, 'id'> = {
-          ...editSubscription,
+          ...selectedSubscription.value,
+          ...cleanPayload(editSubscription),
           updatedOn: editResponse.updatedOn,
         };
 
@@ -263,14 +266,11 @@ const dialogSubmit = async () => {
       </v-toolbar>
     </template>
 
-    <template #[`item.subscriptionType`]="{ item }">
-      {{ item.subscriptionType }}
-    </template>
     <template #[`item.startDate`]="{ item }">
-      {{ item.startDate }}
+      {{ formatDateTime(item.startDate, 'dd.MM.yyyy') }}
     </template>
     <template #[`item.endDate`]="{ item }">
-      {{ item.endDate }}
+      {{ formatDateTime(item.endDate, 'dd.MM.yyyy') }}
     </template>
     <template #[`item.userId`]="{ item }">
       <v-chip>{{ subscriptionCustomers.find((sc) => sc.id === item.userId)?.title }}</v-chip>

@@ -15,6 +15,7 @@ import {
   deleteCompany,
   patchCompany,
 } from '@/services/api/companies.ts';
+import { cleanPayload } from '@/services/trpc';
 import { useCompaniesStore } from '@/stores/companies.ts';
 import { useDisplayStore } from '@/stores/display.ts';
 import { useSnackbarStore } from '@/stores/snackbar';
@@ -247,7 +248,7 @@ const dialogSubmit = async (inputProperties: InputProperties[]) => {
 
         const displayedEditedCompany = {
           ...selectedCompany.value,
-          ...Object.fromEntries(Object.entries(editedCompany).filter(([, v]) => v !== '')),
+          ...cleanPayload(editedCompany),
           updatedOn: willUpdateNextRefreshText,
         };
         companiesStore.updateCompanyById(selectedCompany.value.id, displayedEditedCompany);

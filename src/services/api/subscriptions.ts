@@ -1,6 +1,6 @@
 import type { ServerDataTableOptions } from '@/types/server-data-table-options';
 
-import { trpc } from '../trpc';
+import { cleanPayload, trpc } from '../trpc';
 
 export type SubscriptionSortKeys = 'creationDate' | 'startDate' | 'endDate' | 'subscriptionType';
 export type SubscriptionServerDataTableOptions = ServerDataTableOptions<SubscriptionSortKeys>;
@@ -17,8 +17,10 @@ export const createSubscription = async (input: CreateSubscriptionInput) =>
 
 export type UpdateSubscriptionInput = Partial<CreateSubscriptionInput>;
 
-export const patchSubscription = async (id: number, input: UpdateSubscriptionInput) =>
-  await trpc.subscription.updateSubscription.mutate({ id, data: input });
+export const patchSubscription = async (id: number, input: UpdateSubscriptionInput) => {
+  const data = cleanPayload(input, true);
+  return await trpc.subscription.updateSubscription.mutate({ id, data });
+};
 
 export const deleteSubscription = async (id: number) =>
   await trpc.subscription.deleteSubscription.mutate({ id });

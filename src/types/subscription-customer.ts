@@ -1,6 +1,7 @@
 import type { CreateUpdateDate } from './create-update-date';
+import type { Nullish } from './nullish';
 
-export interface SubscriptionCustomer extends Partial<CreateUpdateDate> {
+export interface SubscriptionCustomer extends Nullish<CreateUpdateDate> {
   id: number;
   customerCode: number | null;
   title: string;

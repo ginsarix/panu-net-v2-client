@@ -21,6 +21,10 @@ export const trpc = createTRPCProxyClient<AppRouter>({
   ],
 });
 
-export const cleanPayload = <T extends Record<string, unknown>>(payload: T) => {
-  return Object.fromEntries(Object.entries(payload).filter(([, v]) => v !== ''));
+export const cleanPayload = <T extends Record<string, unknown>>(
+  payload: T,
+  cleanZero: boolean = false,
+) => {
+  const compareFn = (v: unknown) => (!cleanZero ? v !== '' : v !== '' && v !== 0);
+  return Object.fromEntries(Object.entries(payload).filter(([, v]) => compareFn(v))) as Partial<T>;
 };

@@ -9,6 +9,7 @@ import {
   deleteSubscriptionCustomer,
   patchSubscriptionCustomer,
 } from '@/services/api/subscription-customers';
+import { cleanPayload } from '@/services/trpc';
 import { useDisplayStore } from '@/stores/display';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useSubscriptionCustomersStore } from '@/stores/subscription-customers';
@@ -170,7 +171,8 @@ const dialogSubmit = async () => {
         );
 
         const displayEditedSubscriptionCustomer: Omit<SubscriptionCustomer, 'id'> = {
-          ...editCustomer,
+          ...selectedCustomer.value,
+          ...cleanPayload(editCustomer),
           updatedOn: editResponse.updatedOn,
         };
 

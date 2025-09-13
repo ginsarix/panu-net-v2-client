@@ -1,6 +1,8 @@
 import type { CreateUpdateDate } from '@/types/create-update-date.ts';
 
-export interface Company extends Partial<CreateUpdateDate> {
+import type { Nullish } from './nullish';
+
+export interface Company extends Nullish<CreateUpdateDate> {
   id?: number;
   code: string;
   name: string;

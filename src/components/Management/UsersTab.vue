@@ -13,6 +13,7 @@ import {
   deleteUsers,
   patchUser,
 } from '@/services/api/users.ts';
+import { cleanPayload } from '@/services/trpc';
 import { useCompaniesStore } from '@/stores/companies';
 import { useDisplayStore } from '@/stores/display.ts';
 import { useSnackbarStore } from '@/stores/snackbar';
@@ -126,7 +127,7 @@ const dialogSubmit = async () => {
 
         const displayedEditedUser: User = {
           ...selectedUser.value,
-          ...Object.fromEntries(Object.entries(editedUser).filter(([, v]) => v !== '')),
+          ...cleanPayload(editedUser),
           updatedOn,
         };
         usersStore.updateUserById(selectedUser.value.id, displayedEditedUser);
