@@ -42,14 +42,17 @@ const loadCustomers = async (options?: SubscriptionCustomerServerDataTableOption
 const selectedCustomer = ref<SubscriptionCustomer | null>(null);
 
 const currentMode = ref(ActionMode.Idle);
-const showCrudDialog = computed(() => {
-  if (currentMode.value === ActionMode.Idle) return false;
-  if (currentMode.value === ActionMode.Create) return true;
-  return !!selectedCustomer.value;
-});
+const showCrudDialog = ref(false);
 
 watch(currentMode, (newValue) => {
-  if (newValue === ActionMode.Idle) resetForm();
+  if (newValue === ActionMode.Idle) {
+    showCrudDialog.value = false;
+    resetForm();
+  } else if (newValue === ActionMode.Create) {
+    showCrudDialog.value = true;
+  } else {
+    showCrudDialog.value = !!selectedCustomer.value;
+  }
 });
 
 const customersLoaded = ref(false);

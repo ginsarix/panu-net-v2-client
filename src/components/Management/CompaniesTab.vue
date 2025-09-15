@@ -2,7 +2,7 @@
 import { TRPCClientError } from '@trpc/client';
 import { storeToRefs } from 'pinia';
 import { v4 as uuidv4 } from 'uuid';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { VIconBtn } from 'vuetify/labs/components';
 
 import GixCrudDialog from '@/components/GixCrudDialog.vue';
@@ -41,12 +41,16 @@ const selectedCompany = ref<Company | null>(null);
 const selectedCompanyIds = ref<number[]>([]);
 
 const currentMode = ref(ActionMode.Idle);
-const showCrudDialog = computed(() => {
-  if (currentMode.value === ActionMode.Idle) return false;
+const showCrudDialog = ref(false);
 
-  if (currentMode.value === ActionMode.Create) return true;
-
-  return !!(selectedCompany.value || selectedCompanyIds.value.length);
+watch(currentMode, (newValue) => {
+  if (newValue === ActionMode.Idle) {
+    showCrudDialog.value = false;
+  } else if (newValue === ActionMode.Create) {
+    showCrudDialog.value = true;
+  } else {
+    showCrudDialog.value = !!(selectedCompany.value || selectedCompanyIds.value.length);
+  }
 });
 
 const companyInputPropertiesIds = {
