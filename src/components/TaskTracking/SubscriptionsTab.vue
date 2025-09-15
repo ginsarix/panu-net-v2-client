@@ -201,7 +201,7 @@ const dialogSubmit = async () => {
 
         const displayEditedSubscription: Omit<Subscription, 'id'> = {
           ...selectedSubscription.value,
-          ...cleanPayload(editSubscription),
+          ...cleanPayload(editSubscription, true),
           updatedOn: editResponse.updatedOn,
         };
 
