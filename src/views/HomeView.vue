@@ -87,7 +87,7 @@ const totalDebtors = computed(() => debtorsStore.debtors.length);
 const totalCreditors = computed(() => creditorsStore.creditors.length);
 
 const kpis = [
-  { label: 'Şirketler', value: totalCompanies, icon: 'mdi-domain', theme: 'primary' },
+  { label: 'Firmalar', value: totalCompanies, icon: 'mdi-domain', theme: 'primary' },
   { label: 'Kullanıcılar', value: totalUsers, icon: 'mdi-account-group', theme: 'info' },
   {
     label: 'Borçlular',
