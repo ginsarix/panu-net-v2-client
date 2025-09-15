@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 
-import RoleIconsInfo from '@/components/RoleIconsInfo.vue';
 import { useCurrentUserStore } from '@/stores/current-user';
 
 defineProps<{
@@ -18,7 +17,6 @@ const router = useRouter();
 
 const currentUserStore = useCurrentUserStore();
 const { currentUser } = storeToRefs(currentUserStore);
-const dialog = ref(false);
 
 onMounted(async () => {
   try {
@@ -47,15 +45,6 @@ const loginout = async () => {
     <v-list class="pa-2">
       <v-list-item :prepend-icon="userIcon" :title="currentUser?.name" nav>
         <template #append>
-          <v-btn
-            style="opacity: 60%"
-            variant="text"
-            id="role-info-activator"
-            size="small"
-            icon="mdi-information-outline"
-            aria-label="Rol ikonları bilgi menüsünü aç"
-            @click="dialog = true"
-          />
           <v-tooltip :text="`${currentUser ? 'Çıkış' : 'Giriş'} Yap`" location="bottom">
             <template #activator="{ props }">
               <v-btn
@@ -180,6 +169,4 @@ const loginout = async () => {
       </v-list-group>
     </v-list>
   </v-navigation-drawer>
-
-  <RoleIconsInfo activator="#role-info-activator" />
 </template>
