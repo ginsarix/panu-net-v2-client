@@ -59,6 +59,12 @@ const selectedUserIds = ref<number[]>([]);
 const currentMode = ref(ActionMode.Idle);
 const showCrudDialog = ref(false);
 
+watch(showCrudDialog, (newValue) => {
+  if (!newValue && currentMode.value !== ActionMode.Idle) {
+    currentMode.value = ActionMode.Idle;
+  }
+});
+
 watch(currentMode, (newValue) => {
   if (newValue === ActionMode.Idle) {
     showCrudDialog.value = false;
