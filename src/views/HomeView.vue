@@ -104,7 +104,7 @@ const kpis = [
 ];
 
 const quickLinks = [
-  { label: 'Şirketler', icon: 'mdi-domain', to: '/management/companies', theme: 'primary' },
+  { label: 'Firmalar', icon: 'mdi-domain', to: '/management/companies', theme: 'primary' },
   { label: 'Kullanıcılar', icon: 'mdi-account-group', to: '/management/users', theme: 'info' },
   { label: 'Borçlular', icon: 'mdi-bank-transfer-out', to: '/dbcr/debtors', theme: 'error' },
   { label: 'Alacaklılar', icon: 'mdi-bank-transfer-in', to: '/dbcr/creditors', theme: 'success' },
