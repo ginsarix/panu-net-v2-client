@@ -16,7 +16,7 @@ export const useUsersStore = defineStore('users', () => {
   };
 
   const addUserToList = (user: User, addToStart = false) =>
-    (users.value = addToStart ? [user, ...users.value] : [...users.value, user]);
+    addToStart ? users.value.unshift(user) : users.value.push(user);
 
   const updateUserById = (id: string | number, data: Partial<User>) =>
     (users.value = users.value.map((u) => (u.id === id ? { ...u, ...data } : u)));

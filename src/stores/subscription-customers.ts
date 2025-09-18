@@ -24,9 +24,9 @@ export const useSubscriptionCustomersStore = defineStore('subscriptionCustomers'
     subscriptionCustomer: SubscriptionCustomer,
     addToStart = false,
   ) =>
-    (subscriptionCustomers.value = addToStart
-      ? [subscriptionCustomer, ...subscriptionCustomers.value]
-      : [...subscriptionCustomers.value, subscriptionCustomer]);
+    addToStart
+      ? subscriptionCustomers.value.unshift(subscriptionCustomer)
+      : subscriptionCustomers.value.push(subscriptionCustomer);
 
   const updateSubscriptionCustomerById = (
     id: string | number,

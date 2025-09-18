@@ -19,9 +19,7 @@ export const useSubscriptionsStore = defineStore('subscriptions', () => {
   };
 
   const addSubscriptionToList = (subscription: Subscription, addToStart = false) =>
-    (subscriptions.value = addToStart
-      ? [subscription, ...subscriptions.value]
-      : [...subscriptions.value, subscription]);
+    addToStart ? subscriptions.value.unshift(subscription) : subscriptions.value.push(subscription);
 
   const updateSubscriptionById = (id: string | number, data: Partial<Subscription>) =>
     (subscriptions.value = subscriptions.value.map((s) => (s.id === id ? { ...s, ...data } : s)));

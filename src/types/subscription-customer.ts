@@ -7,6 +7,8 @@ export interface SubscriptionCustomer extends Nullish<CreateUpdateDate> {
   title: string;
   phone: string | null;
   email: string;
+  remindExpiryWithEmail: boolean;
+  remindExpiryWithSms: boolean;
   address: string | null;
   status: boolean;
   manager: string | null;

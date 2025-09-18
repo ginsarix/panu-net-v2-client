@@ -65,7 +65,7 @@ export const useCompaniesStore = defineStore('companies', () => {
   };
 
   const addCompanyToList = (company: Company, addToStart = false) =>
-    (companies.value = addToStart ? [company, ...companies.value] : [...companies.value, company]);
+    addToStart ? companies.value.unshift(company) : companies.value.push(company);
 
   const updateCompanyById = (id: string | number, data: Partial<Company>) => {
     companies.value = companies.value.map((c) => (c.id === id ? { ...c, ...data } : c));
