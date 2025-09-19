@@ -83,7 +83,9 @@ const customerForm = reactive({
   customerCode: { rules: [noEmptyRule], value: 0 },
   title: { rules: [noEmptyRule], value: '' },
   phone: { rules: phoneRules, value: '' },
+  remindExpiryWithSms: { rules: [], value: false },
   email: { rules: emailRules, value: '' },
+  remindExpiryWithEmail: { rules: [], value: true },
   address: { rules: [], value: '' },
   status: { rules: [], value: true },
   manager: { rules: [], value: '' },
@@ -148,7 +150,9 @@ const dialogSubmit = async () => {
     customerCode: customerForm.customerCode.value,
     title: customerForm.title.value,
     phone: customerForm.phone.value,
+    remindExpiryWithSms: customerForm.remindExpiryWithSms.value,
     email: customerForm.email.value,
+    remindExpiryWithEmail: customerForm.remindExpiryWithEmail.value,
     address: customerForm.address.value,
     status: customerForm.status.value,
     manager: customerForm.manager.value,
@@ -318,6 +322,7 @@ const dialogSubmit = async () => {
               :rules="customerForm.phone.rules"
               v-model="customerForm.phone.value"
             />
+
             <v-text-field
               class="mb-2"
               variant="outlined"
@@ -328,6 +333,7 @@ const dialogSubmit = async () => {
               :rules="customerForm.email.rules"
               v-model="customerForm.email.value"
             />
+
             <v-text-field
               class="mb-2"
               variant="outlined"
@@ -335,20 +341,36 @@ const dialogSubmit = async () => {
               label="Adres"
               v-model="customerForm.address.value"
             />
-            <v-switch
-              class="mb-2"
-              label="Durum"
-              v-model="customerForm.status.value"
-              color="primary"
-              :true-value="true"
-              :false-value="false"
-            />
+
             <v-text-field
               class="mb-2"
               variant="outlined"
               rounded="lg"
               label="Yönetici"
               v-model="customerForm.manager.value"
+            />
+            <v-switch
+              label="SMS Hatırlatma"
+              v-model="customerForm.remindExpiryWithSms.value"
+              color="primary"
+              :true-value="true"
+              :false-value="false"
+            />
+
+            <v-switch
+              label="E-posta Hatırlatma"
+              v-model="customerForm.remindExpiryWithEmail.value"
+              color="primary"
+              :true-value="true"
+              :false-value="false"
+            />
+
+            <v-switch
+              label="Durum"
+              v-model="customerForm.status.value"
+              color="primary"
+              :true-value="true"
+              :false-value="false"
             />
           </template>
           <template v-else-if="currentMode === ActionMode.Delete">
