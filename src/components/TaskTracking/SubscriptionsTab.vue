@@ -97,7 +97,7 @@ const subscriptionForm = reactive({
     rules: [noEmptyRule],
     value: 'domain' as 'domain' | 'ssl' | 'hosting' | 'mail',
   },
-  userId: { rules: [noEmptyRule], value: 0 },
+  userId: { rules: [noEmptyRule], value: null as number | null },
 });
 
 const isISODate = (dateOrString: string | Date) =>
@@ -172,7 +172,7 @@ const dialogSubmit = async () => {
     startDate: subscriptionForm.startDate.value,
     endDate: subscriptionForm.endDate.value,
     subscriptionType: subscriptionForm.subscriptionType.value,
-    userId: subscriptionForm.userId.value,
+    userId: subscriptionForm.userId.value!,
   });
 
   try {
@@ -351,6 +351,7 @@ const dialogSubmit = async () => {
               rounded="lg"
               label="Müşteri"
               :rules="subscriptionForm.userId.rules"
+              placeholder="Seçiniz"
               v-model.number="subscriptionForm.userId.value"
               item-value="id"
               item-title="title"

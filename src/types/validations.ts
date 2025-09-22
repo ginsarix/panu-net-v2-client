@@ -1,4 +1,4 @@
-export const noEmptyRule = (v: string | number) => !!v || 'Boş bırakılamaz';
+export const noEmptyRule = (v: unknown) => !!v || 'Boş bırakılamaz';
 export const noEmptyArrayRule = (v: unknown[]) => v.length > 0 || 'Boş olamaz.';
 export const emailRule = (v: string) =>
   /^([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})$/.test(v) ||
