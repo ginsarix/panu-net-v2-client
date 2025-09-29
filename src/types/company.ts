@@ -4,7 +4,7 @@ import type { Nullish } from './nullish';
 
 export interface Company extends Nullish<CreateUpdateDate> {
   id?: number;
-  code: string;
+  code: number;
   name: string;
   manager: string;
   phone?: string | null;
@@ -12,7 +12,6 @@ export interface Company extends Nullish<CreateUpdateDate> {
   status: boolean;
   webServiceSource: string;
   webServiceUsername: string;
-  serverName: string;
   apiKey: string;
   apiSecret: string;
 }

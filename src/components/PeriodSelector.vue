@@ -1,16 +1,21 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { computed, watch } from 'vue';
+import { computed, onMounted, watch } from 'vue';
 import { ref } from 'vue';
 
 import { setSelectedPeriod } from '@/services/api/companies';
 import { useAsyncGateStore } from '@/stores/async-gate';
 import { useCompaniesStore } from '@/stores/companies';
+import { formatDateTime } from '@/utils/formatting';
 
 const asyncGateStore = useAsyncGateStore();
 
 const companiesStore = useCompaniesStore();
 const { periods, selectedPeriodCode } = storeToRefs(companiesStore);
+
+onMounted(() => {
+  void companiesStore.loadSelectedPeriodCode();
+});
 
 watch(selectedPeriodCode, async (newValue) => {
   try {
@@ -32,7 +37,7 @@ const dialog = ref(false);
 </script>
 
 <template>
-  <!-- <Transition> only allows 1 element  -->
+  <!-- <transition> only allows 1 element  -->
   <div>
     <v-btn v-bind="$attrs" @click="dialog = true" append-icon="mdi-timeline-clock" variant="flat">{{
       periodSelectorText
@@ -57,9 +62,9 @@ const dialog = ref(false);
                         <span class="text-h6"> Dönem {{ period.code }} </span>
                         <v-spacer />
                         <span class="text-body-2">
-                          {{ period.startDate }}
+                          {{ formatDateTime(period.startDate, 'dd.MM.yyyy') }}
                           —
-                          {{ period.endDate }}
+                          {{ formatDateTime(period.endDate, 'dd.MM.yyyy') }}
                         </span>
                       </div>
                     </v-card>

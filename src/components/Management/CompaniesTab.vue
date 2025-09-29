@@ -67,7 +67,6 @@ const companyInputPropertiesIds = {
   licenseDate: uuidv4(),
   wsSource: uuidv4(),
   wsUsername: uuidv4(),
-  serverName: uuidv4(),
   apiKey: uuidv4(),
   apiSecret: uuidv4(),
   status: uuidv4(),
@@ -77,7 +76,7 @@ const companyInputProperties = ref<InputProperties[]>([
   {
     id: companyInputPropertiesIds.code,
     label: 'Kod',
-    type: 'text',
+    type: 'number',
     validationRules: [noEmptyRule],
     value: '',
   },
@@ -126,17 +125,9 @@ const companyInputProperties = ref<InputProperties[]>([
     value: '',
   },
   {
-    id: companyInputPropertiesIds.serverName,
-    label: 'Sunucu Adı',
-    type: 'text',
-    validationRules: [noEmptyRule],
-    value: '',
-  },
-  {
     id: companyInputPropertiesIds.apiKey,
     label: 'API Key',
     type: 'text',
-    validationRules: [noEmptyRule],
     value: '',
   },
   {
@@ -176,11 +167,7 @@ const companyInputSteppers: StepperProperties[] = [
   {
     step: 3,
     title: 'Entegrasyon',
-    inputIds: [
-      companyInputPropertiesIds.wsSource,
-      companyInputPropertiesIds.wsUsername,
-      companyInputPropertiesIds.serverName,
-    ],
+    inputIds: [companyInputPropertiesIds.wsSource, companyInputPropertiesIds.wsUsername],
   },
   {
     step: 4,
@@ -211,55 +198,43 @@ const dialogSubmit = async (inputProperties: InputProperties[]) => {
 
   const formCompany = (): Partial<Company> => {
     return {
-      code: inputProperties[0].value,
+      code: Number(inputProperties[0].value),
       name: inputProperties[1].value,
       manager: inputProperties[2].value,
       phone: inputProperties[3].value,
       licenseDate: inputProperties[4].value,
       webServiceSource: inputProperties[5].value,
       webServiceUsername: inputProperties[6].value,
-      serverName: inputProperties[7].value,
-      apiKey: inputProperties[8].value,
-      apiSecret: inputProperties[9].value,
-      status: inputProperties[10].value.toLowerCase() === 'true',
+      apiKey: inputProperties[7].value,
+      apiSecret: inputProperties[8].value,
+      status: inputProperties[9].value.toLowerCase() === 'true',
     };
   };
-
-  const willUpdateNextRefreshText = 'Sonraki güncellemede yenilenecektir';
 
   try {
     switch (currentMode.value) {
       case ActionMode.Create:
         const company = formCompany();
+        const createdCompany = await createCompany(company as Company);
 
-        const isValidCompany = Object.keys(company)
-          .filter((key) => !['id', 'phone'].includes(key))
-          .every((key) => Boolean(company[key as keyof Company]));
-
-        if (isValidCompany) {
-          await createCompany(company as Company);
-
-          const latestCompanyId = companies.value[0].id ?? 0;
-
-          const displayCompany = {
-            ...(company as Company),
-            id: latestCompanyId ? latestCompanyId + 1 : latestCompanyId,
-            creationDate: willUpdateNextRefreshText,
-          };
-          companiesStore.addCompanyToList(displayCompany, true);
-        }
+        const displayCompany = {
+          ...(company as Company),
+          id: createdCompany.id,
+          creationDate: createdCompany.creationDate,
+        };
+        companiesStore.addCompanyToList(displayCompany, true);
         break;
       case ActionMode.Edit:
-        const editedCompany = formCompany();
+        const editCompany = formCompany();
 
         if (!selectedCompany.value?.id) return;
 
-        await patchCompany(selectedCompany.value.id, editedCompany);
+        const editedCompany = await patchCompany(selectedCompany.value.id, editCompany);
 
         const displayedEditedCompany = {
           ...selectedCompany.value,
-          ...cleanPayload(editedCompany),
-          updatedOn: willUpdateNextRefreshText,
+          ...cleanPayload(editCompany),
+          updatedOn: editedCompany.updatedOn,
         };
         companiesStore.updateCompanyById(selectedCompany.value.id, displayedEditedCompany);
         break;

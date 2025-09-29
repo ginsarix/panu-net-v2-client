@@ -113,30 +113,30 @@ const dialogSubmit = async () => {
 
         const createPasswordConfirmed = user.password === userForm.passwordAgain.value;
         if (createPasswordConfirmed) {
-          const response = await createUser(user);
+          const createdUser = await createUser(user);
 
           const displayUser = {
             ...user,
-            id: response.id,
-            creationDate: response.creationDate,
+            id: createdUser.id,
+            creationDate: createdUser.creationDate,
           };
           usersStore.addUserToList(displayUser, true);
         }
         break;
       case ActionMode.Edit:
         if (!selectedUser.value?.id) return;
-        const editedUser = formUser();
+        const editUser = formUser();
 
-        const editPasswordConfirmed = editedUser.password === userForm.passwordAgain.value;
+        const editPasswordConfirmed = editUser.password === userForm.passwordAgain.value;
 
         if (!editPasswordConfirmed) return;
 
-        const { updatedOn } = await patchUser(selectedUser.value.id, editedUser);
+        const editedUser = await patchUser(selectedUser.value.id, editUser);
 
         const displayedEditedUser: User = {
           ...selectedUser.value,
-          ...cleanPayload(editedUser),
-          updatedOn,
+          ...cleanPayload(editUser),
+          updatedOn: editedUser.updatedOn,
         };
         usersStore.updateUserById(selectedUser.value.id, displayedEditedUser);
         break;

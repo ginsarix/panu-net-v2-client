@@ -163,12 +163,12 @@ const dialogSubmit = async () => {
       case ActionMode.Create:
         const customer = formCustomer();
 
-        const response = await createSubscriptionCustomer(customer);
+        const createdSubscriptionCustomer = await createSubscriptionCustomer(customer);
 
         const displaySubscriptionCustomer: SubscriptionCustomer = {
           ...customer,
-          id: response.id,
-          creationDate: response.creationDate,
+          id: createdSubscriptionCustomer.id,
+          creationDate: createdSubscriptionCustomer.creationDate,
         };
 
         subscriptionCustomersStore.addSubscriptionCustomerToList(displaySubscriptionCustomer, true);
@@ -178,7 +178,7 @@ const dialogSubmit = async () => {
 
         const editCustomer = formCustomer();
 
-        const editResponse = await patchSubscriptionCustomer(
+        const editedSubscriptionCustomer = await patchSubscriptionCustomer(
           selectedCustomer.value.id,
           editCustomer,
         );
@@ -186,7 +186,7 @@ const dialogSubmit = async () => {
         const displayEditedSubscriptionCustomer: Omit<SubscriptionCustomer, 'id'> = {
           ...selectedCustomer.value,
           ...cleanPayload(editCustomer, true),
-          updatedOn: editResponse.updatedOn,
+          updatedOn: editedSubscriptionCustomer.updatedOn,
         };
 
         subscriptionCustomersStore.updateSubscriptionCustomerById(

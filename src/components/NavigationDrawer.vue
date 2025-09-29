@@ -167,6 +167,23 @@ const loginout = async () => {
           to="/management/modules"
         />
       </v-list-group>
+      <v-list-group value="Reports">
+        <template #activator="{ props }">
+          <v-list-item
+            v-bind="props"
+            rounded="xl"
+            prepend-icon="mdi-file-document-multiple"
+            title="Raporlar"
+          />
+        </template>
+
+        <v-list-item
+          rounded="xl"
+          prepend-icon="mdi-file-document"
+          title="Genel Rapor"
+          to="/reports/general-report"
+        />
+      </v-list-group>
     </v-list>
   </v-navigation-drawer>
 </template>

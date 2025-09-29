@@ -47,7 +47,7 @@ export const getSelectedPeriod = async () => {
   return await trpc.company.getSelectedPeriod.query();
 };
 
-export const getPeriods = async (companyCode: string) => {
+export const getPeriods = async (companyCode: number) => {
   return await trpc.company.getPeriods.query({ companyCode });
 };
 

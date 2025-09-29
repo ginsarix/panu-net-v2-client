@@ -179,12 +179,12 @@ const dialogSubmit = async () => {
     switch (currentMode.value) {
       case ActionMode.Create:
         const subscription = formSubscription();
-        const createResponse = await createSubscription(subscription);
+        const createdSubscription = await createSubscription(subscription);
 
         const displaySubscription: Subscription = {
           ...subscription,
-          id: createResponse.id,
-          creationDate: createResponse.creationDate,
+          id: createdSubscription.id,
+          creationDate: createdSubscription.creationDate,
         };
 
         subscriptionsStore.addSubscriptionToList(displaySubscription, true);
@@ -192,16 +192,16 @@ const dialogSubmit = async () => {
       case ActionMode.Edit:
         if (!selectedSubscription.value?.id) return;
 
-        const editSubscription = formSubscription();
+        const editedSubscription = formSubscription();
 
         const editResponse = await patchSubscription(
           selectedSubscription.value.id,
-          editSubscription,
+          editedSubscription,
         );
 
         const displayEditedSubscription: Omit<Subscription, 'id'> = {
           ...selectedSubscription.value,
-          ...cleanPayload(editSubscription, true),
+          ...cleanPayload(editedSubscription, true),
           updatedOn: editResponse.updatedOn,
         };
 

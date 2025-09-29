@@ -7,6 +7,7 @@ import {
   getCreditCount,
   getPeriods,
   getSelectedCompany,
+  getSelectedPeriod,
 } from '@/services/api/companies.ts';
 import emitter from '@/services/service-bus';
 import type { Company } from '@/types/company.ts';
@@ -25,9 +26,14 @@ export const useCompaniesStore = defineStore('companies', () => {
   const creditCount = ref<number | null>(null);
   const creditCountLoading = ref(false);
   emitter.on('creditsMaybeChanged', async () => {
-    if (selectedCompanyId.value) {
-      creditCountLoading.value = true;
+    if (!selectedCompanyId.value) return;
+
+    creditCountLoading.value = true;
+    try {
       creditCount.value = await getCreditCount();
+    } catch (error) {
+      console.error(error);
+    } finally {
       creditCountLoading.value = false;
     }
   });
@@ -76,6 +82,15 @@ export const useCompaniesStore = defineStore('companies', () => {
     companies.value = companies.value.filter((c) => !idSet.has(c.id ?? -1));
   };
 
+  const loadSelectedPeriodCode = async () => {
+    try {
+      const result = await getSelectedPeriod();
+      selectedPeriodCode.value = result.code ?? 0;
+    } catch {
+      selectedPeriodCode.value = 0;
+    }
+  };
+
   return {
     companies,
     totalCompaniesCount,
@@ -91,5 +106,6 @@ export const useCompaniesStore = defineStore('companies', () => {
     removeCompaniesById,
     getSelectedCompanyInstance,
     loadSelectedCompanyId,
+    loadSelectedPeriodCode,
   };
 });

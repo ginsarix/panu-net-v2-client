@@ -10,11 +10,13 @@ const CompaniesTab = () => import('@/components/Management/CompaniesTab.vue');
 const UsersTab = () => import('@/components/Management/UsersTab.vue');
 const CustomersTab = () => import('@/components/TaskTracking/CustomersTab.vue');
 const SubscriptionsTab = () => import('@/components/TaskTracking/SubscriptionsTab.vue');
+const GeneralReport = () => import('@/components/Reports/GeneralReport.vue');
 const DebtorsCreditorsView = () => import('@/views/DebtorsCreditorsView.vue');
 const LoginView = () => import('@/views/LoginView.vue');
 const ManagementView = () => import('@/views/ManagementView.vue');
 const TaskTrackingView = () => import('@/views/TaskTrackingView.vue');
 const HomeView = () => import('../views/HomeView.vue');
+const ReportsView = () => import('@/views/ReportsView.vue');
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -84,6 +86,16 @@ const router = createRouter({
         {
           path: 'dispatched-orders',
           component: HomeView,
+        },
+      ],
+    },
+    {
+      path: '/reports',
+      component: ReportsView,
+      children: [
+        {
+          path: 'general-report',
+          component: GeneralReport,
         },
       ],
     },

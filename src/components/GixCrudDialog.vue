@@ -156,7 +156,7 @@ const defaultStepperProperties = computed(() => [
 ]);
 
 const getRules = (inputProperties: InputProperties) =>
-  props.currentMode === ActionMode.Create ? inputProperties.validationRules || [] : [];
+  props.currentMode === ActionMode.Create ? inputProperties.validationRules : [];
 </script>
 
 <template>
