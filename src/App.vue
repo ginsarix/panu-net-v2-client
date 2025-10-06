@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { VIconBtn } from 'vuetify/labs/components';
 
@@ -25,18 +25,29 @@ const rail = ref(true);
 
 const snackbarStore = useSnackbarStore();
 const { snackbar, snackbarText, snackbarError } = storeToRefs(snackbarStore);
+
+const railToggleIcon = computed(() => {
+  if (mobile.value.value) return 'mdi-menu';
+  if (rail.value) return 'mdi-menu-close';
+  return 'mdi-menu-open';
+});
 </script>
 
 <template>
   <v-app>
     <v-layout>
-      <NavigationDrawer v-if="currentUser" :rail="rail" @update:rail="rail = false" />
+      <NavigationDrawer
+        v-if="currentUser"
+        :rail="rail"
+        @update:rail="rail = false"
+        :mobile="mobile.value"
+      />
 
       <v-app-bar>
         <v-icon-btn
           v-if="currentUser"
           class="mr-3"
-          :icon="rail ? 'mdi-menu-close' : 'mdi-menu-open'"
+          :icon="railToggleIcon"
           @click="rail = !rail"
           aria-label="Navigasyon menüsünü aç"
         />

@@ -42,9 +42,7 @@ const loadDebtors = async () => {
   if (!selectedCompany.value) return;
 
   try {
-    await debtorsStore.loadDebtors({
-      companyCode: selectedCompany.value.code,
-    });
+    await debtorsStore.loadDebtors();
   } catch (error) {
     console.error(error);
     if (error instanceof TRPCClientError) {

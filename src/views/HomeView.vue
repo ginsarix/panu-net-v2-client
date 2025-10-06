@@ -61,9 +61,7 @@ const loadCreditors = async () => {
   if (!selectedCompany.value) return;
 
   try {
-    await creditorsStore.loadCreditors({
-      companyCode: selectedCompany.value.code,
-    });
+    await creditorsStore.loadCreditors();
   } catch (error) {
     console.error(error);
   }
@@ -73,9 +71,7 @@ const loadDebtors = async () => {
   if (!selectedCompany.value) return;
 
   try {
-    await debtorsStore.loadDebtors({
-      companyCode: selectedCompany.value.code,
-    });
+    await debtorsStore.loadDebtors();
   } catch (error) {
     console.error(error);
   }

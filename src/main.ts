@@ -5,7 +5,7 @@ import vuetify from '@/plugins/vuetify';
 
 import App from './App.vue';
 import './assets/base.css';
-import { pinia } from './plugins/pinia';
+import pinia from './plugins/pinia';
 import router from './router';
 
 const app = createApp(App);

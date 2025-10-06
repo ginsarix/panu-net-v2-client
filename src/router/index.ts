@@ -1,7 +1,7 @@
 import { storeToRefs } from 'pinia';
 import { createRouter, createWebHashHistory } from 'vue-router';
 
-import { pinia } from '@/plugins/pinia';
+import pinia from '@/plugins/pinia';
 import { useCurrentUserStore } from '@/stores/current-user';
 
 const CreditorsTab = () => import('@/components/DebtorsCreditors/CreditorsTab.vue');

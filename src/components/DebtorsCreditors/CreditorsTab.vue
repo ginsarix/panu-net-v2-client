@@ -43,9 +43,7 @@ const loadCreditors = async () => {
   if (!selectedCompany.value) return;
 
   try {
-    await creditorsStore.loadCreditors({
-      companyCode: selectedCompany.value.code,
-    });
+    await creditorsStore.loadCreditors();
   } catch (error) {
     console.error(error);
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useMotion } from '@vueuse/motion';
+import { motion } from 'motion-v';
 import { ref } from 'vue';
 import { VIconBtn } from 'vuetify/labs/VIconBtn';
 
@@ -9,27 +9,14 @@ const props = defineProps<{
   refreshFn?: (...args: unknown[]) => MaybePromise<unknown>;
 }>();
 
-const refreshRotations = ref(1);
-
+const refreshRotation = ref(0);
 const refreshing = ref(false);
-const refreshBtnTarget = ref<HTMLElement | null>(null);
-
-const { apply } = useMotion(refreshBtnTarget, {
-  initial: {
-    rotate: 0,
-  },
-});
 
 const toggleRefresh = async () => {
   if (refreshing.value) return;
   refreshing.value = true;
-  await apply({
-    rotate: 360 * refreshRotations.value,
-    transition: {
-      ease: 'easeOut',
-    },
-  });
-  refreshRotations.value++;
+
+  refreshRotation.value += 360;
 
   if (props.refreshFn) await props.refreshFn();
   refreshing.value = false;
@@ -37,12 +24,12 @@ const toggleRefresh = async () => {
 </script>
 
 <template>
-  <v-icon-btn
-    v-motion
-    ref="refreshBtnTarget"
-    @click="toggleRefresh"
-    variant="text"
-    class="me-1"
-    icon="mdi-refresh"
-  />
+  <v-icon-btn @click="toggleRefresh" variant="text" class="me-1">
+    <motion.div
+      :animate="{ rotate: refreshRotation }"
+      :transition="{ type: 'spring', stiffness: 200, damping: 20 }"
+    >
+      <v-icon icon="mdi-refresh" />
+    </motion.div>
+  </v-icon-btn>
 </template>

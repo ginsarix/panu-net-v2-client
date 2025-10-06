@@ -7,6 +7,7 @@ import { useCurrentUserStore } from '@/stores/current-user';
 
 defineProps<{
   rail: boolean;
+  mobile: boolean;
 }>();
 
 defineEmits<{
@@ -38,7 +39,7 @@ const loginout = async () => {
 <template>
   <v-navigation-drawer
     :class="'position-fixed ' + (rail ? '' : 'pa-2')"
-    location="left"
+    :location="!mobile ? 'left' : 'bottom'"
     :rail="rail"
     permanent
   >
