@@ -140,7 +140,8 @@ const invoiceDataTableHeaders = ref<DataTableHeaders[]>([
 ]);
 
 const invoiceItemsDataTableHeaders = ref<DataTableHeaders[]>([
-  { title: 'Açıklama', key: 'aciklama', toggled: true, sortable: false },
+  { title: 'Stok Kart Kodu', key: 'kartkodu', toggled: true, sortable: false },
+  { title: 'Stok Açıklama', key: 'kartaciklama', toggled: true, sortable: false },
   { title: 'Miktar', key: 'miktar', toggled: true, sortable: true },
   { title: 'Birim', key: 'fatbirimi', toggled: true, sortable: true },
   { title: 'Ara Tutar', key: 'kdvharictutar', toggled: true, sortable: true },
@@ -348,6 +349,9 @@ const refresh = async () => {
                   :items="getWaybillItems(item.fisno)"
                   hide-default-footer
                 >
+                  <template #[`item.miktar`]>
+                    {{ Number(item.miktar).toFixed(2) }}
+                  </template>
                   <template #[`item.tutari`]="{ item }">
                     {{ formatCurrency(item.tutari) }}
                   </template>
@@ -456,6 +460,9 @@ const refresh = async () => {
                   :items="getInvoiceItems(item.fisno)"
                   hide-default-footer
                 >
+                  <template #[`item.miktar`]>
+                    {{ Number(item.miktar).toFixed(2) }}
+                  </template>
                   <template #[`item.kdvharictutar`]="{ item }">
                     {{ formatCurrency(item.kdvharictutar) }}
                   </template>
