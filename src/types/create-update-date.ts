@@ -1,4 +1,4 @@
 export interface CreateUpdateDate {
-  creationDate: string;
-  updatedOn: string;
+  creationDate: Date;
+  updatedOn: Date;
 }

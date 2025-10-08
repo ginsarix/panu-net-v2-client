@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { TRPCClientError } from '@trpc/client';
+import { format } from 'date-fns';
 import { storeToRefs } from 'pinia';
-import { v4 as uuidv4 } from 'uuid';
-import { computed, ref, watch } from 'vue';
-import { VIconBtn } from 'vuetify/labs/components';
+import { computed, reactive, ref, watch } from 'vue';
+import { VDateInput, VIconBtn, VMaskInput } from 'vuetify/labs/components';
 
-import GixCrudDialog from '@/components/GixCrudDialog.vue';
 import GixSelectionInfoBar from '@/components/GixSelectionInfoBar.vue';
 import GixTogglerMenu from '@/components/GixTogglerMenu.vue';
 import {
@@ -22,8 +21,7 @@ import { useSnackbarStore } from '@/stores/snackbar';
 import { ActionMode } from '@/types/action-mode.ts';
 import type { Company } from '@/types/company.ts';
 import type { DataTableHeaders } from '@/types/data-table-headers.ts';
-import type { InputProperties } from '@/types/input-properties.ts';
-import type { StepperProperties } from '@/types/stepper-properties.ts';
+// stepper properties inlined in template
 import { noEmptyRule, phoneRules } from '@/types/validations.ts';
 import { formatDateTime } from '@/utils/formatting.ts';
 
@@ -59,124 +57,94 @@ watch(currentMode, (newValue) => {
   }
 });
 
-const companyInputPropertiesIds = {
-  code: uuidv4(),
-  name: uuidv4(),
-  managerName: uuidv4(),
-  phone: uuidv4(),
-  licenseDate: uuidv4(),
-  wsSource: uuidv4(),
-  wsUsername: uuidv4(),
-  apiKey: uuidv4(),
-  apiSecret: uuidv4(),
-  status: uuidv4(),
-};
+// form state handled like UsersTab.vue
+const companyForm = reactive({
+  code: { rules: [noEmptyRule], value: '' as number | string },
+  name: { rules: [noEmptyRule], value: '' },
+  manager: { rules: [noEmptyRule], value: '' },
+  phone: { rules: phoneRules, value: '' },
+  licenseDate: { rules: [noEmptyRule], value: null as Date | null },
+  webServiceSource: { rules: [noEmptyRule], value: '' },
+  webServiceUsername: { rules: [noEmptyRule], value: '' },
+  apiKey: { rules: [], value: '' },
+  apiSecret: { rules: [noEmptyRule], value: '' },
+  status: { rules: [], value: true },
+});
 
-const companyInputProperties = ref<InputProperties[]>([
-  {
-    id: companyInputPropertiesIds.code,
-    label: 'Kod',
-    type: 'number',
-    validationRules: [noEmptyRule],
-    value: '',
-  },
-  {
-    id: companyInputPropertiesIds.name,
-    label: 'İsim',
-    type: 'text',
-    validationRules: [noEmptyRule],
-    value: '',
-  },
-  {
-    id: companyInputPropertiesIds.managerName,
-    label: 'Yönetici Adı',
-    type: 'text',
-    validationRules: [noEmptyRule],
-    value: '',
-  },
-  {
-    id: companyInputPropertiesIds.phone,
-    label: 'Telefon',
-    type: 'tel',
-    value: '',
-    mask: 'phone',
-    placeholder: '(###) ### - ####',
-    validationRules: phoneRules,
-  },
-  {
-    id: companyInputPropertiesIds.licenseDate,
-    label: 'Lisans tarihi',
-    type: 'date',
-    validationRules: [noEmptyRule],
-    value: '',
-  },
-  {
-    id: companyInputPropertiesIds.wsSource,
-    label: 'Web Service Kaynak',
-    type: 'url',
-    validationRules: [noEmptyRule],
-    value: '',
-  },
-  {
-    id: companyInputPropertiesIds.wsUsername,
-    label: 'Web Service Kullanıcı Adı',
-    type: 'text',
-    validationRules: [noEmptyRule],
-    value: '',
-  },
-  {
-    id: companyInputPropertiesIds.apiKey,
-    label: 'API Key',
-    type: 'text',
-    value: '',
-  },
-  {
-    id: companyInputPropertiesIds.apiSecret,
-    label: 'API Şifresi',
-    type: 'password',
-    showPassword: false,
-    icon: 'mdi-lock',
-    validationRules: [noEmptyRule],
-    value: '',
-  },
-  {
-    id: companyInputPropertiesIds.status,
-    label: 'Durum',
-    type: 'checkbox',
-    value: 'true',
-    neverResetValue: true,
-  },
-]);
-
-const companyInputSteppers: StepperProperties[] = [
-  {
-    step: 1,
-    title: 'Şirket Bilgileri',
-    inputIds: [
-      companyInputPropertiesIds.code,
-      companyInputPropertiesIds.name,
-      companyInputPropertiesIds.managerName,
-      companyInputPropertiesIds.phone,
-    ],
-  },
-  {
-    step: 2,
-    title: 'Lisans & Durum',
-    inputIds: [companyInputPropertiesIds.licenseDate, companyInputPropertiesIds.status],
-  },
-  {
-    step: 3,
-    title: 'Entegrasyon',
-    inputIds: [companyInputPropertiesIds.wsSource, companyInputPropertiesIds.wsUsername],
-  },
-  {
-    step: 4,
-    title: 'API Erişimi',
-    inputIds: [companyInputPropertiesIds.apiKey, companyInputPropertiesIds.apiSecret],
-  },
-];
+// steps are inlined directly in the template below
 
 const dialogErrorMessage = ref('');
+
+// local dialog state/helpers (like UsersTab)
+const isSubmitting = ref(false);
+const formSubmitted = ref(false);
+
+const resetForm = () => {
+  Object.values(companyForm).forEach((field) => {
+    if (typeof field.value === 'string') field.value = '';
+    else if (typeof field.value === 'boolean') field.value = true;
+    else field.value = null;
+  });
+};
+
+const validateField = (field: (typeof companyForm)[keyof typeof companyForm]) =>
+  //                                             fuck you typescript
+  field.rules.every((rule) => rule(field.value as never) === true);
+
+const formActionModes = [ActionMode.Create, ActionMode.Edit];
+const isForm = computed(() => formActionModes.includes(currentMode.value));
+
+const cardIcon = computed(() => {
+  switch (currentMode.value) {
+    case ActionMode.Create:
+      return 'mdi-plus';
+    case ActionMode.Edit:
+      return 'mdi-pencil';
+    case ActionMode.Delete:
+      return 'mdi-trash-can';
+    default:
+      return undefined;
+  }
+});
+const cardTitle = computed(() => {
+  switch (currentMode.value) {
+    case ActionMode.Create:
+      return 'Oluştur';
+    case ActionMode.Edit:
+      return 'Düzenle';
+    case ActionMode.Delete:
+      return 'Sil';
+    case ActionMode.Idle:
+      return '👋';
+    default:
+      return currentMode.value;
+  }
+});
+
+const formValid = computed(() => Object.values(companyForm).every((field) => validateField(field)));
+const editFormValid = computed(() =>
+  Object.values(companyForm).some((field) => validateField(field)),
+);
+
+// ensure form resets when mode becomes idle
+watch(currentMode, (val) => {
+  if (val === ActionMode.Idle) resetForm();
+  if (val === ActionMode.Edit && selectedCompany.value) {
+    // prefill form from selectedCompany
+    const s = selectedCompany.value;
+    companyForm.code.value = s?.code ?? '';
+    companyForm.name.value = s?.name ?? '';
+    companyForm.manager.value = s?.manager ?? '';
+    companyForm.phone.value = s?.phone ?? '';
+    companyForm.licenseDate.value = s?.licenseDate ? new Date(s.licenseDate) : null;
+    companyForm.webServiceSource.value = s?.webServiceSource ?? '';
+    companyForm.webServiceUsername.value = s?.webServiceUsername ?? '';
+    companyForm.apiKey.value = s?.apiKey ?? '';
+    companyForm.apiSecret.value = s?.apiSecret ?? '';
+    companyForm.status.value = !!s?.status;
+  }
+  if (val === ActionMode.Create) resetForm();
+});
 
 const companiesLoaded = ref(false);
 
@@ -190,7 +158,7 @@ const loadCompanies = async (options?: CompanyServerDataTableOptions) => {
   }
 };
 
-const dialogSubmit = async (inputProperties: InputProperties[]) => {
+const dialogSubmit = async () => {
   if (selectedCompanyIds.value.length && currentMode.value === ActionMode.Delete) {
     await batchDelete();
     return;
@@ -198,16 +166,18 @@ const dialogSubmit = async (inputProperties: InputProperties[]) => {
 
   const formCompany = (): Partial<Company> => {
     return {
-      code: Number(inputProperties[0].value),
-      name: inputProperties[1].value,
-      manager: inputProperties[2].value,
-      phone: inputProperties[3].value,
-      licenseDate: inputProperties[4].value,
-      webServiceSource: inputProperties[5].value,
-      webServiceUsername: inputProperties[6].value,
-      apiKey: inputProperties[7].value,
-      apiSecret: inputProperties[8].value,
-      status: inputProperties[9].value.toLowerCase() === 'true',
+      code: Number(companyForm.code.value),
+      name: companyForm.name.value,
+      manager: companyForm.manager.value,
+      phone: companyForm.phone.value,
+      licenseDate: companyForm.licenseDate.value
+        ? new Date(companyForm.licenseDate.value)
+        : new Date(),
+      webServiceSource: companyForm.webServiceSource.value,
+      webServiceUsername: companyForm.webServiceUsername.value,
+      apiKey: companyForm.apiKey.value,
+      apiSecret: companyForm.apiSecret.value,
+      status: !!companyForm.status.value,
     };
   };
 
@@ -289,6 +259,20 @@ const includedDataTableHeaders = computed(() =>
 );
 
 const infoDialog = ref(false);
+
+const showApiPassword = ref(false);
+const handleSubmit = async () => {
+  formSubmitted.value = true;
+
+  if (currentMode.value === ActionMode.Create && !formValid.value) return;
+
+  isSubmitting.value = true;
+  await dialogSubmit();
+
+  // close dialog and reset mode
+  currentMode.value = ActionMode.Idle;
+  isSubmitting.value = false;
+};
 </script>
 
 <template>
@@ -473,16 +457,146 @@ const infoDialog = ref(false);
     </v-card>
   </v-dialog>
 
-  <GixCrudDialog
-    v-model:show-dialog="showCrudDialog"
-    v-model:current-mode="currentMode"
-    delete-text="Silinen firmalar geri alınamaz, devam etmek istediğinize emin misiniz?"
-    v-model:inputs-properties="companyInputProperties"
-    :stepper-properties="companyInputSteppers"
-    @submit="dialogSubmit"
-    :error-message="dialogErrorMessage"
-    max-dialog-width="600"
-  />
+  <v-dialog v-model="showCrudDialog" max-width="600">
+    <v-card rounded="lg">
+      <v-card-title>
+        <v-icon size="small" :icon="cardIcon" />
+        {{ cardTitle }}
+      </v-card-title>
+
+      <v-form class="pa-2" @submit.prevent="handleSubmit">
+        <v-card-text>
+          <v-alert v-if="dialogErrorMessage" type="error" class="mb-4" closable>
+            {{ dialogErrorMessage }}
+          </v-alert>
+
+          <template v-if="isForm">
+            <v-stepper
+              editable
+              :items="['Şirket Bilgileri', 'Lisans & Durum', 'Entegrasyon', 'API Erişimi']"
+              :hide-actions="false"
+              rounded="lg"
+              prev-text="Önceki"
+              next-text="Sonraki"
+            >
+              <!-- Step 1: Şirket Bilgileri -->
+              <template #[`item.1`]>
+                <v-text-field
+                  label="Kod"
+                  variant="outlined"
+                  rounded="lg"
+                  :rules="companyForm.code.rules"
+                  v-model="companyForm.code.value"
+                />
+
+                <v-text-field
+                  label="İsim"
+                  variant="outlined"
+                  rounded="lg"
+                  :rules="companyForm.name.rules"
+                  v-model="companyForm.name.value"
+                />
+
+                <v-text-field
+                  label="Yönetici Adı"
+                  variant="outlined"
+                  rounded="lg"
+                  :rules="companyForm.manager.rules"
+                  v-model="companyForm.manager.value"
+                />
+
+                <v-mask-input
+                  mask="phone"
+                  :placeholder="'(###) ### - ####'"
+                  variant="outlined"
+                  rounded="lg"
+                  :rules="companyForm.phone.rules"
+                  v-model="companyForm.phone.value"
+                />
+              </template>
+
+              <!-- Step 2: Lisans & Durum -->
+              <template #[`item.2`]>
+                <v-date-input
+                  :display-format="(date: Date) => format(date, 'dd.MM.yyyy')"
+                  label="Lisans tarihi"
+                  placeholder="gg.aa.yyyy"
+                  variant="outlined"
+                  rounded="lg"
+                  :rules="companyForm.licenseDate.rules"
+                  v-model="companyForm.licenseDate.value"
+                />
+
+                <v-checkbox label="Durum" v-model="companyForm.status.value" />
+              </template>
+
+              <!-- Step 3: Entegrasyon -->
+              <template #[`item.3`]>
+                <v-text-field
+                  label="Web Service Kaynak"
+                  variant="outlined"
+                  rounded="lg"
+                  :rules="companyForm.webServiceSource.rules"
+                  v-model="companyForm.webServiceSource.value"
+                />
+
+                <v-text-field
+                  label="Web Service Kullanıcı Adı"
+                  variant="outlined"
+                  rounded="lg"
+                  :rules="companyForm.webServiceUsername.rules"
+                  v-model="companyForm.webServiceUsername.value"
+                />
+              </template>
+
+              <!-- Step 4: API Erişimi -->
+              <template #[`item.4`]>
+                <v-text-field
+                  label="API Key"
+                  variant="outlined"
+                  rounded="lg"
+                  v-model="companyForm.apiKey.value"
+                />
+
+                <v-text-field
+                  :type="showApiPassword ? 'text' : 'password'"
+                  label="API Şifresi"
+                  variant="outlined"
+                  rounded="lg"
+                  :append-inner-icon="showApiPassword ? 'mdi-eye-off' : 'mdi-eye'"
+                  @click:append-inner="showApiPassword = !showApiPassword"
+                  :rules="companyForm.apiSecret.rules"
+                  v-model="companyForm.apiSecret.value"
+                />
+              </template>
+            </v-stepper>
+          </template>
+
+          <div v-else-if="currentMode === ActionMode.Delete">
+            <span> Silinen firmalar geri alınamaz, devam etmek istediğinize emin misiniz? </span>
+          </div>
+          <div v-else>🧑‍💻</div>
+        </v-card-text>
+
+        <v-card-actions>
+          <v-spacer />
+
+          <v-btn @click="currentMode = ActionMode.Idle" text="İptal" rounded="lg" />
+          <v-btn
+            type="submit"
+            :loading="isSubmitting"
+            :disabled="
+              (currentMode === ActionMode.Create && !formValid) ||
+              (currentMode === ActionMode.Edit && !editFormValid)
+            "
+            :text="isForm ? 'Kaydet' : 'Evet'"
+            :color="isForm ? 'primary' : 'error'"
+            rounded="lg"
+          />
+        </v-card-actions>
+      </v-form>
+    </v-card>
+  </v-dialog>
 
   <GixSelectionInfoBar
     @submit="currentMode = ActionMode.Delete"

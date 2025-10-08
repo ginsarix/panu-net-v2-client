@@ -1,9 +1,9 @@
 import { format } from 'date-fns';
 
-export const formatDateTime = (str: string, formatStr?: string) => {
-  const date = new Date(str);
+export const formatDateTime = (date: string | Date, formatStr?: string) => {
+  const parsedDate = typeof date === 'string' ? new Date(date) : date;
 
-  if (date.toString() === 'Invalid Date') return str;
+  if (parsedDate.toString() === 'Invalid Date') return parsedDate;
 
-  return format(date, formatStr || 'dd.MM.yyyy HH:mm:ss');
+  return format(parsedDate, formatStr || 'dd.MM.yyyy HH:mm:ss');
 };

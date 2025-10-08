@@ -8,7 +8,7 @@ export interface Company extends Nullish<CreateUpdateDate> {
   name: string;
   manager: string;
   phone?: string | null;
-  licenseDate: string;
+  licenseDate: Date;
   status: boolean;
   webServiceSource: string;
   webServiceUsername: string;

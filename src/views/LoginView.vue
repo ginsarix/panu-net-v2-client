@@ -60,7 +60,7 @@ const submit = async () => {
   try {
     const result = await login(email.value, password.value);
 
-    if ('otpIdentifier' in result) {
+    if ('otpIdentifier' in result && result.otpIdentifier) {
       otpIdentifier.value = result.otpIdentifier;
       otpTtl.value = result.ttl;
     } else if ('success' in result) {
