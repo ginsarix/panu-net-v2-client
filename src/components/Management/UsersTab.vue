@@ -71,8 +71,17 @@ watch(currentMode, (newValue) => {
     resetForm();
   } else if (newValue === ActionMode.Create) {
     showCrudDialog.value = true;
+    resetForm();
   } else {
     showCrudDialog.value = !!(selectedUser.value || selectedUserIds.value.length);
+    if (newValue === ActionMode.Edit && selectedUser.value) {
+      const u = selectedUser.value;
+      userForm.name.value = u.name ?? '';
+      userForm.email.value = u.email ?? '';
+      userForm.phone.value = u.phone ?? '';
+      userForm.role.value = u.role ?? 'user';
+      userForm.userCompanies.value = u.companies;
+    }
   }
 });
 
@@ -371,7 +380,6 @@ const editFormValid = computed(
               label="Ad"
               :rules="userForm.name.rules"
               v-model="userForm.name.value"
-              :placeholder="selectedUser?.name"
             />
             <v-text-field
               class="mb-2"
@@ -382,12 +390,11 @@ const editFormValid = computed(
               type="email"
               :rules="userForm.email.rules"
               v-model="userForm.email.value"
-              :placeholder="selectedUser?.email"
             />
             <v-mask-input
               class="mb-2"
               mask="phone"
-              :placeholder="selectedUser?.phone ?? '(###) ### - ####'"
+              placeholder="(###) ### - ####"
               variant="outlined"
               rounded="lg"
               label="Telefon"
