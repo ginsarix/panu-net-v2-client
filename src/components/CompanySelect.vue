@@ -6,13 +6,10 @@ import { onMounted, ref } from 'vue';
 
 import { setSelectedCompany } from '@/services/api/companies.ts';
 import emitter from '@/services/service-bus.ts';
-import { useAsyncGateStore } from '@/stores/async-gate';
 import { useCompaniesStore } from '@/stores/companies.ts';
 import { useSnackbarStore } from '@/stores/snackbar.ts';
 
 import PeriodSelector from './PeriodSelector.vue';
-
-const asyncGate = useAsyncGateStore();
 
 const companiesStore = useCompaniesStore();
 const { companies, creditCount, creditCountLoading, selectedCompanyId } =
@@ -40,8 +37,6 @@ const loadSelectedCompanyId = async () => {
   try {
     skipWatch.value = true;
     await companiesStore.loadSelectedCompanyId();
-
-    asyncGate.markReady();
   } catch (error) {
     console.error(error);
   } finally {

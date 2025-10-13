@@ -1,4 +1,3 @@
-import { MotionPlugin } from '@vueuse/motion';
 import { createApp } from 'vue';
 
 import vuetify from '@/plugins/vuetify';
@@ -14,6 +13,5 @@ app.use(pinia);
 app.use(router);
 
 app.use(vuetify);
-app.use(MotionPlugin);
 
 app.mount('#app');

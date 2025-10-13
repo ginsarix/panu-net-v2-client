@@ -30,7 +30,7 @@ onMounted(async () => {
 });
 const userIcon = computed(() => (currentUser.value?.role === 'admin' ? 'mdi-key' : 'mdi-account'));
 
-const loginout = async () => {
+const logout = async () => {
   if (currentUser) await currentUserStore.logoutCurrentUser();
   await router.push('/login');
 };
@@ -38,7 +38,7 @@ const loginout = async () => {
 
 <template>
   <v-navigation-drawer
-    :class="'position-fixed ' + (rail ? '' : 'pa-2')"
+    :class="'position-fixed' + (rail ? '' : ' pa-2')"
     :location="!mobile ? 'left' : 'bottom'"
     :rail="rail"
     permanent
@@ -50,7 +50,7 @@ const loginout = async () => {
             <template #activator="{ props }">
               <v-btn
                 v-bind="props"
-                @click="loginout"
+                @click="logout"
                 variant="text"
                 size="small"
                 :icon="currentUser ? 'mdi-logout' : 'mdi-login'"

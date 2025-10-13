@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { computed, onMounted, watch } from 'vue';
-import { ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 
 import { setSelectedPeriod } from '@/services/api/companies';
 import { useAsyncGateStore } from '@/stores/async-gate';
@@ -13,19 +12,31 @@ const asyncGateStore = useAsyncGateStore();
 const companiesStore = useCompaniesStore();
 const { periods, selectedPeriodCode } = storeToRefs(companiesStore);
 
-onMounted(() => {
-  void companiesStore.loadSelectedPeriodCode();
+const isInitialLoad = ref(true);
+let saveTimeout: NodeJS.Timeout | null = null;
+
+onMounted(async () => {
+  await companiesStore.loadSelectedPeriodCode();
+  isInitialLoad.value = false;
 });
 
-watch(selectedPeriodCode, async (newValue) => {
-  try {
-    asyncGateStore.reset();
+watch(selectedPeriodCode, async (newValue, oldValue) => {
+  if (!isInitialLoad.value && oldValue !== undefined && newValue !== oldValue) {
+    if (saveTimeout) {
+      clearTimeout(saveTimeout);
+    }
 
-    await setSelectedPeriod(newValue);
+    saveTimeout = setTimeout(async () => {
+      try {
+        asyncGateStore.reset();
 
-    asyncGateStore.markReady();
-  } catch (error) {
-    console.error(error);
+        await setSelectedPeriod(newValue);
+
+        asyncGateStore.markReady();
+      } catch (error) {
+        console.error(error);
+      }
+    }, 100);
   }
 });
 

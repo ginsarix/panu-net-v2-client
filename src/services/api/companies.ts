@@ -40,7 +40,7 @@ export const getSelectedCompany = async () => {
 };
 
 export const setSelectedPeriod = async (periodCode: number) => {
-  return await trpc.company.setPeriod.query({ periodCode });
+  return await trpc.company.setPeriod.mutate({ periodCode });
 };
 
 export const getSelectedPeriod = async () => {

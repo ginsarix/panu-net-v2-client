@@ -4,13 +4,10 @@ import { computed, onMounted, watch } from 'vue';
 
 import AnalyticsTab from '@/components/DebtorsCreditors/AnalyticsTab.vue';
 import { useSelectedCompany } from '@/composables/useSelectedCompany';
-import { useAsyncGateStore } from '@/stores/async-gate';
 import { useCompaniesStore } from '@/stores/companies';
 import { useCreditorsStore } from '@/stores/creditors';
 import { useDebtorsStore } from '@/stores/debtors';
 import { useUsersStore } from '@/stores/users';
-
-const asyncGateStore = useAsyncGateStore();
 
 const companiesStore = useCompaniesStore();
 const usersStore = useUsersStore();
@@ -43,20 +40,6 @@ const { selectedPeriodCode } = storeToRefs(companiesStore);
 
 const { selectedCompany, loading } = useSelectedCompany();
 
-watch(
-  [selectedCompany, selectedPeriodCode],
-  async ([newSelectedCompany, newSelectedPeriod]) => {
-    if (newSelectedCompany || newSelectedPeriod) {
-      await asyncGateStore.promise;
-
-      loading.value = true;
-      await Promise.all([loadDebtors(), loadCreditors()]);
-      loading.value = false;
-    }
-  },
-  { immediate: true },
-);
-
 const loadCreditors = async () => {
   if (!selectedCompany.value) return;
 
@@ -76,6 +59,18 @@ const loadDebtors = async () => {
     console.error(error);
   }
 };
+
+watch(
+  [selectedCompany, selectedPeriodCode],
+  async ([newSelectedCompany, newSelectedPeriod]) => {
+    if (newSelectedCompany && newSelectedPeriod !== null && newSelectedPeriod !== undefined) {
+      loading.value = true;
+      await Promise.all([loadDebtors(), loadCreditors()]);
+      loading.value = false;
+    }
+  },
+  { immediate: true },
+);
 
 const totalCompanies = computed(() => companiesStore.companies.length);
 const totalUsers = computed(() => usersStore.users.length);

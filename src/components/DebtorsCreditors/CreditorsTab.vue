@@ -4,7 +4,6 @@ import { storeToRefs } from 'pinia';
 import { computed, ref, watch } from 'vue';
 
 import { useSelectedCompany } from '@/composables/useSelectedCompany';
-import { useAsyncGateStore } from '@/stores/async-gate';
 import { useCompaniesStore } from '@/stores/companies';
 import { useCreditorsStore } from '@/stores/creditors.ts';
 import { useDisplayStore } from '@/stores/display';
@@ -12,8 +11,6 @@ import { useSnackbarStore } from '@/stores/snackbar';
 import type { DataTableHeaders } from '@/types/data-table-headers';
 
 import GixTogglerMenu from '../GixTogglerMenu.vue';
-
-const asyncGateStore = useAsyncGateStore();
 
 const { mobile } = storeToRefs(useDisplayStore());
 
@@ -27,17 +24,6 @@ const { selectedCompany, loading } = useSelectedCompany();
 
 const snackbarStore = useSnackbarStore();
 const { snackbar, snackbarError, snackbarText } = storeToRefs(snackbarStore);
-
-watch(
-  [selectedCompany, selectedPeriodCode],
-  async ([newSelectedCompany, newSelectedPeriod]) => {
-    if (newSelectedCompany || newSelectedPeriod) {
-      await asyncGateStore.promise;
-      await loadCreditors();
-    }
-  },
-  { immediate: true },
-);
 
 const loadCreditors = async () => {
   if (!selectedCompany.value) return;
@@ -54,6 +40,16 @@ const loadCreditors = async () => {
     }
   }
 };
+
+watch(
+  [selectedCompany, selectedPeriodCode],
+  async ([newSelectedCompany, newSelectedPeriod]) => {
+    if (newSelectedCompany && newSelectedPeriod !== null && newSelectedPeriod !== undefined) {
+      await loadCreditors();
+    }
+  },
+  { immediate: true },
+);
 
 const dataTableHeaders = ref<DataTableHeaders[]>([
   { title: 'Cari Kart Kodu', key: 'code', toggled: true, sortable: true },
