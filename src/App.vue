@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { motion } from 'motion-v';
 import { storeToRefs } from 'pinia';
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
@@ -54,7 +55,30 @@ const railToggleIcon = computed(() => {
         <v-app-bar-title v-show="!mobile.value" @click="router.push('/')" class="cursor-pointer">
           <span class="panu-font">Panu</span
           ><span class="panu-font font-italic" style="color: var(--color-panu)">Net</span>
-          <strong class="pa-2 rounded-pill version-text">V2</strong>
+          <v-tooltip text="Ben hayattayım!" location="bottom">
+            <template #activator="{ props }">
+              <motion.strong
+                v-bind="props"
+                :animate="{
+                  boxShadow: [
+                    'rgba(56, 180, 74, 0.4) 5px 0, rgba(56, 180, 74, 0.3) 10px 0, rgba(56, 180, 74, 0.2) 15px 0, rgba(56, 180, 74, 0.1) 20px 0, rgba(56, 180, 74, 0.05) 25px 0',
+                    'rgba(56, 180, 74, 0.3) 3px 0, rgba(56, 180, 74, 0.2) 6px 0, rgba(56, 180, 74, 0.15) 9px 0, rgba(56, 180, 74, 0.1) 12px 0, rgba(56, 180, 74, 0.05) 15px 0',
+                    'rgba(56, 180, 74, 0.4) 5px 0, rgba(56, 180, 74, 0.3) 10px 0, rgba(56, 180, 74, 0.2) 15px 0, rgba(56, 180, 74, 0.1) 20px 0, rgba(56, 180, 74, 0.05) 25px 0',
+                  ],
+                }"
+                :transition="{
+                  duration: 5,
+                  repeat: Infinity,
+                  // asymmetric breathing effect
+                  ease: [0.45, 0, 0.55, 1.2],
+                  times: [0, 0.4, 1],
+                }"
+                class="pa-2 rounded-pill"
+              >
+                V2
+              </motion.strong>
+            </template>
+          </v-tooltip>
         </v-app-bar-title>
 
         <CompanySelect v-if="currentUser" />
@@ -73,14 +97,3 @@ const railToggleIcon = computed(() => {
   </v-app>
   <GixFooter />
 </template>
-
-<style scoped>
-.version-text {
-  box-shadow:
-    rgba(56, 180, 74, 0.4) 5px 0,
-    rgba(56, 180, 74, 0.3) 10px 0,
-    rgba(56, 180, 74, 0.2) 15px 0,
-    rgba(56, 180, 74, 0.1) 20px 0,
-    rgba(56, 180, 74, 0.05) 25px 0;
-}
-</style>

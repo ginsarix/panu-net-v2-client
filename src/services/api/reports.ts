@@ -16,6 +16,7 @@ export const getGeneralReport = async (
   formatCdates(generalReport.waybills.result);
   formatCdates(generalReport.invoices.result);
   formatCdates(generalReport.bankReceipts.result);
+  formatCdates(generalReport.materialReceipts.result);
   formatCdates(generalReport.creditCardCollections.result);
 
   return generalReport;
