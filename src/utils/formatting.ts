@@ -7,3 +7,11 @@ export const formatDateTime = (date: string | Date, formatStr?: string) => {
 
   return format(parsedDate, formatStr || 'dd.MM.yyyy HH:mm:ss');
 };
+
+export const formatCurrency = (value: string | number | undefined): string => {
+  if (value === undefined || value === null) return '0';
+  return Number(value).toLocaleString('tr-TR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};

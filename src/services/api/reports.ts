@@ -18,6 +18,7 @@ export const getGeneralReport = async (
   formatCdates(generalReport.bankReceipts.result);
   formatCdates(generalReport.materialReceipts.result);
   formatCdates(generalReport.creditCardCollections.result);
+  formatCdates(generalReport.checkEntries.result);
 
   return generalReport;
 };

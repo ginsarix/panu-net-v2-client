@@ -10,6 +10,7 @@ import { useDebtorsStore } from '@/stores/debtors.ts';
 import { useDisplayStore } from '@/stores/display.ts';
 import { useSnackbarStore } from '@/stores/snackbar';
 import type { DataTableHeaders } from '@/types/data-table-headers.ts';
+import { formatCurrency } from '@/utils/formatting';
 
 const { mobile } = storeToRefs(useDisplayStore());
 
@@ -89,6 +90,9 @@ const includedDataTableHeaders = computed(() =>
           v-model:toggle-items="dataTableHeaders"
         />
       </v-toolbar>
+    </template>
+    <template #[`item.balance`]="{ item }">
+      {{ formatCurrency(item.balance) }}
     </template>
   </v-data-table>
 </template>

@@ -54,9 +54,10 @@ export const useCompaniesStore = defineStore('companies', () => {
 
   const getSelectedCompanyInstance = () =>
     companies.value.find((c) => c.id === selectedCompanyId.value);
+
   const loadSelectedCompanyId = async () => {
     try {
-      selectedCompanyId.value = (await getSelectedCompany()).id ?? null;
+      selectedCompanyId.value = ((await getSelectedCompany()).id as number) ?? null;
     } catch {
       selectedCompanyId.value = null;
     } finally {
@@ -85,7 +86,7 @@ export const useCompaniesStore = defineStore('companies', () => {
   const loadSelectedPeriodCode = async () => {
     try {
       const result = await getSelectedPeriod();
-      selectedPeriodCode.value = result.code ?? 0;
+      selectedPeriodCode.value = (result.code as number) ?? 0;
     } catch {
       selectedPeriodCode.value = 0;
     }

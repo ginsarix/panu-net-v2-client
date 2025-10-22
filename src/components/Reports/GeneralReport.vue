@@ -11,6 +11,7 @@ import { getGeneralReport } from '@/services/api/reports';
 import { useDisplayStore } from '@/stores/display';
 import type { DataTableHeaders } from '@/types/data-table-headers';
 import { uniqueBy } from '@/utils/array';
+import { formatCurrency } from '@/utils/formatting';
 
 import GixTogglerMenu from '../GixTogglerMenu.vue';
 
@@ -95,14 +96,6 @@ const loadGeneralReport = async () => {
   } finally {
     loading.value = false;
   }
-};
-
-const formatCurrency = (value: string | number | undefined): string => {
-  if (value === undefined || value === null) return '0';
-  return Number(value).toLocaleString('tr-TR', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
 };
 
 const waybillDataTableHeaders = ref<DataTableHeaders[]>([
@@ -209,6 +202,22 @@ const includedMaterialReceiptsDataTableHeaders = computed(() =>
   materialReceiptsDataTableHeaders.value.filter((header) => header.toggled),
 );
 
+const checkEntriesDataTableHeaders = ref<DataTableHeaders[]>([
+  { title: 'Bordro No', key: 'bordrono', toggled: true, sortable: true },
+  { title: 'Tutar', key: 'tutar', toggled: true, sortable: true },
+  { title: 'Döviz', key: 'doviz', toggled: true, sortable: true },
+  { title: 'Vade', key: 'vade', toggled: true, sortable: true },
+  { title: 'Cirolu', key: 'cirolu', toggled: true, sortable: true },
+  { title: 'Açıklama', key: 'aciklama', toggled: true, sortable: false },
+  { title: 'Banka Adı', key: 'bankadi', toggled: true, sortable: true },
+  { title: 'Borçlu', key: 'borclu', toggled: true, sortable: true },
+  { title: 'Oluşturulma Tarihi', key: '_cdate', toggled: true, sortable: true },
+]);
+
+const includedCheckEntriesDataTableHeaders = computed(() =>
+  checkEntriesDataTableHeaders.value.filter((header) => header.toggled),
+);
+
 const refreshRotation = ref(0);
 const isRefreshing = ref(false);
 
@@ -220,6 +229,7 @@ const scrollNavItems = ref([
   { id: 'bank-receipts', label: 'Banka Fişleri', icon: 'mdi-bank' },
   { id: 'credit-card-collections', label: 'Kredi Kartı Tahsilatları', icon: 'mdi-credit-card' },
   { id: 'material-receipts', label: 'Malzeme Fişleri', icon: 'mdi-package-variant' },
+  { id: 'check-entries', label: 'Çek Girişleri', icon: 'mdi-checkbook' },
   { id: 'cash-summary', label: 'Nakit Girişleri', icon: 'mdi-cash' },
   { id: 'account-cards', label: 'Cari Kartları', icon: 'mdi-account' },
   { id: 'purchased-services-invoices', label: 'Alınan Hizmetler', icon: 'mdi-invoice-text' },
@@ -866,6 +876,71 @@ const scrollToSection = (sectionId: string) => {
                 </v-sheet>
               </td>
             </tr>
+          </template>
+        </v-data-table>
+      </v-card>
+
+      <v-card id="check-entries" class="report-section-card mb-6" elevation="2" border>
+        <v-card-title class="pa-4 border-b">
+          <div class="d-flex align-center w-100">
+            <v-avatar color="purple" size="40" class="me-3">
+              <v-icon icon="mdi-checkbook" color="white" />
+            </v-avatar>
+            <div>
+              <div class="text-h6 font-weight-bold">Çek Girişleri</div>
+              <div class="text-caption text-medium-emphasis">
+                {{ generalReport.checkEntries.result?.length || 0 }} adet çek girişi
+              </div>
+            </div>
+            <v-spacer />
+            <v-chip
+              v-if="generalReport.checkEntries.result?.length"
+              color="purple"
+              variant="tonal"
+              class="me-3"
+            >
+              {{
+                formatCurrency(
+                  generalReport.checkEntries.result
+                    ?.map((item) => Number(item.tutar))
+                    .reduce((acc, val) => acc + val, 0) ?? 0,
+                )
+              }}
+              TL
+            </v-chip>
+            <GixTogglerMenu
+              menu-activator-btn-text="Filtrele"
+              menu-activator-btn-class="rounded-lg border"
+              menu-activator-btn-icon="mdi-filter-variant"
+              v-model:toggle-items="checkEntriesDataTableHeaders"
+            />
+          </div>
+        </v-card-title>
+
+        <v-data-table
+          :items="generalReport.checkEntries.result"
+          class="rounded-b-lg"
+          no-data-text="Çek girişi bulunamadı."
+          items-per-page-text="Sayfa başı çek girişi"
+          :mobile="mobile.value"
+          fixed-header
+          :headers="includedCheckEntriesDataTableHeaders"
+          hover
+        >
+          <template #[`item.tutar`]="{ item }">
+            {{ formatCurrency(item.tutar) }}
+          </template>
+          <template #[`item.vade`]="{ item }">
+            {{ format(item.vade, 'dd.MM.yyyy') }}
+          </template>
+          <template #[`item.cirolu`]="{ item }">
+            <v-chip
+              :color="item.cirolu === 'E' ? 'success' : 'warning'"
+              variant="tonal"
+              size="small"
+            >
+              {{ item.cirolu === 'E' ? 'Evet' : 'Hayır' }}
+            </v-chip>
           </template>
         </v-data-table>
       </v-card>
