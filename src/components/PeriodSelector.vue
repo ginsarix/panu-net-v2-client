@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import { setSelectedPeriod } from '@/services/api/companies';
 import { useAsyncGateStore } from '@/stores/async-gate';
@@ -13,31 +13,12 @@ const companiesStore = useCompaniesStore();
 const { periods, selectedPeriodCode } = storeToRefs(companiesStore);
 
 const isInitialLoad = ref(true);
-let saveTimeout: NodeJS.Timeout | null = null;
+const tempSelectedPeriodCode = ref(0);
 
 onMounted(async () => {
   await companiesStore.loadSelectedPeriodCode();
+  tempSelectedPeriodCode.value = selectedPeriodCode.value;
   isInitialLoad.value = false;
-});
-
-watch(selectedPeriodCode, async (newValue, oldValue) => {
-  if (!isInitialLoad.value && oldValue !== undefined && newValue !== oldValue) {
-    if (saveTimeout) {
-      clearTimeout(saveTimeout);
-    }
-
-    saveTimeout = setTimeout(async () => {
-      try {
-        asyncGateStore.reset();
-
-        await setSelectedPeriod(newValue);
-
-        asyncGateStore.markReady();
-      } catch (error) {
-        console.error(error);
-      }
-    }, 100);
-  }
 });
 
 const periodSelectorText = computed(() =>
@@ -45,6 +26,22 @@ const periodSelectorText = computed(() =>
 );
 
 const dialog = ref(false);
+
+const handlePeriodConfirm = async () => {
+  if (tempSelectedPeriodCode.value !== selectedPeriodCode.value) {
+    try {
+      asyncGateStore.reset();
+
+      await setSelectedPeriod(tempSelectedPeriodCode.value);
+      selectedPeriodCode.value = tempSelectedPeriodCode.value;
+
+      asyncGateStore.markReady();
+    } catch (error) {
+      console.error(error);
+    }
+  }
+  dialog.value = false;
+};
 </script>
 
 <template>
@@ -57,7 +54,7 @@ const dialog = ref(false);
     <v-dialog v-model="dialog" max-width="500">
       <v-card rounded="lg">
         <v-card-text>
-          <v-item-group v-model="selectedPeriodCode" selected-class="bg-primary" mandatory>
+          <v-item-group v-model="tempSelectedPeriodCode" selected-class="bg-primary" mandatory>
             <v-container>
               <v-row>
                 <v-col cols="12" sm="6" v-for="period in periods" :key="period.code">
@@ -86,7 +83,7 @@ const dialog = ref(false);
           </v-item-group>
         </v-card-text>
         <v-card-actions>
-          <v-btn color="primary" rounded="lg" @click="dialog = !dialog">Tamam</v-btn>
+          <v-btn color="primary" rounded="lg" @click="handlePeriodConfirm">Tamam</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
