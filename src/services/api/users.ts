@@ -16,7 +16,8 @@ export const createUser = async (data: WithRequiredProperty<User, 'password'>) =
 };
 
 export const patchUser = async (id: number, data: Partial<User>) => {
-  data = cleanPayload(data);
+  data = cleanPayload(data, true);
+
   return await trpc.user.updateUser.mutate({ id, data });
 };
 

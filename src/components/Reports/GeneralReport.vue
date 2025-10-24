@@ -246,6 +246,10 @@ const refresh = async () => {
   isRefreshing.value = false;
 };
 
+const showRefreshButton = computed(
+  () => dateFiltersChanged.value && generalReport.value && datesValid.value,
+);
+
 const scrollToSection = (sectionId: string) => {
   const element = document.getElementById(sectionId);
   if (element) {
@@ -326,7 +330,7 @@ const scrollToSection = (sectionId: string) => {
       <v-col class="mt-2" cols="auto">
         <AnimatePresence>
           <motion.button
-            v-if="dateFiltersChanged && generalReport && datesValid"
+            v-if="showRefreshButton"
             key="refreshBtn"
             :initial="{ scale: 0, opacity: 0 }"
             :animate="{ scale: 1, opacity: 1, rotate: !xs.value ? refreshRotation : undefined }"

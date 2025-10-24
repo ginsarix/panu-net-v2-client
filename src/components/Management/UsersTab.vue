@@ -15,6 +15,7 @@ import {
 } from '@/services/api/users.ts';
 import { cleanPayload } from '@/services/trpc';
 import { useCompaniesStore } from '@/stores/companies';
+import { useCurrentUserStore } from '@/stores/current-user';
 import { useDisplayStore } from '@/stores/display.ts';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useUsersStore } from '@/stores/users.ts';
@@ -36,6 +37,9 @@ const { mobile } = storeToRefs(useDisplayStore());
 
 const usersStore = useUsersStore();
 const { users, totalUsersCount } = storeToRefs(usersStore);
+
+const currentUserStore = useCurrentUserStore();
+const { currentUser } = storeToRefs(currentUserStore);
 
 const companiesStore = useCompaniesStore();
 const { companies } = storeToRefs(companiesStore);
@@ -139,6 +143,8 @@ const dialogSubmit = async () => {
         const editPasswordConfirmed = editUser.password === userForm.passwordAgain.value;
 
         if (!editPasswordConfirmed) return;
+
+        if (editUser.email === selectedUser.value.email) editUser.email = '';
 
         const editedUser = await patchUser(selectedUser.value.id, editUser);
 
@@ -331,8 +337,29 @@ const editFormValid = computed(
         <GixRefreshButton class="me-5" :refresh-fn="() => loadUsers()" />
       </v-toolbar>
     </template>
+    <template #[`item.name`]="{ item }">
+      <v-tooltip
+        v-if="item.id === Number(currentUser?.id)"
+        location="bottom"
+        :text="'Bu sizsiniz!'"
+      >
+        <template #activator="{ props }">
+          <v-chip v-bind="props" color="blue-lighten-2">
+            <span>{{ item.name }}</span>
+          </v-chip>
+        </template>
+      </v-tooltip>
+      <span v-else>{{ item.name }}</span>
+    </template>
     <template #[`item.role`]="{ item }">
-      {{ item.role === 'admin' ? 'Admin' : 'Kullanıcı' }}
+      <v-chip :color="item.role === 'admin' ? 'red-lighten-1' : 'secondary'">
+        <v-icon
+          size="small"
+          :icon="item.role === 'admin' ? 'mdi-shield' : 'mdi-account'"
+          class="me-1"
+        />
+        {{ item.role === 'admin' ? 'Admin' : 'Kullanıcı' }}
+      </v-chip>
     </template>
     <template #[`item.creationDate`]="{ item }">
       {{ item.creationDate ? formatDateTime(item.creationDate) : '' }}
@@ -414,6 +441,7 @@ const editFormValid = computed(
                     v-model="userForm.userCompanies.value"
                     v-show="!companySelectHidden"
                     variant="outlined"
+                    rounded="lg"
                     multiple
                     chips
                     label="Firmalar"

@@ -12,8 +12,7 @@ import { useSnackbarStore } from '@/stores/snackbar.ts';
 import PeriodSelector from './PeriodSelector.vue';
 
 const companiesStore = useCompaniesStore();
-const { companies, creditCount, creditCountLoading, selectedCompanyId } =
-  storeToRefs(companiesStore);
+const { companies, creditCount, selectedCompanyId } = storeToRefs(companiesStore);
 
 const snackbarStore = useSnackbarStore();
 const { snackbar, snackbarText, snackbarError } = storeToRefs(snackbarStore);
@@ -28,7 +27,7 @@ const loadCompanies = async () => {
   try {
     await companiesStore.loadCompanies();
   } catch (error) {
-    noDataText.value = 'Beklenmedik birşey oldu.';
+    noDataText.value = 'Beklenmedik bir hata oluştu.';
     console.error(error);
   }
 };
@@ -127,8 +126,7 @@ watchDebounced(
   <v-expand-x-transition v-show="selectedCompanyIdPassthrough">
     <span class="text-overline mt-3 me-3 text-no-wrap">
       Kontör:
-      <v-progress-circular v-if="creditCountLoading" size="20" indeterminate />
-      <span v-else>{{ creditCount }}</span>
+      {{ creditCount }}
     </span>
   </v-expand-x-transition>
 </template>

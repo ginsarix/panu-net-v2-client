@@ -178,6 +178,8 @@ const dialogSubmit = async () => {
 
         const editCustomer = formCustomer();
 
+        if (editCustomer.email === selectedCustomer.value.email) editCustomer.email = '';
+
         const editedSubscriptionCustomer = await patchSubscriptionCustomer(
           selectedCustomer.value.id,
           editCustomer,

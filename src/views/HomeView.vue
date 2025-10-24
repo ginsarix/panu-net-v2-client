@@ -6,11 +6,15 @@ import AnalyticsTab from '@/components/DebtorsCreditors/AnalyticsTab.vue';
 import { useSelectedCompany } from '@/composables/useSelectedCompany';
 import { useCompaniesStore } from '@/stores/companies';
 import { useCreditorsStore } from '@/stores/creditors';
+import { useCurrentUserStore } from '@/stores/current-user';
 import { useDebtorsStore } from '@/stores/debtors';
 import { useUsersStore } from '@/stores/users';
 
 const companiesStore = useCompaniesStore();
 const usersStore = useUsersStore();
+
+const currentUserStore = useCurrentUserStore();
+const { currentUser } = storeToRefs(currentUserStore);
 
 onMounted(async () => {
   if (!totalCompanies.value) await loadCompanies();
@@ -77,9 +81,8 @@ const totalUsers = computed(() => usersStore.users.length);
 const totalDebtors = computed(() => debtorsStore.debtors.length);
 const totalCreditors = computed(() => creditorsStore.creditors.length);
 
-const kpis = [
+const baseKpis = [
   { label: 'Firmalar', value: totalCompanies, icon: 'mdi-domain', theme: 'primary' },
-  { label: 'Kullanıcılar', value: totalUsers, icon: 'mdi-account-group', theme: 'info' },
   {
     label: 'Borçlular',
     value: totalDebtors,
@@ -94,12 +97,37 @@ const kpis = [
   },
 ];
 
-const quickLinks = [
-  { label: 'Firmalar', icon: 'mdi-domain', to: '/management/companies', theme: 'primary' },
-  { label: 'Kullanıcılar', icon: 'mdi-account-group', to: '/management/users', theme: 'info' },
+const adminKpis = [
+  { label: 'Kullanıcılar', value: totalUsers, icon: 'mdi-account-group', theme: 'info' },
+];
+
+const kpis = computed(() =>
+  currentUser.value?.role === 'admin'
+    ? [...baseKpis.slice(0, 1), ...adminKpis, ...baseKpis.slice(1)]
+    : baseKpis,
+);
+
+const baseLinks = [
   { label: 'Borçlular', icon: 'mdi-bank-transfer-out', to: '/dbcr/debtors', theme: 'error' },
   { label: 'Alacaklılar', icon: 'mdi-bank-transfer-in', to: '/dbcr/creditors', theme: 'success' },
+  {
+    label: 'Genel Rapor',
+    icon: 'mdi-file-document',
+    to: '/reports/general-report',
+    theme: 'primary',
+  },
 ];
+
+const adminLinks = [
+  { label: 'Kullanıcılar', icon: 'mdi-account-group', to: '/management/users', theme: 'info' },
+  { label: 'Firmalar', icon: 'mdi-domain', to: '/management/companies', theme: 'primary' },
+];
+
+const quickLinks = computed(() =>
+  currentUser.value?.role === 'admin'
+    ? [...baseLinks.slice(0, 2), ...adminLinks, ...baseLinks.slice(2)]
+    : baseLinks,
+);
 </script>
 
 <template>

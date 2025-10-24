@@ -133,6 +133,7 @@ const logout = async () => {
           to="/task-tracking/subscriptions"
         />
         <v-list-item
+          v-if="currentUser?.role === 'admin'"
           rounded="xl"
           prepend-icon="mdi-account-cash"
           title="Müşteriler"
@@ -140,7 +141,7 @@ const logout = async () => {
         />
       </v-list-group>
 
-      <v-list-group value="Management">
+      <v-list-group v-if="currentUser?.role === 'admin'" value="Management">
         <template #activator="{ props }">
           <v-list-item
             v-bind="props"

@@ -4,7 +4,7 @@ import { ref } from 'vue';
 import { getLogin, logout } from '@/services/api/auth';
 
 export const useCurrentUserStore = defineStore('currentUser', () => {
-  const currentUser = ref<{ name: string; role: 'user' | 'admin' } | null>(null);
+  const currentUser = ref<{ id: string; name: string; role: 'user' | 'admin' } | null>(null);
   const loadCurrentUser = async () => {
     const login = await getLogin();
     if (!login) {
