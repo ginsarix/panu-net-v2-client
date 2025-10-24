@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { TRPCClientError } from '@trpc/client';
 import { storeToRefs } from 'pinia';
-import { computed, ref, watch } from 'vue';
+import { computed, ref } from 'vue';
 
+import { useCompanyPeriodWatcher } from '@/composables/useCompanyPeriodWatcher';
 import { useSelectedCompany } from '@/composables/useSelectedCompany';
-import { useCompaniesStore } from '@/stores/companies';
 import { useCreditorsStore } from '@/stores/creditors.ts';
 import { useDisplayStore } from '@/stores/display';
 import { useSnackbarStore } from '@/stores/snackbar';
@@ -18,17 +18,17 @@ const { mobile } = storeToRefs(useDisplayStore());
 const creditorsStore = useCreditorsStore();
 const { creditors } = storeToRefs(creditorsStore);
 
-const companiesStore = useCompaniesStore();
-const { selectedPeriodCode } = storeToRefs(companiesStore);
-
-const { selectedCompany, loading } = useSelectedCompany();
+const { selectedCompany, loading: selectedCompanyLoading } = useSelectedCompany();
 
 const snackbarStore = useSnackbarStore();
 const { snackbar, snackbarError, snackbarText } = storeToRefs(snackbarStore);
 
+const loading = ref(false);
+
 const loadCreditors = async () => {
   if (!selectedCompany.value) return;
 
+  loading.value = true;
   try {
     await creditorsStore.loadCreditors();
   } catch (error) {
@@ -39,18 +39,12 @@ const loadCreditors = async () => {
       snackbarText.value = error.message;
       snackbar.value = true;
     }
+  } finally {
+    loading.value = false;
   }
 };
 
-watch(
-  [selectedCompany, selectedPeriodCode],
-  async ([newSelectedCompany, newSelectedPeriod]) => {
-    if (newSelectedCompany && newSelectedPeriod !== null && newSelectedPeriod !== undefined) {
-      await loadCreditors();
-    }
-  },
-  { immediate: true },
-);
+useCompanyPeriodWatcher(loadCreditors, true);
 
 const dataTableHeaders = ref<DataTableHeaders[]>([
   { title: 'Cari Kart Kodu', key: 'code', toggled: true, sortable: true },
@@ -67,7 +61,7 @@ const includedDataTableHeaders = computed(() =>
 <template>
   <v-data-table
     :items="creditors"
-    :loading="loading"
+    :loading="selectedCompanyLoading"
     class="rounded-lg elevation-0 border"
     no-data-text="Alacaklılar bulunamadı."
     loading-text="Alacaklılar yükleniyor..."

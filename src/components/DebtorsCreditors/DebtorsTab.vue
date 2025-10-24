@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { TRPCClientError } from '@trpc/client';
 import { storeToRefs } from 'pinia';
-import { computed, ref, watch } from 'vue';
+import { computed, ref } from 'vue';
 
 import GixTogglerMenu from '@/components/GixTogglerMenu.vue';
+import { useCompanyPeriodWatcher } from '@/composables/useCompanyPeriodWatcher';
 import { useSelectedCompany } from '@/composables/useSelectedCompany';
-import { useCompaniesStore } from '@/stores/companies';
 import { useDebtorsStore } from '@/stores/debtors.ts';
 import { useDisplayStore } from '@/stores/display.ts';
 import { useSnackbarStore } from '@/stores/snackbar';
@@ -17,17 +17,17 @@ const { mobile } = storeToRefs(useDisplayStore());
 const debtorsStore = useDebtorsStore();
 const { debtors } = storeToRefs(debtorsStore);
 
-const companiesStore = useCompaniesStore();
-const { selectedPeriodCode } = storeToRefs(companiesStore);
-
-const { selectedCompany, loading } = useSelectedCompany();
+const { selectedCompany, loading: selectedCompanyLoading } = useSelectedCompany();
 
 const snackbarStore = useSnackbarStore();
 const { snackbar, snackbarError, snackbarText } = storeToRefs(snackbarStore);
 
+const loading = ref(false);
+
 const loadDebtors = async () => {
   if (!selectedCompany.value) return;
 
+  loading.value = true;
   try {
     await debtorsStore.loadDebtors();
   } catch (error) {
@@ -37,18 +37,12 @@ const loadDebtors = async () => {
       snackbarText.value = error.message;
       snackbar.value = true;
     }
+  } finally {
+    loading.value = false;
   }
 };
 
-watch(
-  [selectedCompany, selectedPeriodCode],
-  async ([newSelectedCompany, newSelectedPeriod]) => {
-    if (newSelectedCompany && newSelectedPeriod !== null && newSelectedPeriod !== undefined) {
-      await loadDebtors();
-    }
-  },
-  { immediate: true },
-);
+useCompanyPeriodWatcher(loadDebtors, true);
 
 const dataTableHeaders = ref<DataTableHeaders[]>([
   { title: 'Cari Kart Kodu', key: 'code', toggled: true, sortable: true },
@@ -66,7 +60,7 @@ const includedDataTableHeaders = computed(() =>
 <template>
   <v-data-table
     :items="debtors"
-    :loading="loading"
+    :loading="selectedCompanyLoading"
     class="rounded-lg elevation-0 border"
     no-data-text="Borçlular bulunamadı."
     loading-text="Borçlular yükleniyor..."

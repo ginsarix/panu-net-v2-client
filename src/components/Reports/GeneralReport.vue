@@ -3,10 +3,11 @@ import { TRPCClientError } from '@trpc/client';
 import { addDays, format, isBefore, isEqual } from 'date-fns';
 import { AnimatePresence, motion } from 'motion-v';
 import { storeToRefs } from 'pinia';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { VDateInput } from 'vuetify/labs/VDateInput';
 import { VIconBtn } from 'vuetify/labs/VIconBtn';
 
+import { useCompanyPeriodWatcher } from '@/composables/useCompanyPeriodWatcher';
 import { getGeneralReport } from '@/services/api/reports';
 import { useDisplayStore } from '@/stores/display';
 import type { DataTableHeaders } from '@/types/data-table-headers';
@@ -48,12 +49,6 @@ const requestedEndDateFilter = ref<Date>();
 
 const startDateFilter = ref(new Date());
 const endDateFilter = ref(addDays(new Date(), 1));
-
-const dateFiltersChanged = computed(
-  () =>
-    requestedStartDateFilter.value !== startDateFilter.value ||
-    requestedEndDateFilter.value !== endDateFilter.value,
-);
 
 const datesValid = computed(() => {
   if (!startDateFilter.value || !endDateFilter.value) return false;
@@ -97,6 +92,14 @@ const loadGeneralReport = async () => {
     loading.value = false;
   }
 };
+
+const { stop: stopWatch } = watch(generalReport, async (newGeneralReport) => {
+  if (newGeneralReport) {
+    useCompanyPeriodWatcher(loadGeneralReport);
+
+    stopWatch();
+  }
+});
 
 const waybillDataTableHeaders = ref<DataTableHeaders[]>([
   { title: 'Fiş No', key: 'fisno', toggled: true, sortable: true },
@@ -219,7 +222,6 @@ const includedCheckEntriesDataTableHeaders = computed(() =>
 );
 
 const refreshRotation = ref(0);
-const isRefreshing = ref(false);
 
 // scroll navigation
 const showScrollNav = computed(() => generalReport.value && !loading.value);
@@ -236,19 +238,12 @@ const scrollNavItems = ref([
 ]);
 
 const refresh = async () => {
-  if (isRefreshing.value) return;
+  if (loading.value) return;
 
-  isRefreshing.value = true;
   refreshRotation.value += 360;
 
   await loadGeneralReport();
-
-  isRefreshing.value = false;
 };
-
-const showRefreshButton = computed(
-  () => dateFiltersChanged.value && generalReport.value && datesValid.value,
-);
 
 const scrollToSection = (sectionId: string) => {
   const element = document.getElementById(sectionId);
@@ -330,7 +325,7 @@ const scrollToSection = (sectionId: string) => {
       <v-col class="mt-2" cols="auto">
         <AnimatePresence>
           <motion.button
-            v-if="showRefreshButton"
+            v-if="generalReport && datesValid"
             key="refreshBtn"
             :initial="{ scale: 0, opacity: 0 }"
             :animate="{ scale: 1, opacity: 1, rotate: !xs.value ? refreshRotation : undefined }"
@@ -344,7 +339,7 @@ const scrollToSection = (sectionId: string) => {
                   v-show="!xs.value"
                   v-bind="props"
                   icon="mdi-refresh"
-                  :disabled="isRefreshing"
+                  :disabled="loading"
                 />
               </template>
             </v-tooltip>

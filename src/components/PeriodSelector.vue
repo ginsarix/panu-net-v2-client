@@ -13,16 +13,17 @@ const companiesStore = useCompaniesStore();
 const { periods, selectedPeriodCode } = storeToRefs(companiesStore);
 
 const isInitialLoad = ref(true);
-const tempSelectedPeriodCode = ref(0);
+const tempSelectedPeriodCode = ref<number>();
 
 onMounted(async () => {
   await companiesStore.loadSelectedPeriodCode();
-  tempSelectedPeriodCode.value = selectedPeriodCode.value;
+  tempSelectedPeriodCode.value =
+    selectedPeriodCode.value === 0 ? undefined : selectedPeriodCode.value;
   isInitialLoad.value = false;
 });
 
 const periodSelectorText = computed(() =>
-  !selectedPeriodCode.value ? 'Dönem Seç' : `Dönem: ${selectedPeriodCode.value}`,
+  !selectedPeriodCode.value ? 'Dönem: Öntanımlı' : `Dönem: ${selectedPeriodCode.value}`,
 );
 
 const dialog = ref(false);
@@ -32,8 +33,8 @@ const handlePeriodConfirm = async () => {
     try {
       asyncGateStore.reset();
 
-      await setSelectedPeriod(tempSelectedPeriodCode.value);
-      selectedPeriodCode.value = tempSelectedPeriodCode.value;
+      await setSelectedPeriod(tempSelectedPeriodCode.value ?? 0);
+      selectedPeriodCode.value = tempSelectedPeriodCode.value ?? 0;
 
       asyncGateStore.markReady();
     } catch (error) {
@@ -54,7 +55,7 @@ const handlePeriodConfirm = async () => {
     <v-dialog v-model="dialog" max-width="500">
       <v-card rounded="lg">
         <v-card-text>
-          <v-item-group v-model="tempSelectedPeriodCode" selected-class="bg-primary" mandatory>
+          <v-item-group v-model="tempSelectedPeriodCode" selected-class="bg-primary">
             <v-container>
               <v-row>
                 <v-col cols="12" sm="6" v-for="period in periods" :key="period.code">
@@ -81,6 +82,7 @@ const handlePeriodConfirm = async () => {
               </v-row>
             </v-container>
           </v-item-group>
+          Öntanımlı dönemi seçmek için boş bırakınız.
         </v-card-text>
         <v-card-actions>
           <v-btn color="primary" rounded="lg" @click="handlePeriodConfirm">Tamam</v-btn>
