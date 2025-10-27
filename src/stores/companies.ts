@@ -29,6 +29,7 @@ export const useCompaniesStore = defineStore('companies', () => {
     if (!selectedCompanyId.value) return;
 
     creditCountLoading.value = true;
+    await new Promise((resolve) => setTimeout(resolve, 500)); // wait for the credits to update on the external service (just a guarantee)
     try {
       creditCount.value = await getCreditCount();
     } catch (error) {

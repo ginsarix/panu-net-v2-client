@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { useCurrentUserStore } from '@/stores/current-user';
+
+import CompanySection from './CompanySection.vue';
 
 defineProps<{
   rail: boolean;
@@ -34,18 +36,28 @@ const logout = async () => {
   if (currentUser) await currentUserStore.logoutCurrentUser();
   await router.push('/login');
 };
+
+const companySectionVisible = ref(false);
 </script>
 
 <template>
   <v-navigation-drawer
     :class="'position-fixed' + (rail ? '' : ' pa-2')"
     :location="!mobile ? 'left' : 'bottom'"
-    :rail="rail"
+    :rail
     permanent
   >
     <v-list class="pa-2">
       <v-list-item :prepend-icon="userIcon" :title="currentUser?.name" nav>
         <template #append>
+          <v-btn
+            v-if="mobile"
+            aria-label="Ayarlar"
+            @click="companySectionVisible = !companySectionVisible"
+            icon="mdi-cog"
+            variant="text"
+            size="small"
+          />
           <v-tooltip :text="`${currentUser ? 'Çıkış' : 'Giriş'} Yap`" location="bottom">
             <template #activator="{ props }">
               <v-btn
@@ -60,6 +72,13 @@ const logout = async () => {
           </v-tooltip>
         </template>
       </v-list-item>
+      <template v-if="mobile">
+        <v-expand-transition v-show="companySectionVisible">
+          <div>
+            <CompanySection :mobile class="text-center" />
+          </div>
+        </v-expand-transition>
+      </template>
     </v-list>
     <v-divider />
     <v-list>

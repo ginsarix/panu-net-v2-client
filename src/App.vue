@@ -5,14 +5,13 @@ import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { VIconBtn } from 'vuetify/labs/components';
 
-import CompanySelect from '@/components/CompanySelect.vue';
+import CompanySection from '@/components/CompanySection.vue';
 import GixFooter from '@/components/GixFooter.vue';
 import GixSnackbar from '@/components/GixSnackbar.vue';
 import NavigationDrawer from '@/components/NavigationDrawer.vue';
-import { useSnackbarStore } from '@/stores/snackbar.ts';
-
-import { useCurrentUserStore } from './stores/current-user';
-import { useDisplayStore } from './stores/display';
+import { useCurrentUserStore } from '@/stores/current-user';
+import { useDisplayStore } from '@/stores/display';
+import { useSnackbarStore } from '@/stores/snackbar';
 
 const currentUserStore = useCurrentUserStore();
 const { currentUser } = storeToRefs(currentUserStore);
@@ -52,7 +51,7 @@ const railToggleIcon = computed(() => {
           @click="rail = !rail"
           aria-label="Navigasyon menüsünü aç"
         />
-        <v-app-bar-title v-show="!mobile.value" @click="router.push('/')" class="cursor-pointer">
+        <v-app-bar-title @click="router.push('/')" class="cursor-pointer">
           <span class="panu-font">Panu</span
           ><span class="panu-font font-italic" style="color: var(--color-panu)">Net</span>
           <v-tooltip text="Ben hayattayım!" location="bottom">
@@ -81,7 +80,7 @@ const railToggleIcon = computed(() => {
           </v-tooltip>
         </v-app-bar-title>
 
-        <CompanySelect v-if="currentUser" />
+        <CompanySection :mobile="mobile.value" v-if="currentUser && !mobile.value" />
       </v-app-bar>
       <v-main>
         <v-container>

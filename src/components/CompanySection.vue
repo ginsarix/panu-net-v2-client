@@ -2,14 +2,21 @@
 import { TRPCClientError } from '@trpc/client';
 import { watchDebounced } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
+import { VExpandTransition, VExpandXTransition } from 'vuetify/components';
 
 import { setSelectedCompany } from '@/services/api/companies.ts';
 import emitter from '@/services/service-bus.ts';
 import { useCompaniesStore } from '@/stores/companies.ts';
 import { useSnackbarStore } from '@/stores/snackbar.ts';
+import type { Company } from '@/types/company';
+import { formatDateTime } from '@/utils/formatting';
 
 import PeriodSelector from './PeriodSelector.vue';
+
+const props = defineProps<{
+  mobile: boolean;
+}>();
 
 const companiesStore = useCompaniesStore();
 const { companies, creditCount, selectedCompanyId } = storeToRefs(companiesStore);
@@ -43,11 +50,21 @@ const loadSelectedCompanyId = async () => {
   }
 };
 
+const selectedCompanyInstance = ref<Company>();
+
 onMounted(async () => {
   await loadCompanies();
   await loadSelectedCompanyId();
   selectedCompanyIdPassthrough.value = selectedCompanyId.value;
 });
+
+watch(
+  selectedCompanyId,
+  () => {
+    selectedCompanyInstance.value = companiesStore.getSelectedCompanyInstance();
+  },
+  { immediate: true },
+);
 
 emitter.on('companyNotSelected', () => {
   if (!selectedCompanyId) return;
@@ -94,6 +111,8 @@ watchDebounced(
   },
   { debounce: 300 },
 );
+
+const ExpandTransition = computed(() => (props.mobile ? VExpandTransition : VExpandXTransition));
 </script>
 
 <template>
@@ -120,13 +139,23 @@ watchDebounced(
       /> </template
   ></v-select>
 
-  <v-expand-x-transition v-show="selectedCompanyIdPassthrough">
-    <PeriodSelector class="mt-1 me-3" />
-  </v-expand-x-transition>
-  <v-expand-x-transition v-show="selectedCompanyIdPassthrough">
+  <component :is="ExpandTransition" v-show="selectedCompanyIdPassthrough">
+    <span class="text-overline mt-3 mx-3 text-no-wrap"
+      >Lisans Tarihi:
+      {{
+        selectedCompanyInstance?.licenseDate
+          ? formatDateTime(selectedCompanyInstance.licenseDate, 'dd.MM.yyyy')
+          : ''
+      }}</span
+    >
+  </component>
+  <component :is="ExpandTransition" v-show="selectedCompanyIdPassthrough">
+    <PeriodSelector :class="mobile ? 'me-3' : 'mt-1 me-3'" />
+  </component>
+  <component :is="ExpandTransition" v-show="selectedCompanyIdPassthrough">
     <span class="text-overline mt-3 me-3 text-no-wrap">
       Kontör:
       {{ creditCount }}
     </span>
-  </v-expand-x-transition>
+  </component>
 </template>

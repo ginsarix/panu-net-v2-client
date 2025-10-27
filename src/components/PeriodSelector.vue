@@ -48,9 +48,14 @@ const handlePeriodConfirm = async () => {
 <template>
   <!-- <transition> only allows 1 element  -->
   <div>
-    <v-btn v-bind="$attrs" @click="dialog = true" append-icon="mdi-timeline-clock" variant="flat">{{
-      periodSelectorText
-    }}</v-btn>
+    <v-btn
+      v-bind="$attrs"
+      @click="dialog = true"
+      append-icon="mdi-timeline-clock"
+      variant="outlined"
+      border="thin"
+      >{{ periodSelectorText }}</v-btn
+    >
 
     <v-dialog v-model="dialog" max-width="500">
       <v-card rounded="lg">

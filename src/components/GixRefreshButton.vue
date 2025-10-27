@@ -24,7 +24,7 @@ const toggleRefresh = async () => {
 </script>
 
 <template>
-  <v-icon-btn @click="toggleRefresh" variant="text" class="me-1">
+  <v-icon-btn aria-label="Yenile" @click="toggleRefresh" variant="text" class="me-1">
     <motion.div
       :animate="{ rotate: refreshRotation }"
       :transition="{ type: 'spring', stiffness: 200, damping: 20 }"

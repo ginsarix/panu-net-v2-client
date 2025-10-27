@@ -174,14 +174,6 @@ const quickLinks = computed(() =>
         </v-card>
       </v-col>
     </v-row>
-
-    <v-row align="center" justify="center">
-      <v-col cols="12" md="10">
-        <v-alert type="info" class="elevation-2 text-center py-6" border="start">
-          <span class="text-h5 font-weight-bold">PanuNet V2</span> — Modern, hızlı ve "think simple!
-        </v-alert>
-      </v-col>
-    </v-row>
   </v-container>
 </template>
 
