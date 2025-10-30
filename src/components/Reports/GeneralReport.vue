@@ -14,6 +14,7 @@ import type { DataTableHeaders } from '@/types/data-table-headers';
 import { uniqueBy } from '@/utils/array';
 import { formatCurrency } from '@/utils/formatting';
 
+import GixChart from '../GixChart.vue';
 import GixTogglerMenu from '../GixTogglerMenu.vue';
 
 const { mobile, xs } = storeToRefs(useDisplayStore());
@@ -125,6 +126,49 @@ const waybillItemsDataTableHeaders = ref<DataTableHeaders[]>([
   { title: 'Genel Tutar', key: 'toplamtutar', toggled: true, sortable: true },
 ]);
 
+// group items by a label and sum a numeric value
+function buildGroupedSumChartData<T>(
+  collection: { result: T[] } | T[] | undefined,
+  getGroup: (item: T) => string | undefined,
+  getValue: (item: T) => number | string | undefined,
+  options?: { unknownLabel?: string },
+) {
+  const items = Array.isArray(collection) ? collection : (collection?.result ?? []);
+
+  const unknownLabel = options?.unknownLabel ?? 'Diğer';
+  const totalsByGroup = items.reduce(
+    (acc, item) => {
+      const rawGroup = getGroup(item);
+      const group = rawGroup && String(rawGroup).trim() ? String(rawGroup) : unknownLabel;
+      const value = Number(getValue(item)) || 0;
+      acc[group] = (acc[group] ?? 0) + value;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
+
+  const legendData = Object.keys(totalsByGroup);
+  const seriesData = legendData.map((name) => ({ name, value: totalsByGroup[name] }));
+
+  return { legendData, seriesData };
+}
+
+const waybillChartData = computed(() => {
+  if (!generalReport.value || !generalReport.value.waybills) {
+    return { legendData: [], seriesData: [] };
+  }
+
+  return buildGroupedSumChartData<{
+    turuack?: string;
+    toplamtutar?: string | number;
+  }>(
+    generalReport.value.waybills,
+    (w) => w.turuack,
+    (w) => w.toplamtutar,
+    { unknownLabel: 'Diğer' },
+  );
+});
+
 const includedWaybillDataTableHeaders = computed(() =>
   waybillDataTableHeaders.value.filter((header) => header.toggled),
 );
@@ -153,6 +197,21 @@ const invoiceItemsDataTableHeaders = ref<DataTableHeaders[]>([
   { title: 'Genel Tutar', key: 'toplamtutar', toggled: true, sortable: true },
 ]);
 
+const invoiceChartData = computed(() => {
+  if (!generalReport.value || !generalReport.value.invoices) {
+    return { legendData: [], seriesData: [] };
+  }
+
+  return buildGroupedSumChartData<{
+    turuack?: string;
+    toplamtutar?: string | number;
+  }>(
+    generalReport.value.invoices,
+    (i) => i.turuack,
+    (i) => i.toplamtutar,
+    { unknownLabel: 'Diğer' },
+  );
+});
 const includedInvoiceDataTableHeaders = computed(() =>
   invoiceDataTableHeaders.value.filter((header) => header.toggled),
 );
@@ -164,6 +223,22 @@ const bankReceiptsDataTableHeaders = ref<DataTableHeaders[]>([
   { title: 'Açıklama', key: 'aciklama', toggled: true, sortable: false },
   { title: 'Oluşturulma Tarihi', key: '_cdate', toggled: true, sortable: true },
 ]);
+
+const bankReceiptsChartData = computed(() => {
+  if (!generalReport.value || !generalReport.value.bankReceipts) {
+    return { legendData: [], seriesData: [] };
+  }
+
+  return buildGroupedSumChartData<{
+    turuack?: string;
+    toplamtutar?: string | number;
+  }>(
+    generalReport.value.bankReceipts,
+    (i) => i.turuack,
+    (i) => i.toplamtutar,
+    { unknownLabel: 'Diğer' },
+  );
+});
 
 const includedBankReceiptsDataTableHeaders = computed(() =>
   bankReceiptsDataTableHeaders.value.filter((header) => header.toggled),
@@ -201,6 +276,22 @@ const materialReceiptsItemsDataTableHeaders = ref<DataTableHeaders[]>([
   { title: 'Toplam', key: 'toplam', toggled: true, sortable: true },
 ]);
 
+const materialReceiptsChartData = computed(() => {
+  if (!generalReport.value || !generalReport.value.materialReceipts) {
+    return { legendData: [], seriesData: [] };
+  }
+
+  return buildGroupedSumChartData<{
+    turuack?: string;
+    toplamtutar?: string | number;
+  }>(
+    generalReport.value.materialReceipts,
+    (i) => i.turuack,
+    (i) => i.toplamtutar,
+    { unknownLabel: 'Diğer' },
+  );
+});
+
 const includedMaterialReceiptsDataTableHeaders = computed(() =>
   materialReceiptsDataTableHeaders.value.filter((header) => header.toggled),
 );
@@ -222,6 +313,11 @@ const includedCheckEntriesDataTableHeaders = computed(() =>
 );
 
 const refreshRotation = ref(0);
+
+const showWaybillChart = ref(false);
+const showInvoiceChart = ref(false);
+const showBankReceiptsChart = ref(false);
+const showMaterialReceiptsChart = ref(false);
 
 // scroll navigation
 const showScrollNav = computed(() => generalReport.value && !loading.value);
@@ -381,8 +477,9 @@ const scrollToSection = (sectionId: string) => {
       />
       <v-skeleton-loader
         type="table-heading, table-thead, table-tbody, table-tfoot"
-        class="rounded-lg border"
+        class="rounded-lg border mb-5"
       />
+      <v-skeleton-loader elevation="2" type="card" class="rounded-xl border" />
     </template>
     <motion.div
       v-else
@@ -403,35 +500,40 @@ const scrollToSection = (sectionId: string) => {
               </div>
             </div>
             <v-spacer />
-            <v-chip
-              v-if="generalReportUniques.waybills?.length"
-              color="primary"
-              variant="tonal"
-              class="me-3"
-            >
-              {{
-                formatCurrency(
-                  generalReportUniques.waybills
-                    ?.map(
-                      (w) =>
-                        getWaybillItems(w.fisno)
-                          ?.map((item) => Number(item.toplamtutar))
-                          .reduce((acc, val) => acc + val, 0) ?? 0,
-                    )
-                    .reduce((acc, val) => acc + val, 0) ?? 0,
-                )
-              }}
-              TL
-            </v-chip>
             <GixTogglerMenu
               menu-activator-btn-text="Filtrele"
               menu-activator-btn-class="rounded-lg border"
               menu-activator-btn-icon="mdi-filter-variant"
               v-model:toggle-items="waybillDataTableHeaders"
             />
+
+            <v-btn
+              prepend-icon="mdi-chart-bar"
+              variant="text"
+              class="ms-2"
+              rounded="lg"
+              text="Tür Bazlı Grafik"
+              :append-icon="showWaybillChart ? 'mdi-chevron-up' : 'mdi-chevron-down'"
+              border
+              @click="showWaybillChart = !showWaybillChart"
+            />
           </div>
         </v-card-title>
 
+        <v-expand-transition
+          v-show="showWaybillChart"
+          class="ma-auto"
+          style="width: 70vh; height: 70vh"
+        >
+          <GixChart
+            :legendData="waybillChartData.legendData"
+            seriesName="Toplam Tutar"
+            :seriesData="waybillChartData.seriesData"
+            currency="TL"
+          />
+        </v-expand-transition>
+
+        <v-divider class="my-4" />
         <v-data-table
           :items="generalReportUniques.waybills"
           class="rounded-b-lg"
@@ -543,34 +645,38 @@ const scrollToSection = (sectionId: string) => {
               </div>
             </div>
             <v-spacer />
-            <v-chip
-              v-if="generalReportUniques.invoices?.length"
-              color="success"
-              variant="tonal"
-              class="me-3"
-            >
-              {{
-                formatCurrency(
-                  generalReportUniques.invoices
-                    ?.map(
-                      (i) =>
-                        getInvoiceItems(i.fisno)
-                          ?.map((item) => Number(item.toplamtutar))
-                          .reduce((acc, val) => acc + val, 0) ?? 0,
-                    )
-                    .reduce((acc, val) => acc + val, 0) ?? 0,
-                )
-              }}
-              TL
-            </v-chip>
             <GixTogglerMenu
               menu-activator-btn-text="Filtrele"
               menu-activator-btn-class="rounded-lg border"
               menu-activator-btn-icon="mdi-filter-variant"
               v-model:toggle-items="invoiceDataTableHeaders"
             />
+
+            <v-btn
+              prepend-icon="mdi-chart-bar"
+              variant="text"
+              class="ms-2"
+              rounded="lg"
+              text="Tür Bazlı Grafik"
+              :append-icon="showInvoiceChart ? 'mdi-chevron-up' : 'mdi-chevron-down'"
+              border
+              @click="showInvoiceChart = !showInvoiceChart"
+            />
           </div>
         </v-card-title>
+
+        <v-expand-transition
+          v-show="showInvoiceChart"
+          class="ma-auto"
+          style="width: 70vh; height: 70vh"
+        >
+          <GixChart
+            :legendData="invoiceChartData.legendData"
+            seriesName="Toplam Tutar"
+            :seriesData="invoiceChartData.seriesData"
+            currency="TL"
+          />
+        </v-expand-transition>
 
         <v-data-table
           :items="generalReportUniques.invoices"
@@ -682,30 +788,38 @@ const scrollToSection = (sectionId: string) => {
               </div>
             </div>
             <v-spacer />
-            <v-chip
-              v-if="generalReport.bankReceipts.result?.length"
-              color="info"
-              variant="tonal"
-              class="me-3"
-            >
-              {{
-                formatCurrency(
-                  generalReport.bankReceipts.result
-                    ?.map((item) => Number(item.borc))
-                    .reduce((acc, val) => acc + val, 0) ?? 0,
-                )
-              }}
-              TL
-            </v-chip>
             <GixTogglerMenu
               menu-activator-btn-text="Filtrele"
               menu-activator-btn-class="rounded-lg border"
               menu-activator-btn-icon="mdi-filter-variant"
               v-model:toggle-items="bankReceiptsDataTableHeaders"
             />
+
+            <v-btn
+              prepend-icon="mdi-chart-bar"
+              variant="text"
+              class="ms-2"
+              rounded="lg"
+              text="Tür Bazlı Grafik"
+              :append-icon="showBankReceiptsChart ? 'mdi-chevron-up' : 'mdi-chevron-down'"
+              border
+              @click="showBankReceiptsChart = !showBankReceiptsChart"
+            />
           </div>
         </v-card-title>
 
+        <v-expand-transition
+          v-show="showBankReceiptsChart"
+          class="ma-auto"
+          style="width: 70vh; height: 70vh"
+        >
+          <GixChart
+            :legendData="bankReceiptsChartData.legendData"
+            seriesName="Toplam Tutar"
+            :seriesData="bankReceiptsChartData.seriesData"
+            currency="TL"
+          />
+        </v-expand-transition>
         <v-data-table
           :items="generalReport.bankReceipts.result"
           class="rounded-b-lg"
@@ -735,21 +849,6 @@ const scrollToSection = (sectionId: string) => {
               </div>
             </div>
             <v-spacer />
-            <v-chip
-              v-if="generalReport.creditCardCollections.result?.length"
-              color="warning"
-              variant="tonal"
-              class="me-3"
-            >
-              {{
-                formatCurrency(
-                  generalReport.creditCardCollections.result
-                    ?.map((item) => Number(item.toplamtutar))
-                    .reduce((acc, val) => acc + val, 0) ?? 0,
-                )
-              }}
-              TL
-            </v-chip>
             <GixTogglerMenu
               menu-activator-btn-text="Filtrele"
               menu-activator-btn-class="rounded-lg border"
@@ -788,34 +887,38 @@ const scrollToSection = (sectionId: string) => {
               </div>
             </div>
             <v-spacer />
-            <v-chip
-              v-if="generalReportUniques.materialReceipts?.length"
-              color="secondary"
-              variant="tonal"
-              class="me-3"
-            >
-              {{
-                formatCurrency(
-                  generalReportUniques.materialReceipts
-                    ?.map(
-                      (m) =>
-                        getMaterialReceiptItems(m.fisno)
-                          ?.map((item) => Number(item.toplam))
-                          .reduce((acc, val) => acc + val, 0) ?? 0,
-                    )
-                    .reduce((acc, val) => acc + val, 0) ?? 0,
-                )
-              }}
-              TL
-            </v-chip>
             <GixTogglerMenu
               menu-activator-btn-text="Filtrele"
               menu-activator-btn-class="rounded-lg border"
               menu-activator-btn-icon="mdi-filter-variant"
               v-model:toggle-items="materialReceiptsDataTableHeaders"
             />
+
+            <v-btn
+              prepend-icon="mdi-chart-bar"
+              variant="text"
+              class="ms-2"
+              rounded="lg"
+              text="Tür Bazlı Grafik"
+              :append-icon="showMaterialReceiptsChart ? 'mdi-chevron-up' : 'mdi-chevron-down'"
+              border
+              @click="showMaterialReceiptsChart = !showMaterialReceiptsChart"
+            />
           </div>
         </v-card-title>
+
+        <v-expand-transition
+          v-show="showMaterialReceiptsChart"
+          class="ma-auto"
+          style="width: 70vh; height: 70vh"
+        >
+          <GixChart
+            :legendData="materialReceiptsChartData.legendData"
+            seriesName="Toplam Tutar"
+            :seriesData="materialReceiptsChartData.seriesData"
+            currency="TL"
+          />
+        </v-expand-transition>
 
         <v-data-table
           :items="generalReportUniques.materialReceipts"
@@ -892,21 +995,6 @@ const scrollToSection = (sectionId: string) => {
               </div>
             </div>
             <v-spacer />
-            <v-chip
-              v-if="generalReport.checkEntries.result?.length"
-              color="purple"
-              variant="tonal"
-              class="me-3"
-            >
-              {{
-                formatCurrency(
-                  generalReport.checkEntries.result
-                    ?.map((item) => Number(item.tutar))
-                    .reduce((acc, val) => acc + val, 0) ?? 0,
-                )
-              }}
-              TL
-            </v-chip>
             <GixTogglerMenu
               menu-activator-btn-text="Filtrele"
               menu-activator-btn-class="rounded-lg border"
