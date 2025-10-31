@@ -231,11 +231,11 @@ const bankReceiptsChartData = computed(() => {
 
   return buildGroupedSumChartData<{
     turuack?: string;
-    toplamtutar?: string | number;
+    borc?: string | number;
   }>(
     generalReport.value.bankReceipts,
     (i) => i.turuack,
-    (i) => i.toplamtutar,
+    (i) => i.borc,
     { unknownLabel: 'Diğer' },
   );
 });
@@ -523,12 +523,13 @@ const scrollToSection = (sectionId: string) => {
         <v-expand-transition
           v-show="showWaybillChart"
           class="ma-auto"
-          style="width: 70vh; height: 70vh"
+          style="width: 70vh; height: 50vh"
         >
           <GixChart
             :legendData="waybillChartData.legendData"
             seriesName="Toplam Tutar"
             :seriesData="waybillChartData.seriesData"
+            :data-formatter="formatCurrency"
             currency="TL"
           />
         </v-expand-transition>
@@ -668,12 +669,13 @@ const scrollToSection = (sectionId: string) => {
         <v-expand-transition
           v-show="showInvoiceChart"
           class="ma-auto"
-          style="width: 70vh; height: 70vh"
+          style="width: 70vh; height: 50vh"
         >
           <GixChart
             :legendData="invoiceChartData.legendData"
             seriesName="Toplam Tutar"
             :seriesData="invoiceChartData.seriesData"
+            :data-formatter="formatCurrency"
             currency="TL"
           />
         </v-expand-transition>
@@ -811,12 +813,13 @@ const scrollToSection = (sectionId: string) => {
         <v-expand-transition
           v-show="showBankReceiptsChart"
           class="ma-auto"
-          style="width: 70vh; height: 70vh"
+          style="width: 70vh; height: 50vh"
         >
           <GixChart
             :legendData="bankReceiptsChartData.legendData"
             seriesName="Toplam Tutar"
             :seriesData="bankReceiptsChartData.seriesData"
+            :data-formatter="formatCurrency"
             currency="TL"
           />
         </v-expand-transition>
@@ -910,12 +913,13 @@ const scrollToSection = (sectionId: string) => {
         <v-expand-transition
           v-show="showMaterialReceiptsChart"
           class="ma-auto"
-          style="width: 70vh; height: 70vh"
+          style="width: 70vh; height: 50vh"
         >
           <GixChart
             :legendData="materialReceiptsChartData.legendData"
             seriesName="Toplam Tutar"
             :seriesData="materialReceiptsChartData.seriesData"
+            :data-formatter="formatCurrency"
             currency="TL"
           />
         </v-expand-transition>

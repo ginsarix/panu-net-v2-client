@@ -109,7 +109,7 @@ const companySectionVisible = ref(false);
         />
       </v-list-group>
 
-      <v-list-group value="Orders">
+      <!-- <v-list-group value="Orders">
         <template #activator="{ props }">
           <v-list-item
             v-bind="props"
@@ -133,7 +133,7 @@ const companySectionVisible = ref(false);
             Edilenler
           </v-list-item-title>
         </v-list-item>
-      </v-list-group>
+      </v-list-group> -->
 
       <v-list-group value="TaskTracking">
         <template #activator="{ props }">

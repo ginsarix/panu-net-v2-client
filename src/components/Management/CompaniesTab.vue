@@ -364,7 +364,7 @@ const handleSubmit = async () => {
     </template>
   </v-data-table-server>
 
-  <v-dialog v-model="infoDialog" max-width="500">
+  <v-dialog v-model="infoDialog" persistent max-width="500">
     <v-card rounded="lg">
       <v-card-title class="text-h6 text-center">
         {{ selectedCompany?.name }}
@@ -482,7 +482,7 @@ const handleSubmit = async () => {
               <!-- Step 1: Şirket Bilgileri -->
               <template #[`item.1`]>
                 <v-text-field
-                  label="Kod"
+                  label="Firma Kodu"
                   variant="outlined"
                   rounded="lg"
                   :rules="companyForm.code.rules"
@@ -490,7 +490,7 @@ const handleSubmit = async () => {
                 />
 
                 <v-text-field
-                  label="İsim"
+                  label="Firma İsimi"
                   variant="outlined"
                   rounded="lg"
                   :rules="companyForm.name.rules"
@@ -498,7 +498,7 @@ const handleSubmit = async () => {
                 />
 
                 <v-text-field
-                  label="Yönetici Adı"
+                  label="Yönetici Adı Soyadı"
                   variant="outlined"
                   rounded="lg"
                   :rules="companyForm.manager.rules"
@@ -507,6 +507,7 @@ const handleSubmit = async () => {
 
                 <v-mask-input
                   mask="phone"
+                  label="Cep Telefonu"
                   :placeholder="'(###) ### - ####'"
                   variant="outlined"
                   rounded="lg"

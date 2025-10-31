@@ -3,9 +3,11 @@ import { PieChart } from 'echarts/charts';
 import { LegendComponent, TitleComponent, TooltipComponent } from 'echarts/components';
 import { use } from 'echarts/core';
 import { CanvasRenderer } from 'echarts/renderers';
-import type { ECBasicOption } from 'echarts/types/dist/shared';
-import { provide, ref } from 'vue';
+import type { CallbackDataParams, ECBasicOption } from 'echarts/types/dist/shared';
+import { provide, ref, useTemplateRef, watch } from 'vue';
 import VChart, { THEME_KEY } from 'vue-echarts';
+
+import { formatCurrency } from '@/utils/formatting';
 
 use([CanvasRenderer, PieChart, TitleComponent, TooltipComponent, LegendComponent]);
 provide(THEME_KEY, 'dark');
@@ -20,6 +22,8 @@ const props = defineProps<{
   height?: string;
 }>();
 
+const chartRef = useTemplateRef('chart-ref');
+
 const option = ref<ECBasicOption>({
   backgroundColor: 'transparent',
   title: {
@@ -28,10 +32,13 @@ const option = ref<ECBasicOption>({
   },
   tooltip: {
     trigger: 'item',
-    formatter: `{a} <br/>{b} : {c}${props.currency ?? ''} ({d}%)`,
+    formatter: (params: CallbackDataParams) => {
+      const formattedValue = formatCurrency(typeof params.value === 'number' ? params.value : 0);
+      return `${params.seriesName} <br/>${params.name} : ${formattedValue} ${props.currency ?? ''} (${params.percent}%)`;
+    },
   },
   legend: {
-    orient: 'vertical',
+    orient: 'horizontal',
     left: 'left',
     data: props.legendData,
   },
@@ -53,14 +60,17 @@ const option = ref<ECBasicOption>({
   ],
 });
 
-const chartRef = ref<typeof VChart>();
-
-defineExpose({ ...chartRef.value });
+watch(
+  () => props.seriesData,
+  (newSeriesData) => {
+    chartRef.value?.setOption({ ...option.value, series: { data: newSeriesData } });
+  },
+);
 </script>
 
 <template>
   <v-chart
-    ref="chartRef"
+    ref="chart-ref"
     :style="{ height: props.height ?? '70vh' }"
     :loading="loading"
     class="chart"
