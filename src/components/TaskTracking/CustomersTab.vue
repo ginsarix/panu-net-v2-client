@@ -242,7 +242,7 @@ const dialogSubmit = async () => {
         </v-toolbar-title>
 
         <GixTogglerMenu
-          menu-activator-btn-text="Filtrele"
+          menu-activator-btn-text="Kolonlar"
           menu-activator-btn-class="rounded-lg border me-3"
           menu-activator-btn-icon="mdi-filter-variant"
           v-model:toggle-items="dataTableHeaders"

@@ -44,9 +44,17 @@ const getMaterialReceiptItems = (fisno: string) =>
 
 const cashAccountMovements = ref<Awaited<ReturnType<typeof getCashAccountMovements>>>();
 
+const cashAccountMovementsLoadingStates = ref<Record<string, boolean>>({});
+
 const loadCashAccountMovements = async (cashAccountKey: string) => {
+  if (cashAccountMovements.value?.some((c) => c.cashAccountKey === cashAccountKey)) return;
+
+  cashAccountMovementsLoadingStates.value[cashAccountKey] = true;
+
   const newCashAccountMovements = await getCashAccountMovements(cashAccountKey);
   cashAccountMovements.value = [...(cashAccountMovements.value ?? []), ...newCashAccountMovements];
+
+  cashAccountMovementsLoadingStates.value[cashAccountKey] = false;
 };
 
 const getCashAccountMovementItems = (cashAccountKey: string) =>
@@ -175,7 +183,6 @@ const waybillChartData = computed(() => {
     generalReport.value.waybills,
     (w) => w.turuack,
     (w) => w.toplamtutar,
-    { unknownLabel: 'Diğer' },
   );
 });
 
@@ -219,7 +226,6 @@ const invoiceChartData = computed(() => {
     generalReport.value.invoices,
     (i) => i.turuack,
     (i) => i.toplamtutar,
-    { unknownLabel: 'Diğer' },
   );
 });
 const includedInvoiceDataTableHeaders = computed(() =>
@@ -246,7 +252,6 @@ const bankReceiptsChartData = computed(() => {
     generalReport.value.bankReceipts,
     (i) => i.turuack,
     (i) => i.borc,
-    { unknownLabel: 'Diğer' },
   );
 });
 
@@ -277,6 +282,21 @@ const cashAccountsDataTableHeaders = ref<DataTableHeaders[]>([
   { title: 'Bakiye', key: 'bakiye', toggled: true, sortable: true },
   { title: 'Oluşturulma Tarihi', key: '_cdate', toggled: true, sortable: true },
 ]);
+
+const cashAccountChartData = computed(() => {
+  if (!generalReport.value || !generalReport.value.cashAccounts) {
+    return { legendData: [], seriesData: [] };
+  }
+
+  return buildGroupedSumChartData<{
+    adi?: string;
+    bakiye?: string | number;
+  }>(
+    generalReport.value.cashAccounts,
+    (c) => c.adi,
+    (c) => c.bakiye,
+  );
+});
 
 const cashAccountMovementsDataTableHeaders = ref<DataTableHeaders[]>([
   { title: 'Fiş No', key: 'fisno', toggled: true, sortable: true },
@@ -321,7 +341,6 @@ const materialReceiptsChartData = computed(() => {
     generalReport.value.materialReceipts,
     (i) => i.turuack,
     (i) => i.toplamtutar,
-    { unknownLabel: 'Diğer' },
   );
 });
 
@@ -351,6 +370,7 @@ const showWaybillChart = ref(false);
 const showInvoiceChart = ref(false);
 const showBankReceiptsChart = ref(false);
 const showMaterialReceiptsChart = ref(false);
+const showCashAccountChart = ref(false);
 
 // scroll navigation
 const showScrollNav = computed(() => generalReport.value && !loading.value);
@@ -534,7 +554,7 @@ const scrollToSection = (sectionId: string) => {
             </div>
             <v-spacer />
             <GixTogglerMenu
-              menu-activator-btn-text="Filtrele"
+              menu-activator-btn-text="Kolonlar"
               menu-activator-btn-class="rounded-lg border"
               menu-activator-btn-icon="mdi-filter-variant"
               v-model:toggle-items="waybillDataTableHeaders"
@@ -680,7 +700,7 @@ const scrollToSection = (sectionId: string) => {
             </div>
             <v-spacer />
             <GixTogglerMenu
-              menu-activator-btn-text="Filtrele"
+              menu-activator-btn-text="Kolonlar"
               menu-activator-btn-class="rounded-lg border"
               menu-activator-btn-icon="mdi-filter-variant"
               v-model:toggle-items="invoiceDataTableHeaders"
@@ -824,7 +844,7 @@ const scrollToSection = (sectionId: string) => {
             </div>
             <v-spacer />
             <GixTogglerMenu
-              menu-activator-btn-text="Filtrele"
+              menu-activator-btn-text="Kolonlar"
               menu-activator-btn-class="rounded-lg border"
               menu-activator-btn-icon="mdi-filter-variant"
               v-model:toggle-items="bankReceiptsDataTableHeaders"
@@ -886,7 +906,7 @@ const scrollToSection = (sectionId: string) => {
             </div>
             <v-spacer />
             <GixTogglerMenu
-              menu-activator-btn-text="Filtrele"
+              menu-activator-btn-text="Kolonlar"
               menu-activator-btn-class="rounded-lg border"
               menu-activator-btn-icon="mdi-filter-variant"
               v-model:toggle-items="creditCardCollectionsDataTableHeaders"
@@ -924,7 +944,7 @@ const scrollToSection = (sectionId: string) => {
             </div>
             <v-spacer />
             <GixTogglerMenu
-              menu-activator-btn-text="Filtrele"
+              menu-activator-btn-text="Kolonlar"
               menu-activator-btn-class="rounded-lg border"
               menu-activator-btn-icon="mdi-filter-variant"
               v-model:toggle-items="materialReceiptsDataTableHeaders"
@@ -1033,7 +1053,7 @@ const scrollToSection = (sectionId: string) => {
             </div>
             <v-spacer />
             <GixTogglerMenu
-              menu-activator-btn-text="Filtrele"
+              menu-activator-btn-text="Kolonlar"
               menu-activator-btn-class="rounded-lg border"
               menu-activator-btn-icon="mdi-filter-variant"
               v-model:toggle-items="checkEntriesDataTableHeaders"
@@ -1082,14 +1102,39 @@ const scrollToSection = (sectionId: string) => {
               </div>
             </div>
             <v-spacer />
+
             <GixTogglerMenu
-              menu-activator-btn-text="Filtrele"
+              menu-activator-btn-text="Kolonlar"
               menu-activator-btn-class="rounded-lg border"
               menu-activator-btn-icon="mdi-filter-variant"
               v-model:toggle-items="cashAccountsDataTableHeaders"
             />
+
+            <v-btn
+              text="Kasa Bakiye Grafiği"
+              prepend-icon="mdi-chart-bar"
+              class="ms-2"
+              rounded="lg"
+              :append-icon="showCashAccountChart ? 'mdi-chevron-up' : 'mdi-chevron-down'"
+              border
+              @click="showCashAccountChart = !showCashAccountChart"
+            />
           </div>
         </v-card-title>
+
+        <v-expand-transition
+          v-show="showCashAccountChart"
+          class="ma-auto"
+          style="width: 70vh; height: 50vh"
+        >
+          <GixChart
+            :legendData="cashAccountChartData.legendData"
+            seriesName="Bakiye"
+            :seriesData="cashAccountChartData.seriesData"
+            :data-formatter="formatCurrency"
+            currency="TL"
+          />
+        </v-expand-transition>
 
         <v-data-table
           :items="generalReport.cashAccounts.result"
@@ -1141,7 +1186,7 @@ const scrollToSection = (sectionId: string) => {
                     :headers="cashAccountMovementsDataTableHeaders"
                     :items="getCashAccountMovementItems(item._key)"
                     no-data-text="Hareket bulunamadı."
-                    :loading="!getCashAccountMovementItems(item._key)?.length"
+                    :loading="cashAccountMovementsLoadingStates[item._key]"
                     loading-text="Hareketler yükleniyor..."
                     hide-default-footer
                   >
