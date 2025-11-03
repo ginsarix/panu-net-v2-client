@@ -8,7 +8,7 @@ import { VDateInput } from 'vuetify/labs/VDateInput';
 import { VIconBtn } from 'vuetify/labs/VIconBtn';
 
 import { useCompanyPeriodWatcher } from '@/composables/useCompanyPeriodWatcher';
-import { getGeneralReport } from '@/services/api/reports';
+import { getCashAccountMovements, getGeneralReport } from '@/services/api/reports';
 import { useDisplayStore } from '@/stores/display';
 import type { DataTableHeaders } from '@/types/data-table-headers';
 import { uniqueBy } from '@/utils/array';
@@ -41,6 +41,16 @@ const getInvoiceItems = (fisno: string) =>
   generalReport.value?.invoices.result.filter((w) => w.fisno === fisno);
 const getMaterialReceiptItems = (fisno: string) =>
   generalReport.value?.materialReceipts.result.filter((m) => m.fisno === fisno);
+
+const cashAccountMovements = ref<Awaited<ReturnType<typeof getCashAccountMovements>>>();
+
+const loadCashAccountMovements = async (cashAccountKey: string) => {
+  const newCashAccountMovements = await getCashAccountMovements(cashAccountKey);
+  cashAccountMovements.value = [...(cashAccountMovements.value ?? []), ...newCashAccountMovements];
+};
+
+const getCashAccountMovementItems = (cashAccountKey: string) =>
+  cashAccountMovements.value?.filter((c) => c.cashAccountKey === cashAccountKey);
 
 const loading = ref(false);
 const error = ref('');
@@ -258,6 +268,29 @@ const includedCreditCardCollectionsDataTableHeaders = computed(() =>
   creditCardCollectionsDataTableHeaders.value.filter((header) => header.toggled),
 );
 
+const cashAccountsDataTableHeaders = ref<DataTableHeaders[]>([
+  { title: 'Adı', key: 'adi', toggled: true, sortable: true },
+  { title: 'Açıklama', key: 'aciklama', toggled: true, sortable: false },
+  { title: 'B/A', key: 'ba', toggled: true, sortable: true },
+  { title: 'Borç', key: 'borc', toggled: true, sortable: true },
+  { title: 'Alacak', key: 'alacak', toggled: true, sortable: true },
+  { title: 'Bakiye', key: 'bakiye', toggled: true, sortable: true },
+  { title: 'Oluşturulma Tarihi', key: '_cdate', toggled: true, sortable: true },
+]);
+
+const cashAccountMovementsDataTableHeaders = ref<DataTableHeaders[]>([
+  { title: 'Fiş No', key: 'fisno', toggled: true, sortable: true },
+  { title: 'Alacak', key: 'alacak', toggled: true, sortable: true },
+  { title: 'Borç', key: 'borc', toggled: true, sortable: true },
+  { title: 'Açıklama', key: 'aciklama', toggled: true, sortable: false },
+  { title: 'Tür', key: 'turu', toggled: true, sortable: true },
+  { title: 'Oluşturulma Tarihi', key: '_cdate', toggled: true, sortable: true },
+]);
+
+const includedCashAccountsDataTableHeaders = computed(() =>
+  cashAccountsDataTableHeaders.value.filter((header) => header.toggled),
+);
+
 const materialReceiptsDataTableHeaders = ref<DataTableHeaders[]>([
   { title: 'Fiş No', key: 'fisno', toggled: true, sortable: true },
   { title: 'Cari Ünvan', key: 'cariunvan', toggled: true, sortable: true },
@@ -328,7 +361,7 @@ const scrollNavItems = ref([
   { id: 'credit-card-collections', label: 'Kredi Kartı Tahsilatları', icon: 'mdi-credit-card' },
   { id: 'material-receipts', label: 'Malzeme Fişleri', icon: 'mdi-package-variant' },
   { id: 'check-entries', label: 'Çek Girişleri', icon: 'mdi-checkbook' },
-  { id: 'cash-summary', label: 'Nakit Girişleri', icon: 'mdi-cash' },
+  { id: 'cash-accounts', label: 'Kasa Kartları Listesi', icon: 'mdi-cash' },
   { id: 'account-cards', label: 'Cari Kartları', icon: 'mdi-account' },
   { id: 'purchased-services-invoices', label: 'Alınan Hizmetler', icon: 'mdi-invoice-text' },
 ]);
@@ -1036,35 +1069,94 @@ const scrollToSection = (sectionId: string) => {
         </v-data-table>
       </v-card>
 
-      <v-card id="cash-summary" class="summary-card mb-6" elevation="3" rounded="xl" border>
-        <v-card-text class="pa-6 pa-sm-8 pa-md-10">
-          <div class="d-flex align-center mb-4">
-            <v-avatar color="success" size="48" class="me-4">
-              <v-icon icon="mdi-cash" color="white" size="24" />
+      <v-card id="cash-accounts" class="report-section-card mb-6" elevation="2" border>
+        <v-card-title class="pa-4 border-b">
+          <div class="d-flex align-center w-100">
+            <v-avatar color="green-darken-1" size="40" class="me-3">
+              <v-icon icon="mdi-cash" color="white" />
             </v-avatar>
             <div>
-              <div class="text-h5 text-sm-h4 font-weight-bold">Nakit Girişleri</div>
-              <div class="text-caption text-medium-emphasis">Kasa bakiyeleri özeti</div>
-            </div>
-          </div>
-
-          <v-divider class="mb-4" />
-
-          <div class="py-2">
-            <div class="d-flex justify-space-between align-center">
-              <div>
-                <div class="text-h6 text-sm-h5 font-weight-medium">Kasa Bakiye Toplamı</div>
-                <div class="text-caption text-medium-emphasis">Tüm hesapların toplam bakiyesi</div>
-              </div>
-              <div class="text-right">
-                <div class="text-h5 text-sm-h4 font-weight-bold text-success">
-                  {{ formatCurrency(generalReport.cashAccountsBalanceSum) }} TL
-                </div>
-                <div class="text-caption text-medium-emphasis">Toplam bakiye</div>
+              <div class="text-h6 font-weight-bold">Kasa Kartları</div>
+              <div class="text-caption text-medium-emphasis">
+                {{ generalReport.cashAccounts.result?.length || 0 }} adet kasa kartı
               </div>
             </div>
+            <v-spacer />
+            <GixTogglerMenu
+              menu-activator-btn-text="Filtrele"
+              menu-activator-btn-class="rounded-lg border"
+              menu-activator-btn-icon="mdi-filter-variant"
+              v-model:toggle-items="cashAccountsDataTableHeaders"
+            />
           </div>
-        </v-card-text>
+        </v-card-title>
+
+        <v-data-table
+          :items="generalReport.cashAccounts.result"
+          class="rounded-b-lg"
+          no-data-text="Kasa kartı bulunamadı."
+          items-per-page-text="Sayfa başı kasa kartı"
+          :mobile="mobile.value"
+          fixed-header
+          :headers="includedCashAccountsDataTableHeaders"
+          show-expand
+          item-value="_key"
+          hover
+        >
+          <template #[`item.bakiye`]="{ item }">
+            {{ formatCurrency(item.bakiye) }}
+          </template>
+          <template #[`item.borc`]="{ item }">
+            {{ formatCurrency(item.borc) }}
+          </template>
+          <template #[`item.alacak`]="{ item }">
+            {{ formatCurrency(item.alacak) }}
+          </template>
+
+          <template #[`item.data-table-expand`]="{ internalItem, isExpanded, toggleExpand }">
+            <v-btn
+              :append-icon="isExpanded(internalItem) ? 'mdi-chevron-up' : 'mdi-chevron-down'"
+              text="Hareketler"
+              rounded="lg"
+              class="text-none"
+              color="medium-emphasis"
+              size="small"
+              variant="text"
+              width="105"
+              border
+              slim
+              @click="
+                loadCashAccountMovements(internalItem.raw._key);
+                toggleExpand(internalItem);
+              "
+            />
+          </template>
+
+          <template #expanded-row="{ columns, item }">
+            <tr>
+              <td :colspan="columns.length" class="py-2">
+                <v-sheet rounded="lg" border>
+                  <v-data-table
+                    :mobile="mobile.value"
+                    :headers="cashAccountMovementsDataTableHeaders"
+                    :items="getCashAccountMovementItems(item._key)"
+                    no-data-text="Hareket bulunamadı."
+                    :loading="!getCashAccountMovementItems(item._key)?.length"
+                    loading-text="Hareketler yükleniyor..."
+                    hide-default-footer
+                  >
+                    <template #[`item.alacak`]="{ item }">
+                      {{ formatCurrency(item.alacak) }}
+                    </template>
+                    <template #[`item.borc`]="{ item }">
+                      {{ formatCurrency(item.borc) }}
+                    </template>
+                  </v-data-table>
+                </v-sheet>
+              </td>
+            </tr>
+          </template>
+        </v-data-table>
       </v-card>
 
       <v-card id="account-cards" class="summary-card mb-6" elevation="3" rounded="xl" border>
