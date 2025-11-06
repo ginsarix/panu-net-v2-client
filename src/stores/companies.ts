@@ -16,6 +16,7 @@ import type { Period } from '@/types/period';
 export const useCompaniesStore = defineStore('companies', () => {
   const companies = ref<Company[]>([]);
   const periods = ref<Period[]>([]);
+  const periodsLoading = ref(false);
   const selectedPeriodCode = ref(0);
 
   const totalCompaniesCount = ref(0);
@@ -46,11 +47,20 @@ export const useCompaniesStore = defineStore('companies', () => {
 
     if (companyCode === undefined) return;
 
-    periods.value = (await getPeriods(companyCode)).map((p) => ({
-      code: p.donemkodu,
-      startDate: p.baslangic,
-      endDate: p.bitis,
-    }));
+    periods.value = [];
+
+    periodsLoading.value = true;
+    try {
+      periods.value = (await getPeriods(companyCode)).map((p) => ({
+        code: p.donemkodu,
+        startDate: p.baslangic,
+        endDate: p.bitis,
+      }));
+    } catch (error) {
+      console.error(error);
+    } finally {
+      periodsLoading.value = false;
+    }
   });
 
   const getSelectedCompanyInstance = () =>
@@ -101,6 +111,7 @@ export const useCompaniesStore = defineStore('companies', () => {
     selectedCompanyId,
     selectedCompanyIdLoaded,
     periods,
+    periodsLoading,
     selectedPeriodCode,
     loadCompanies,
     addCompanyToList,

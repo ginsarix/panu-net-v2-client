@@ -1,4 +1,4 @@
-import { formatDateTime } from '@/utils/formatting';
+import { formatDateTime, mapCashAccountMovementTypes } from '@/utils/formatting';
 
 import { trpc } from '../trpc';
 
@@ -28,5 +28,10 @@ export const getGeneralReport = async (
 export const getCashAccountMovements = async (cashAccountKey: string) => {
   const cashAccountMovements = await trpc.report.getCashAccountMovements.query({ cashAccountKey });
   formatCdates(cashAccountMovements.result);
+
+  cashAccountMovements.result.forEach((c) => {
+    c.turuack = mapCashAccountMovementTypes(c.turu);
+  });
+
   return cashAccountMovements.result.map((c) => ({ ...c, cashAccountKey }));
 };

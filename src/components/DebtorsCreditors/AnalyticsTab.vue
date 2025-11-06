@@ -32,6 +32,7 @@ const totalCreditorBalance = computed(() =>
     title="B/A Analiz Grafiği"
     :legendData="['Borçlu', 'Alacaklı']"
     seriesName="B/A"
+    height="60vh"
     :seriesData="[
       { value: totalDebtorBalance, name: 'Borçlu' },
       { value: totalCreditorBalance, name: 'Alacaklı' },

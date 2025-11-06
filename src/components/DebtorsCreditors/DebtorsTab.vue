@@ -17,7 +17,7 @@ const { mobile } = storeToRefs(useDisplayStore());
 const debtorsStore = useDebtorsStore();
 const { debtors } = storeToRefs(debtorsStore);
 
-const { selectedCompany, loading: selectedCompanyLoading } = useSelectedCompany();
+const { selectedCompany } = useSelectedCompany();
 
 const snackbarStore = useSnackbarStore();
 const { snackbar, snackbarError, snackbarText } = storeToRefs(snackbarStore);
@@ -60,7 +60,7 @@ const includedDataTableHeaders = computed(() =>
 <template>
   <v-data-table
     :items="debtors"
-    :loading="selectedCompanyLoading"
+    :loading
     class="rounded-lg elevation-0 border"
     no-data-text="Borçlular bulunamadı."
     loading-text="Borçlular yükleniyor..."

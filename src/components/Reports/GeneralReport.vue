@@ -14,6 +14,7 @@ import type { DataTableHeaders } from '@/types/data-table-headers';
 import { uniqueBy } from '@/utils/array';
 import { formatCurrency } from '@/utils/formatting';
 
+import GixBarChart from '../GixBarChart.vue';
 import GixChart from '../GixChart.vue';
 import GixTogglerMenu from '../GixTogglerMenu.vue';
 
@@ -56,6 +57,16 @@ const loadCashAccountMovements = async (cashAccountKey: string) => {
 
   cashAccountMovementsLoadingStates.value[cashAccountKey] = false;
 };
+
+const cashAccountMovementsGraphStates = ref<Record<string, boolean>>({});
+
+const toggleCashAccountMovementsGraph = (cashAccountKey: string) => {
+  cashAccountMovementsGraphStates.value[cashAccountKey] =
+    !cashAccountMovementsGraphStates.value[cashAccountKey];
+};
+
+const isCashAccountMovementsGraphOpen = (cashAccountKey: string) =>
+  cashAccountMovementsGraphStates.value[cashAccountKey] ?? false;
 
 const getCashAccountMovementItems = (cashAccountKey: string) =>
   cashAccountMovements.value?.filter((c) => c.cashAccountKey === cashAccountKey);
@@ -300,12 +311,30 @@ const cashAccountChartData = computed(() => {
 
 const cashAccountMovementsDataTableHeaders = ref<DataTableHeaders[]>([
   { title: 'Fiş No', key: 'fisno', toggled: true, sortable: true },
+  { title: 'Tür', key: 'turuack', toggled: true, sortable: true },
   { title: 'Alacak', key: 'alacak', toggled: true, sortable: true },
   { title: 'Borç', key: 'borc', toggled: true, sortable: true },
+  { title: 'Bakiye', key: 'bakiye', toggled: true, sortable: true },
   { title: 'Açıklama', key: 'aciklama', toggled: true, sortable: false },
-  { title: 'Tür', key: 'turu', toggled: true, sortable: true },
   { title: 'Oluşturulma Tarihi', key: '_cdate', toggled: true, sortable: true },
 ]);
+
+const getCashAccountMovementsChartData = (cashAccountKey: string) => {
+  if (!generalReport.value || !cashAccountMovements.value) {
+    return { xAxisData: [], barSeriesData: [] };
+  }
+
+  const data = buildGroupedSumChartData<{
+    turuack?: string;
+    bakiye?: string | number;
+  }>(
+    cashAccountMovements.value.filter((c) => c.cashAccountKey === cashAccountKey),
+    (c) => c.turuack,
+    (c) => c.bakiye,
+  ).seriesData;
+
+  return { xAxisData: data.map((s) => s.name), barSeriesData: data.map((s) => Number(s.value)) };
+};
 
 const includedCashAccountsDataTableHeaders = computed(() =>
   cashAccountsDataTableHeaders.value.filter((header) => header.toggled),
@@ -579,7 +608,6 @@ const scrollToSection = (sectionId: string) => {
           style="width: 70vh; height: 50vh"
         >
           <GixChart
-            :legendData="waybillChartData.legendData"
             seriesName="Toplam Tutar"
             :seriesData="waybillChartData.seriesData"
             :data-formatter="formatCurrency"
@@ -725,7 +753,6 @@ const scrollToSection = (sectionId: string) => {
           style="width: 70vh; height: 50vh"
         >
           <GixChart
-            :legendData="invoiceChartData.legendData"
             seriesName="Toplam Tutar"
             :seriesData="invoiceChartData.seriesData"
             :data-formatter="formatCurrency"
@@ -869,7 +896,6 @@ const scrollToSection = (sectionId: string) => {
           style="width: 70vh; height: 50vh"
         >
           <GixChart
-            :legendData="bankReceiptsChartData.legendData"
             seriesName="Toplam Tutar"
             :seriesData="bankReceiptsChartData.seriesData"
             :data-formatter="formatCurrency"
@@ -1190,6 +1216,43 @@ const scrollToSection = (sectionId: string) => {
                     loading-text="Hareketler yükleniyor..."
                     hide-default-footer
                   >
+                    <template #top>
+                      <v-card elevation="2" rounded="lg" class="rounded-b-0">
+                        <v-card-title class="pa-4 border-b">
+                          <div class="d-flex justify-space-between">
+                            <v-avatar color="teal-lighten-1" size="40">
+                              <v-icon icon="mdi-swap-horizontal" color="white" />
+                            </v-avatar>
+                            <v-btn
+                              prepend-icon="mdi-chart-bar"
+                              text="Tür Bazlı Grafik"
+                              rounded="lg"
+                              border
+                              @click="toggleCashAccountMovementsGraph(item._key)"
+                              :append-icon="
+                                isCashAccountMovementsGraphOpen(item._key)
+                                  ? 'mdi-chevron-up'
+                                  : 'mdi-chevron-down'
+                              "
+                            />
+                          </div>
+                        </v-card-title>
+                        <v-expand-transition
+                          class="ma-auto"
+                          style="width: 70vh; height: 50vh"
+                          v-show="isCashAccountMovementsGraphOpen(item._key)"
+                        >
+                          <GixBarChart
+                            :x-axis-data="getCashAccountMovementsChartData(item._key).xAxisData"
+                            :bar-series-data="
+                              getCashAccountMovementsChartData(item._key).barSeriesData
+                            "
+                            :data-formatter="formatCurrency"
+                            currency="TL"
+                          />
+                        </v-expand-transition>
+                      </v-card>
+                    </template>
                     <template #[`item.alacak`]="{ item }">
                       {{ formatCurrency(item.alacak) }}
                     </template>

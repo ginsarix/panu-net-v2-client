@@ -10,7 +10,7 @@ import { formatDateTime } from '@/utils/formatting';
 const asyncGateStore = useAsyncGateStore();
 
 const companiesStore = useCompaniesStore();
-const { periods, selectedPeriodCode } = storeToRefs(companiesStore);
+const { periods, periodsLoading, selectedPeriodCode } = storeToRefs(companiesStore);
 
 const isInitialLoad = ref(true);
 const tempSelectedPeriodCode = ref<number>();
@@ -58,7 +58,7 @@ const handlePeriodConfirm = async () => {
     >
 
     <v-dialog v-model="dialog" max-width="500">
-      <v-card rounded="lg">
+      <v-card :loading="periodsLoading" rounded="lg">
         <v-card-text>
           <v-item-group v-model="tempSelectedPeriodCode" selected-class="bg-primary">
             <v-container>
