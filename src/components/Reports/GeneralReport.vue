@@ -321,7 +321,7 @@ const cashAccountMovementsDataTableHeaders = ref<DataTableHeaders[]>([
 
 const getCashAccountMovementsChartData = (cashAccountKey: string) => {
   if (!generalReport.value || !cashAccountMovements.value) {
-    return { xAxisData: [], barSeriesData: [] };
+    return { axisData: [], barSeriesData: [] };
   }
 
   const data = buildGroupedSumChartData<{
@@ -333,7 +333,7 @@ const getCashAccountMovementsChartData = (cashAccountKey: string) => {
     (c) => c.bakiye,
   ).seriesData;
 
-  return { xAxisData: data.map((s) => s.name), barSeriesData: data.map((s) => Number(s.value)) };
+  return { axisData: data.map((s) => s.name), barSeriesData: data.map((s) => Number(s.value)) };
 };
 
 const includedCashAccountsDataTableHeaders = computed(() =>
@@ -436,23 +436,24 @@ const scrollToSection = (sectionId: string) => {
 </script>
 
 <template>
-  <v-container fluid class="pa-6">
-    <v-row class="align-center mb-6">
+  <v-container fluid class="pa-2 pa-sm-4 pa-md-6">
+    <v-row class="align-center mb-4 mb-sm-6">
       <v-col cols="12" sm="8" class="mb-2 mb-sm-0">
-        <h2 class="text-h4 mb-4 mb-sm-0 text-center text-sm-start">Genel Rapor</h2>
+        <h2 class="text-h5 text-sm-h4 mb-4 mb-sm-0 text-center text-sm-start">Genel Rapor</h2>
       </v-col>
-      <v-col cols="12" sm="4" class="d-flex justify-end justify-center-sm">
+      <v-col cols="12" sm="4" class="d-flex justify-center justify-sm-end">
         <motion.div
           v-if="showScrollNav"
           :initial="{ scale: 0.9, opacity: 0 }"
           :animate="{ scale: 1, opacity: 1 }"
           :transition="{ duration: 0.25, ease: 'easeOut' }"
-          class="w-100 d-flex justify-end"
+          class="w-100 d-flex justify-center justify-sm-end"
         >
           <v-menu>
             <template #activator="{ props }">
               <v-btn v-bind="props" rounded="lg" color="primary" class="w-100 w-sm-auto">
-                Bölümlere Git
+                <span class="d-none d-sm-inline">Bölümlere Git</span>
+                <span class="d-sm-none">Bölümler</span>
               </v-btn>
             </template>
 
@@ -477,7 +478,7 @@ const scrollToSection = (sectionId: string) => {
     <span class="text-medium-emphasis"> Dönem tarihini geçersiz kılmaz </span>
 
     <v-row class="mb-2 mt-1 controls-row">
-      <v-col cols="12" sm="5">
+      <v-col cols="12" sm="5" md="4">
         <v-date-input
           v-model="startDateFilter"
           :display-format="(date: Date) => format(date, 'dd.MM.yyyy')"
@@ -486,9 +487,10 @@ const scrollToSection = (sectionId: string) => {
           placeholder="gg.AA.yyyy"
           rounded="lg"
           variant="outlined"
+          density="compact"
         />
       </v-col>
-      <v-col cols="12" sm="5">
+      <v-col cols="12" sm="5" md="4">
         <v-date-input
           v-model="endDateFilter"
           :display-format="(date: Date) => format(date, 'dd.MM.yyyy')"
@@ -497,10 +499,11 @@ const scrollToSection = (sectionId: string) => {
           placeholder="gg.AA.yyyy"
           rounded="lg"
           variant="outlined"
+          density="compact"
         />
       </v-col>
 
-      <v-col class="mt-2" cols="auto">
+      <v-col class="mt-2 mt-sm-0 d-flex align-center" cols="12" sm="2" md="auto">
         <AnimatePresence>
           <motion.button
             v-if="generalReport && datesValid"
@@ -521,7 +524,7 @@ const scrollToSection = (sectionId: string) => {
                 />
               </template>
             </v-tooltip>
-            <v-btn v-show="xs.value" class="text-none">Uygula</v-btn>
+            <v-btn v-show="xs.value" class="text-none">Yenile</v-btn>
           </motion.button>
         </AnimatePresence>
       </v-col>
@@ -569,49 +572,54 @@ const scrollToSection = (sectionId: string) => {
       :animate="{ scale: 1, opacity: 1 }"
       :transition="{ duration: 0.25, ease: 'easeOut' }"
     >
-      <v-card id="waybills" class="report-section-card mb-6" elevation="2" border>
-        <v-card-title class="pa-4 bg-primary-lighten-5 border-b">
-          <div class="d-flex align-center w-100">
-            <v-avatar color="primary" size="40" class="me-3">
-              <v-icon icon="mdi-text" color="white" />
-            </v-avatar>
-            <div>
-              <div class="text-h6 font-weight-bold">İrsaliyeler</div>
-              <div class="text-caption text-medium-emphasis">
-                {{ generalReportUniques.waybills?.length || 0 }} adet irsaliye
+      <v-card id="waybills" class="report-section-card mb-4 mb-sm-6" elevation="2" border>
+        <v-card-title class="pa-3 pa-sm-4 bg-primary-lighten-5 border-b">
+          <div
+            class="d-flex flex-column flex-sm-row align-start align-sm-center w-100 gap-2 gap-sm-0"
+          >
+            <div class="d-flex align-center w-100 w-sm-auto">
+              <v-avatar color="primary" class="me-2 me-sm-3 responsive-avatar">
+                <v-icon icon="mdi-text" color="white" />
+              </v-avatar>
+              <div>
+                <div class="text-subtitle-1 text-sm-h6 font-weight-bold">İrsaliyeler</div>
+                <div class="text-caption text-medium-emphasis">
+                  {{ generalReportUniques.waybills?.length || 0 }} adet irsaliye
+                </div>
               </div>
             </div>
-            <v-spacer />
-            <GixTogglerMenu
-              menu-activator-btn-text="Kolonlar"
-              menu-activator-btn-class="rounded-lg border"
-              menu-activator-btn-icon="mdi-filter-variant"
-              v-model:toggle-items="waybillDataTableHeaders"
-            />
+            <v-spacer class="d-none d-sm-flex" />
+            <div class="d-flex flex-wrap gap-2 w-100 w-sm-auto justify-end">
+              <GixTogglerMenu
+                menu-activator-btn-text="Kolonlar"
+                menu-activator-btn-class="rounded-lg border"
+                menu-activator-btn-icon="mdi-filter-variant"
+                v-model:toggle-items="waybillDataTableHeaders"
+              />
 
-            <v-btn
-              prepend-icon="mdi-chart-bar"
-              variant="text"
-              class="ms-2"
-              rounded="lg"
-              text="Tür Bazlı Grafik"
-              :append-icon="showWaybillChart ? 'mdi-chevron-up' : 'mdi-chevron-down'"
-              border
-              @click="showWaybillChart = !showWaybillChart"
-            />
+              <v-btn
+                :prepend-icon="!xs ? 'mdi-chart-bar' : undefined"
+                :icon="xs ? 'mdi-chart-bar' : undefined"
+                variant="text"
+                rounded="lg"
+                class="text-none"
+                :text="!xs ? 'Tür Bazlı Grafik' : undefined"
+                :append-icon="showWaybillChart ? 'mdi-chevron-up' : 'mdi-chevron-down'"
+                border
+                size="small"
+                @click="showWaybillChart = !showWaybillChart"
+              />
+            </div>
           </div>
         </v-card-title>
 
-        <v-expand-transition
-          v-show="showWaybillChart"
-          class="ma-auto"
-          style="width: 70vh; height: 50vh"
-        >
+        <v-expand-transition v-show="showWaybillChart">
           <GixChart
             seriesName="Toplam Tutar"
             :seriesData="waybillChartData.seriesData"
             :data-formatter="formatCurrency"
             currency="TL"
+            height="55vh"
           />
         </v-expand-transition>
 
@@ -714,49 +722,54 @@ const scrollToSection = (sectionId: string) => {
         </v-data-table>
       </v-card>
 
-      <v-card id="invoices" class="report-section-card mb-6" elevation="2" border>
-        <v-card-title class="pa-4 bg-success-lighten-5 border-b">
-          <div class="d-flex align-center w-100">
-            <v-avatar color="success" size="40" class="me-3">
-              <v-icon icon="mdi-file-document" color="white" />
-            </v-avatar>
-            <div>
-              <div class="text-h6 font-weight-bold">Faturalar</div>
-              <div class="text-caption text-medium-emphasis">
-                {{ generalReportUniques.invoices?.length || 0 }} adet fatura
+      <v-card id="invoices" class="report-section-card mb-4 mb-sm-6" elevation="2" border>
+        <v-card-title class="pa-3 pa-sm-4 bg-success-lighten-5 border-b">
+          <div
+            class="d-flex flex-column flex-sm-row align-start align-sm-center w-100 gap-2 gap-sm-0"
+          >
+            <div class="d-flex align-center w-100 w-sm-auto">
+              <v-avatar color="success" class="me-2 me-sm-3 responsive-avatar">
+                <v-icon icon="mdi-file-document" color="white" />
+              </v-avatar>
+              <div>
+                <div class="text-subtitle-1 text-sm-h6 font-weight-bold">Faturalar</div>
+                <div class="text-caption text-medium-emphasis">
+                  {{ generalReportUniques.invoices?.length || 0 }} adet fatura
+                </div>
               </div>
             </div>
-            <v-spacer />
-            <GixTogglerMenu
-              menu-activator-btn-text="Kolonlar"
-              menu-activator-btn-class="rounded-lg border"
-              menu-activator-btn-icon="mdi-filter-variant"
-              v-model:toggle-items="invoiceDataTableHeaders"
-            />
+            <v-spacer class="d-none d-sm-flex" />
+            <div class="d-flex flex-wrap gap-2 w-100 w-sm-auto justify-end">
+              <GixTogglerMenu
+                menu-activator-btn-text="Kolonlar"
+                menu-activator-btn-class="rounded-lg border"
+                menu-activator-btn-icon="mdi-filter-variant"
+                v-model:toggle-items="invoiceDataTableHeaders"
+              />
 
-            <v-btn
-              prepend-icon="mdi-chart-bar"
-              variant="text"
-              class="ms-2"
-              rounded="lg"
-              text="Tür Bazlı Grafik"
-              :append-icon="showInvoiceChart ? 'mdi-chevron-up' : 'mdi-chevron-down'"
-              border
-              @click="showInvoiceChart = !showInvoiceChart"
-            />
+              <v-btn
+                :prepend-icon="!xs ? 'mdi-chart-bar' : undefined"
+                :icon="xs ? 'mdi-chart-bar' : undefined"
+                variant="text"
+                rounded="lg"
+                class="text-none"
+                :text="!xs ? 'Tür Bazlı Grafik' : undefined"
+                :append-icon="showInvoiceChart ? 'mdi-chevron-up' : 'mdi-chevron-down'"
+                border
+                size="small"
+                @click="showInvoiceChart = !showInvoiceChart"
+              />
+            </div>
           </div>
         </v-card-title>
 
-        <v-expand-transition
-          v-show="showInvoiceChart"
-          class="ma-auto"
-          style="width: 70vh; height: 50vh"
-        >
+        <v-expand-transition v-show="showInvoiceChart">
           <GixChart
             seriesName="Toplam Tutar"
             :seriesData="invoiceChartData.seriesData"
             :data-formatter="formatCurrency"
             currency="TL"
+            height="55vh"
           />
         </v-expand-transition>
 
@@ -857,49 +870,54 @@ const scrollToSection = (sectionId: string) => {
         </v-data-table>
       </v-card>
 
-      <v-card id="bank-receipts" class="report-section-card mb-6" elevation="2" border>
-        <v-card-title class="pa-4 bg-info-lighten-5 border-b">
-          <div class="d-flex align-center w-100">
-            <v-avatar color="info" size="40" class="me-3">
-              <v-icon icon="mdi-bank" color="white" />
-            </v-avatar>
-            <div>
-              <div class="text-h6 font-weight-bold">Banka Giriş Fişleri</div>
-              <div class="text-caption text-medium-emphasis">
-                {{ generalReport.bankReceipts.result?.length || 0 }} adet fiş
+      <v-card id="bank-receipts" class="report-section-card mb-4 mb-sm-6" elevation="2" border>
+        <v-card-title class="pa-3 pa-sm-4 bg-info-lighten-5 border-b">
+          <div
+            class="d-flex flex-column flex-sm-row align-start align-sm-center w-100 gap-2 gap-sm-0"
+          >
+            <div class="d-flex align-center w-100 w-sm-auto">
+              <v-avatar color="info" class="me-2 me-sm-3 responsive-avatar">
+                <v-icon icon="mdi-bank" color="white" />
+              </v-avatar>
+              <div>
+                <div class="text-subtitle-1 text-sm-h6 font-weight-bold">Banka Giriş Fişleri</div>
+                <div class="text-caption text-medium-emphasis">
+                  {{ generalReport.bankReceipts.result?.length || 0 }} adet fiş
+                </div>
               </div>
             </div>
-            <v-spacer />
-            <GixTogglerMenu
-              menu-activator-btn-text="Kolonlar"
-              menu-activator-btn-class="rounded-lg border"
-              menu-activator-btn-icon="mdi-filter-variant"
-              v-model:toggle-items="bankReceiptsDataTableHeaders"
-            />
+            <v-spacer class="d-none d-sm-flex" />
+            <div class="d-flex flex-wrap gap-2 w-100 w-sm-auto justify-end">
+              <GixTogglerMenu
+                menu-activator-btn-text="Kolonlar"
+                menu-activator-btn-class="rounded-lg border"
+                menu-activator-btn-icon="mdi-filter-variant"
+                v-model:toggle-items="bankReceiptsDataTableHeaders"
+              />
 
-            <v-btn
-              prepend-icon="mdi-chart-bar"
-              variant="text"
-              class="ms-2"
-              rounded="lg"
-              text="Tür Bazlı Grafik"
-              :append-icon="showBankReceiptsChart ? 'mdi-chevron-up' : 'mdi-chevron-down'"
-              border
-              @click="showBankReceiptsChart = !showBankReceiptsChart"
-            />
+              <v-btn
+                :prepend-icon="!xs ? 'mdi-chart-bar' : undefined"
+                :icon="xs ? 'mdi-chart-bar' : undefined"
+                variant="text"
+                rounded="lg"
+                class="text-none"
+                :text="!xs ? 'Tür Bazlı Grafik' : undefined"
+                :append-icon="showBankReceiptsChart ? 'mdi-chevron-up' : 'mdi-chevron-down'"
+                border
+                size="small"
+                @click="showBankReceiptsChart = !showBankReceiptsChart"
+              />
+            </div>
           </div>
         </v-card-title>
 
-        <v-expand-transition
-          v-show="showBankReceiptsChart"
-          class="ma-auto"
-          style="width: 70vh; height: 50vh"
-        >
+        <v-expand-transition v-show="showBankReceiptsChart">
           <GixChart
             seriesName="Toplam Tutar"
             :seriesData="bankReceiptsChartData.seriesData"
             :data-formatter="formatCurrency"
             currency="TL"
+            height="55vh"
           />
         </v-expand-transition>
         <v-data-table
@@ -918,25 +936,38 @@ const scrollToSection = (sectionId: string) => {
         </v-data-table>
       </v-card>
 
-      <v-card id="credit-card-collections" class="report-section-card mb-6" elevation="2" border>
-        <v-card-title class="pa-4 bg-warning-lighten-5 border-b">
-          <div class="d-flex align-center w-100">
-            <v-avatar color="warning" size="40" class="me-3">
-              <v-icon icon="mdi-credit-card" color="white" />
-            </v-avatar>
-            <div>
-              <div class="text-h6 font-weight-bold">Kredi Kartı Tahsilatları</div>
-              <div class="text-caption text-medium-emphasis">
-                {{ generalReport.creditCardCollections.result?.length || 0 }} adet tahsilat
+      <v-card
+        id="credit-card-collections"
+        class="report-section-card mb-4 mb-sm-6"
+        elevation="2"
+        border
+      >
+        <v-card-title class="pa-3 pa-sm-4 bg-warning-lighten-5 border-b">
+          <div
+            class="d-flex flex-column flex-sm-row align-start align-sm-center w-100 gap-2 gap-sm-0"
+          >
+            <div class="d-flex align-center w-100 w-sm-auto">
+              <v-avatar color="warning" class="me-2 me-sm-3 responsive-avatar">
+                <v-icon icon="mdi-credit-card" color="white" />
+              </v-avatar>
+              <div>
+                <div class="text-subtitle-1 text-sm-h6 font-weight-bold">
+                  Kredi Kartı Tahsilatları
+                </div>
+                <div class="text-caption text-medium-emphasis">
+                  {{ generalReport.creditCardCollections.result?.length || 0 }} adet tahsilat
+                </div>
               </div>
             </div>
-            <v-spacer />
-            <GixTogglerMenu
-              menu-activator-btn-text="Kolonlar"
-              menu-activator-btn-class="rounded-lg border"
-              menu-activator-btn-icon="mdi-filter-variant"
-              v-model:toggle-items="creditCardCollectionsDataTableHeaders"
-            />
+            <v-spacer class="d-none d-sm-flex" />
+            <div class="d-flex flex-wrap gap-2 w-100 w-sm-auto justify-end">
+              <GixTogglerMenu
+                menu-activator-btn-text="Kolonlar"
+                menu-activator-btn-class="rounded-lg border"
+                menu-activator-btn-icon="mdi-filter-variant"
+                v-model:toggle-items="creditCardCollectionsDataTableHeaders"
+              />
+            </div>
           </div>
         </v-card-title>
 
@@ -956,50 +987,55 @@ const scrollToSection = (sectionId: string) => {
         </v-data-table>
       </v-card>
 
-      <v-card id="material-receipts" class="report-section-card mb-6" elevation="2" border>
-        <v-card-title class="pa-4 bg-secondary-lighten-5 border-b">
-          <div class="d-flex align-center w-100">
-            <v-avatar color="secondary" size="40" class="me-3">
-              <v-icon icon="mdi-package-variant" color="white" />
-            </v-avatar>
-            <div>
-              <div class="text-h6 font-weight-bold">Malzeme Fişleri</div>
-              <div class="text-caption text-medium-emphasis">
-                {{ generalReportUniques.materialReceipts?.length || 0 }} adet malzeme fişi
+      <v-card id="material-receipts" class="report-section-card mb-4 mb-sm-6" elevation="2" border>
+        <v-card-title class="pa-3 pa-sm-4 bg-secondary-lighten-5 border-b">
+          <div
+            class="d-flex flex-column flex-sm-row align-start align-sm-center w-100 gap-2 gap-sm-0"
+          >
+            <div class="d-flex align-center w-100 w-sm-auto">
+              <v-avatar color="secondary" class="me-2 me-sm-3 responsive-avatar">
+                <v-icon icon="mdi-package-variant" color="white" />
+              </v-avatar>
+              <div>
+                <div class="text-subtitle-1 text-sm-h6 font-weight-bold">Malzeme Fişleri</div>
+                <div class="text-caption text-medium-emphasis">
+                  {{ generalReportUniques.materialReceipts?.length || 0 }} adet malzeme fişi
+                </div>
               </div>
             </div>
-            <v-spacer />
-            <GixTogglerMenu
-              menu-activator-btn-text="Kolonlar"
-              menu-activator-btn-class="rounded-lg border"
-              menu-activator-btn-icon="mdi-filter-variant"
-              v-model:toggle-items="materialReceiptsDataTableHeaders"
-            />
+            <v-spacer class="d-none d-sm-flex" />
+            <div class="d-flex flex-wrap gap-2 w-100 w-sm-auto justify-end">
+              <GixTogglerMenu
+                menu-activator-btn-text="Kolonlar"
+                menu-activator-btn-class="rounded-lg border"
+                menu-activator-btn-icon="mdi-filter-variant"
+                v-model:toggle-items="materialReceiptsDataTableHeaders"
+              />
 
-            <v-btn
-              prepend-icon="mdi-chart-bar"
-              variant="text"
-              class="ms-2"
-              rounded="lg"
-              text="Tür Bazlı Grafik"
-              :append-icon="showMaterialReceiptsChart ? 'mdi-chevron-up' : 'mdi-chevron-down'"
-              border
-              @click="showMaterialReceiptsChart = !showMaterialReceiptsChart"
-            />
+              <v-btn
+                :prepend-icon="!xs ? 'mdi-chart-bar' : undefined"
+                :icon="xs ? 'mdi-chart-bar' : undefined"
+                variant="text"
+                rounded="lg"
+                class="text-none"
+                :text="!xs ? 'Tür Bazlı Grafik' : undefined"
+                :append-icon="showMaterialReceiptsChart ? 'mdi-chevron-up' : 'mdi-chevron-down'"
+                border
+                size="small"
+                @click="showMaterialReceiptsChart = !showMaterialReceiptsChart"
+              />
+            </div>
           </div>
         </v-card-title>
 
-        <v-expand-transition
-          v-show="showMaterialReceiptsChart"
-          class="ma-auto"
-          style="width: 70vh; height: 50vh"
-        >
+        <v-expand-transition v-show="showMaterialReceiptsChart">
           <GixChart
             :legendData="materialReceiptsChartData.legendData"
             seriesName="Toplam Tutar"
             :seriesData="materialReceiptsChartData.seriesData"
             :data-formatter="formatCurrency"
             currency="TL"
+            height="55vh"
           />
         </v-expand-transition>
 
@@ -1065,25 +1101,31 @@ const scrollToSection = (sectionId: string) => {
         </v-data-table>
       </v-card>
 
-      <v-card id="check-entries" class="report-section-card mb-6" elevation="2" border>
-        <v-card-title class="pa-4 border-b">
-          <div class="d-flex align-center w-100">
-            <v-avatar color="purple" size="40" class="me-3">
-              <v-icon icon="mdi-checkbook" color="white" />
-            </v-avatar>
-            <div>
-              <div class="text-h6 font-weight-bold">Çek Girişleri</div>
-              <div class="text-caption text-medium-emphasis">
-                {{ generalReport.checkEntries.result?.length || 0 }} adet çek girişi
+      <v-card id="check-entries" class="report-section-card mb-4 mb-sm-6" elevation="2" border>
+        <v-card-title class="pa-3 pa-sm-4 border-b">
+          <div
+            class="d-flex flex-column flex-sm-row align-start align-sm-center w-100 gap-2 gap-sm-0"
+          >
+            <div class="d-flex align-center w-100 w-sm-auto">
+              <v-avatar color="purple" class="me-2 me-sm-3 responsive-avatar">
+                <v-icon icon="mdi-checkbook" color="white" />
+              </v-avatar>
+              <div>
+                <div class="text-subtitle-1 text-sm-h6 font-weight-bold">Çek Girişleri</div>
+                <div class="text-caption text-medium-emphasis">
+                  {{ generalReport.checkEntries.result?.length || 0 }} adet çek girişi
+                </div>
               </div>
             </div>
-            <v-spacer />
-            <GixTogglerMenu
-              menu-activator-btn-text="Kolonlar"
-              menu-activator-btn-class="rounded-lg border"
-              menu-activator-btn-icon="mdi-filter-variant"
-              v-model:toggle-items="checkEntriesDataTableHeaders"
-            />
+            <v-spacer class="d-none d-sm-flex" />
+            <div class="d-flex flex-wrap gap-2 w-100 w-sm-auto justify-end">
+              <GixTogglerMenu
+                menu-activator-btn-text="Kolonlar"
+                menu-activator-btn-class="rounded-lg border"
+                menu-activator-btn-icon="mdi-filter-variant"
+                v-model:toggle-items="checkEntriesDataTableHeaders"
+              />
+            </div>
           </div>
         </v-card-title>
 
@@ -1115,50 +1157,55 @@ const scrollToSection = (sectionId: string) => {
         </v-data-table>
       </v-card>
 
-      <v-card id="cash-accounts" class="report-section-card mb-6" elevation="2" border>
-        <v-card-title class="pa-4 border-b">
-          <div class="d-flex align-center w-100">
-            <v-avatar color="green-darken-1" size="40" class="me-3">
-              <v-icon icon="mdi-cash" color="white" />
-            </v-avatar>
-            <div>
-              <div class="text-h6 font-weight-bold">Kasa Kartları</div>
-              <div class="text-caption text-medium-emphasis">
-                {{ generalReport.cashAccounts.result?.length || 0 }} adet kasa kartı
+      <v-card id="cash-accounts" class="report-section-card mb-4 mb-sm-6" elevation="2" border>
+        <v-card-title class="pa-3 pa-sm-4 border-b">
+          <div
+            class="d-flex flex-column flex-sm-row align-start align-sm-center w-100 gap-2 gap-sm-0"
+          >
+            <div class="d-flex align-center w-100 w-sm-auto">
+              <v-avatar color="green-darken-1" class="me-2 me-sm-3 responsive-avatar">
+                <v-icon icon="mdi-cash" color="white" />
+              </v-avatar>
+              <div>
+                <div class="text-subtitle-1 text-sm-h6 font-weight-bold">Kasa Kartları</div>
+                <div class="text-caption text-medium-emphasis">
+                  {{ generalReport.cashAccounts.result?.length || 0 }} adet kasa kartı
+                </div>
               </div>
             </div>
-            <v-spacer />
+            <v-spacer class="d-none d-sm-flex" />
 
-            <GixTogglerMenu
-              menu-activator-btn-text="Kolonlar"
-              menu-activator-btn-class="rounded-lg border"
-              menu-activator-btn-icon="mdi-filter-variant"
-              v-model:toggle-items="cashAccountsDataTableHeaders"
-            />
+            <div class="d-flex flex-wrap gap-2 w-100 w-sm-auto justify-end">
+              <GixTogglerMenu
+                menu-activator-btn-text="Kolonlar"
+                menu-activator-btn-class="rounded-lg border"
+                menu-activator-btn-icon="mdi-filter-variant"
+                v-model:toggle-items="cashAccountsDataTableHeaders"
+              />
 
-            <v-btn
-              text="Kasa Bakiye Grafiği"
-              prepend-icon="mdi-chart-bar"
-              class="ms-2"
-              rounded="lg"
-              :append-icon="showCashAccountChart ? 'mdi-chevron-up' : 'mdi-chevron-down'"
-              border
-              @click="showCashAccountChart = !showCashAccountChart"
-            />
+              <v-btn
+                :text="!xs ? 'Kasa Bakiye Grafiği' : undefined"
+                :prepend-icon="!xs ? 'mdi-chart-bar' : undefined"
+                :icon="xs ? 'mdi-chart-bar' : undefined"
+                rounded="lg"
+                class="text-none"
+                :append-icon="showCashAccountChart ? 'mdi-chevron-up' : 'mdi-chevron-down'"
+                border
+                size="small"
+                @click="showCashAccountChart = !showCashAccountChart"
+              />
+            </div>
           </div>
         </v-card-title>
 
-        <v-expand-transition
-          v-show="showCashAccountChart"
-          class="ma-auto"
-          style="width: 70vh; height: 50vh"
-        >
+        <v-expand-transition v-show="showCashAccountChart">
           <GixChart
             :legendData="cashAccountChartData.legendData"
             seriesName="Bakiye"
             :seriesData="cashAccountChartData.seriesData"
             :data-formatter="formatCurrency"
             currency="TL"
+            height="50vh"
           />
         </v-expand-transition>
 
@@ -1218,16 +1265,26 @@ const scrollToSection = (sectionId: string) => {
                   >
                     <template #top>
                       <v-card elevation="2" rounded="lg" class="rounded-b-0">
-                        <v-card-title class="pa-4 border-b">
-                          <div class="d-flex justify-space-between">
-                            <v-avatar color="teal-lighten-1" size="40">
+                        <v-card-title class="pa-3 pa-sm-4 border-b">
+                          <div
+                            class="d-flex align-center justify-space-between w-100 gap-2"
+                            style="flex-wrap: nowrap"
+                          >
+                            <v-avatar
+                              color="teal-lighten-1"
+                              class="responsive-avatar flex-shrink-0"
+                            >
                               <v-icon icon="mdi-swap-horizontal" color="white" />
                             </v-avatar>
+                            <v-spacer />
                             <v-btn
-                              prepend-icon="mdi-chart-bar"
-                              text="Tür Bazlı Grafik"
+                              :prepend-icon="!xs ? 'mdi-chart-bar' : undefined"
+                              :icon="xs ? 'mdi-chart-bar' : undefined"
+                              :text="!xs ? 'Tür Bazlı Grafik' : undefined"
                               rounded="lg"
                               border
+                              size="small"
+                              class="text-none flex-shrink-0"
                               @click="toggleCashAccountMovementsGraph(item._key)"
                               :append-icon="
                                 isCashAccountMovementsGraphOpen(item._key)
@@ -1237,18 +1294,15 @@ const scrollToSection = (sectionId: string) => {
                             />
                           </div>
                         </v-card-title>
-                        <v-expand-transition
-                          class="ma-auto"
-                          style="width: 70vh; height: 50vh"
-                          v-show="isCashAccountMovementsGraphOpen(item._key)"
-                        >
+                        <v-expand-transition v-show="isCashAccountMovementsGraphOpen(item._key)">
                           <GixBarChart
-                            :x-axis-data="getCashAccountMovementsChartData(item._key).xAxisData"
+                            :axis-data="getCashAccountMovementsChartData(item._key).axisData"
                             :bar-series-data="
                               getCashAccountMovementsChartData(item._key).barSeriesData
                             "
                             :data-formatter="formatCurrency"
                             currency="TL"
+                            :index-axis="xs.value ? 'x' : 'y'"
                           />
                         </v-expand-transition>
                       </v-card>
@@ -1259,6 +1313,9 @@ const scrollToSection = (sectionId: string) => {
                     <template #[`item.borc`]="{ item }">
                       {{ formatCurrency(item.borc) }}
                     </template>
+                    <template #[`item.bakiye`]="{ item }">
+                      {{ formatCurrency(item.bakiye) }}
+                    </template>
                   </v-data-table>
                 </v-sheet>
               </td>
@@ -1267,14 +1324,20 @@ const scrollToSection = (sectionId: string) => {
         </v-data-table>
       </v-card>
 
-      <v-card id="account-cards" class="summary-card mb-6" elevation="3" rounded="xl" border>
-        <v-card-text class="pa-6 pa-sm-8 pa-md-10">
+      <v-card
+        id="account-cards"
+        class="summary-card mb-4 mb-sm-6"
+        elevation="3"
+        rounded="xl"
+        border
+      >
+        <v-card-text class="pa-4 pa-sm-6 pa-md-8 pa-lg-10">
           <div class="d-flex align-center mb-4">
-            <v-avatar color="info" size="48" class="me-4">
-              <v-icon icon="mdi-account" color="white" size="24" />
+            <v-avatar color="info" class="me-3 me-sm-4 summary-avatar">
+              <v-icon icon="mdi-account" color="white" class="summary-icon" />
             </v-avatar>
             <div>
-              <div class="text-h5 text-sm-h4 font-weight-bold">Cari Kartları</div>
+              <div class="text-h6 text-sm-h5 text-md-h4 font-weight-bold">Cari Kartları</div>
               <div class="text-caption text-medium-emphasis">Alacaklı ve borçlu hesaplar özeti</div>
             </div>
           </div>
@@ -1282,26 +1345,32 @@ const scrollToSection = (sectionId: string) => {
           <v-divider class="mb-4" />
 
           <div class="py-2">
-            <div class="d-flex justify-space-between align-center mb-4">
+            <div
+              class="d-flex flex-column flex-sm-row justify-space-between align-start align-sm-center mb-4 gap-2"
+            >
               <div>
-                <div class="text-h6 text-sm-h5 font-weight-medium">Alacaklı Toplamı</div>
-                <div class="text-caption text-medium-emphasis">Müşterilerden alınacak tutarlar</div>
+                <div class="text-subtitle-1 text-sm-h6 text-md-h5 font-weight-medium">
+                  Alacaklı Toplamı
+                </div>
               </div>
-              <div class="text-right">
-                <div class="text-h5 text-sm-h4 font-weight-bold text-success">
+              <div class="text-left text-sm-right w-100 w-sm-auto">
+                <div class="text-h6 text-sm-h5 text-md-h4 font-weight-bold text-success">
                   {{ formatCurrency(generalReport.accountCardsCreditorSum) }} TL
                 </div>
                 <div class="text-caption text-medium-emphasis">Alacak bakiyesi</div>
               </div>
             </div>
 
-            <div class="d-flex justify-space-between align-center">
+            <div
+              class="d-flex flex-column flex-sm-row justify-space-between align-start align-sm-center gap-2"
+            >
               <div>
-                <div class="text-h6 text-sm-h5 font-weight-medium">Borçlu Toplamı</div>
-                <div class="text-caption text-medium-emphasis">Tedarikçilere ödenecek tutarlar</div>
+                <div class="text-subtitle-1 text-sm-h6 text-md-h5 font-weight-medium">
+                  Borçlu Toplamı
+                </div>
               </div>
-              <div class="text-right">
-                <div class="text-h5 text-sm-h4 font-weight-bold text-error">
+              <div class="text-left text-sm-right w-100 w-sm-auto">
+                <div class="text-h6 text-sm-h5 text-md-h4 font-weight-bold text-error">
                   {{ formatCurrency(generalReport.accountCardsDebtorSum) }} TL
                 </div>
                 <div class="text-caption text-medium-emphasis">Borç bakiyesi</div>
@@ -1313,18 +1382,18 @@ const scrollToSection = (sectionId: string) => {
 
       <v-card
         id="purchased-services-invoices"
-        class="summary-card mb-6"
+        class="summary-card mb-4 mb-sm-6"
         elevation="3"
         rounded="xl"
         border
       >
-        <v-card-text class="pa-6 pa-sm-8 pa-md-10">
+        <v-card-text class="pa-4 pa-sm-6 pa-md-8 pa-lg-10">
           <div class="d-flex align-center mb-4">
-            <v-avatar color="warning" size="48" class="me-4">
-              <v-icon icon="mdi-invoice-text" color="white" size="24" />
+            <v-avatar color="warning" class="me-3 me-sm-4 summary-avatar">
+              <v-icon icon="mdi-invoice-text" color="white" class="summary-icon" />
             </v-avatar>
             <div>
-              <div class="text-h5 text-sm-h4 font-weight-bold">Alınan Hizmetler</div>
+              <div class="text-h6 text-sm-h5 text-md-h4 font-weight-bold">Alınan Hizmetler</div>
               <div class="text-caption text-medium-emphasis">Hizmet faturaları özeti</div>
             </div>
           </div>
@@ -1332,15 +1401,16 @@ const scrollToSection = (sectionId: string) => {
           <v-divider class="mb-4" />
 
           <div class="py-2">
-            <div class="d-flex justify-space-between align-center">
+            <div
+              class="d-flex flex-column flex-sm-row justify-space-between align-start align-sm-center gap-2"
+            >
               <div>
-                <div class="text-h6 text-sm-h5 font-weight-medium">Tutar Toplamı</div>
-                <div class="text-caption text-medium-emphasis">
-                  Alınan hizmetlerin toplam tutarı
+                <div class="text-subtitle-1 text-sm-h6 text-md-h5 font-weight-medium">
+                  Tutar Toplamı
                 </div>
               </div>
-              <div class="text-right">
-                <div class="text-h5 text-sm-h4 font-weight-bold text-warning">
+              <div class="text-left text-sm-right w-100 w-sm-auto">
+                <div class="text-h6 text-sm-h5 text-md-h4 font-weight-bold text-warning">
                   {{ formatCurrency(generalReport.purchasedServicesInvoicesSum) }} TL
                 </div>
                 <div class="text-caption text-medium-emphasis">Toplam hizmet tutarı</div>
@@ -1360,6 +1430,41 @@ const scrollToSection = (sectionId: string) => {
 @media screen and (min-width: 768px) {
   .controls-row {
     width: 75%;
+  }
+}
+
+/* Responsive avatars */
+.responsive-avatar {
+  width: 32px;
+  height: 32px;
+}
+
+@media screen and (min-width: 600px) {
+  .responsive-avatar {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+.summary-avatar {
+  width: 40px;
+  height: 40px;
+}
+
+@media screen and (min-width: 600px) {
+  .summary-avatar {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+.summary-icon {
+  font-size: 20px;
+}
+
+@media screen and (min-width: 600px) {
+  .summary-icon {
+    font-size: 24px;
   }
 }
 
