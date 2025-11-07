@@ -503,7 +503,7 @@ const scrollToSection = (sectionId: string) => {
         />
       </v-col>
 
-      <v-col class="mt-2 mt-sm-0 d-flex align-center" cols="12" sm="2" md="auto">
+      <v-col class="mt-2 pt-0 mt-sm-0 d-flex align-center" cols="12" sm="2" md="auto">
         <AnimatePresence>
           <motion.button
             v-if="generalReport && datesValid"
@@ -519,6 +519,7 @@ const scrollToSection = (sectionId: string) => {
                 <v-icon-btn
                   v-show="!xs.value"
                   v-bind="props"
+                  class="mb-2"
                   icon="mdi-refresh"
                   :disabled="loading"
                 />
@@ -598,15 +599,15 @@ const scrollToSection = (sectionId: string) => {
               />
 
               <v-btn
-                :prepend-icon="!xs ? 'mdi-chart-bar' : undefined"
-                :icon="xs ? 'mdi-chart-bar' : undefined"
+                :prepend-icon="!xs.value ? 'mdi-chart-bar' : undefined"
+                :icon="xs.value ? 'mdi-chart-bar' : undefined"
                 variant="text"
                 rounded="lg"
-                class="text-none"
-                :text="!xs ? 'Tür Bazlı Grafik' : undefined"
+                class="ms-3 text-none"
+                :text="!xs.value ? 'Tür Bazlı Grafik' : undefined"
                 :append-icon="showWaybillChart ? 'mdi-chevron-up' : 'mdi-chevron-down'"
+                :size="xs.value ? 'small' : undefined"
                 border
-                size="small"
                 @click="showWaybillChart = !showWaybillChart"
               />
             </div>
@@ -748,15 +749,15 @@ const scrollToSection = (sectionId: string) => {
               />
 
               <v-btn
-                :prepend-icon="!xs ? 'mdi-chart-bar' : undefined"
-                :icon="xs ? 'mdi-chart-bar' : undefined"
+                :prepend-icon="!xs.value ? 'mdi-chart-bar' : undefined"
+                :icon="xs.value ? 'mdi-chart-bar' : undefined"
                 variant="text"
                 rounded="lg"
-                class="text-none"
-                :text="!xs ? 'Tür Bazlı Grafik' : undefined"
+                class="ms-3 text-none"
+                :text="!xs.value ? 'Tür Bazlı Grafik' : undefined"
                 :append-icon="showInvoiceChart ? 'mdi-chevron-up' : 'mdi-chevron-down'"
                 border
-                size="small"
+                :size="xs.value ? 'small' : undefined"
                 @click="showInvoiceChart = !showInvoiceChart"
               />
             </div>
@@ -896,15 +897,15 @@ const scrollToSection = (sectionId: string) => {
               />
 
               <v-btn
-                :prepend-icon="!xs ? 'mdi-chart-bar' : undefined"
-                :icon="xs ? 'mdi-chart-bar' : undefined"
+                :prepend-icon="!xs.value ? 'mdi-chart-bar' : undefined"
+                :icon="xs.value ? 'mdi-chart-bar' : undefined"
                 variant="text"
                 rounded="lg"
-                class="text-none"
-                :text="!xs ? 'Tür Bazlı Grafik' : undefined"
+                class="ms-3 text-none"
+                :text="!xs.value ? 'Tür Bazlı Grafik' : undefined"
                 :append-icon="showBankReceiptsChart ? 'mdi-chevron-up' : 'mdi-chevron-down'"
                 border
-                size="small"
+                :size="xs.value ? 'small' : undefined"
                 @click="showBankReceiptsChart = !showBankReceiptsChart"
               />
             </div>
@@ -1013,15 +1014,15 @@ const scrollToSection = (sectionId: string) => {
               />
 
               <v-btn
-                :prepend-icon="!xs ? 'mdi-chart-bar' : undefined"
-                :icon="xs ? 'mdi-chart-bar' : undefined"
+                :prepend-icon="!xs.value ? 'mdi-chart-bar' : undefined"
+                :icon="xs.value ? 'mdi-chart-bar' : undefined"
                 variant="text"
                 rounded="lg"
-                class="text-none"
-                :text="!xs ? 'Tür Bazlı Grafik' : undefined"
+                class="ms-3 text-none"
+                :text="!xs.value ? 'Tür Bazlı Grafik' : undefined"
                 :append-icon="showMaterialReceiptsChart ? 'mdi-chevron-up' : 'mdi-chevron-down'"
                 border
-                size="small"
+                :size="xs.value ? 'small' : undefined"
                 @click="showMaterialReceiptsChart = !showMaterialReceiptsChart"
               />
             </div>
@@ -1184,14 +1185,14 @@ const scrollToSection = (sectionId: string) => {
               />
 
               <v-btn
-                :text="!xs ? 'Kasa Bakiye Grafiği' : undefined"
-                :prepend-icon="!xs ? 'mdi-chart-bar' : undefined"
-                :icon="xs ? 'mdi-chart-bar' : undefined"
+                :text="!xs.value ? 'Kasa Bakiye Grafiği' : undefined"
+                :prepend-icon="!xs.value ? 'mdi-chart-bar' : undefined"
+                :icon="xs.value ? 'mdi-chart-bar' : undefined"
                 rounded="lg"
-                class="text-none"
+                class="ms-3 text-none"
                 :append-icon="showCashAccountChart ? 'mdi-chevron-up' : 'mdi-chevron-down'"
                 border
-                size="small"
+                :size="xs.value ? 'small' : undefined"
                 @click="showCashAccountChart = !showCashAccountChart"
               />
             </div>
@@ -1278,12 +1279,12 @@ const scrollToSection = (sectionId: string) => {
                             </v-avatar>
                             <v-spacer />
                             <v-btn
-                              :prepend-icon="!xs ? 'mdi-chart-bar' : undefined"
-                              :icon="xs ? 'mdi-chart-bar' : undefined"
-                              :text="!xs ? 'Tür Bazlı Grafik' : undefined"
+                              :prepend-icon="!xs.value ? 'mdi-chart-bar' : undefined"
+                              :icon="xs.value ? 'mdi-chart-bar' : undefined"
+                              :text="!xs.value ? 'Tür Bazlı Grafik' : undefined"
                               rounded="lg"
                               border
-                              size="small"
+                              :size="xs.value ? 'small' : undefined"
                               class="text-none flex-shrink-0"
                               @click="toggleCashAccountMovementsGraph(item._key)"
                               :append-icon="

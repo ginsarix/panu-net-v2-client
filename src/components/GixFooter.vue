@@ -1,4 +1,11 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia';
+
+import { useCurrentUserStore } from '@/stores/current-user';
+
+const currentUserStore = useCurrentUserStore();
+const { currentUser } = storeToRefs(currentUserStore);
+
 const socials = [
   {
     icon: 'mdi-facebook',
@@ -51,6 +58,13 @@ const socials = [
     </div>
 
     <v-divider thickness="2" width="50" />
+
+    <div v-if="currentUser">
+      <span class="text-subtitle-2 text-medium-emphasis">
+        Özel Raporlama Yazılımı Web Servis aracılığıyla çalışmakta olup, 80 sorgu 1 kontüre tekamül
+        etmektedir.
+      </span>
+    </div>
 
     <v-divider />
 

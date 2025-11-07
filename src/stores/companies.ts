@@ -1,15 +1,14 @@
 import { defineStore } from 'pinia';
-import { ref, watch } from 'vue';
+import { onUnmounted, ref, watch } from 'vue';
 
 import {
   type CompanyServerDataTableOptions,
   getCompanies,
-  getCreditCount,
   getPeriods,
   getSelectedCompany,
   getSelectedPeriod,
 } from '@/services/api/companies.ts';
-import emitter from '@/services/service-bus';
+import { trpc } from '@/services/trpc.ts';
 import type { Company } from '@/types/company.ts';
 import type { Period } from '@/types/period';
 
@@ -26,22 +25,52 @@ export const useCompaniesStore = defineStore('companies', () => {
 
   const creditCount = ref<number | null>(null);
   const creditCountLoading = ref(false);
-  emitter.on('creditsMaybeChanged', async () => {
+  let subscription: { unsubscribe: () => void } | null = null;
+
+  const connectCreditCountSSE = () => {
     if (!selectedCompanyId.value) return;
 
-    creditCountLoading.value = true;
-    await new Promise((resolve) => setTimeout(resolve, 500)); // wait for the credits to update on the external service (just a guarantee)
-    try {
-      creditCount.value = await getCreditCount();
-    } catch (error) {
-      console.error(error);
-    } finally {
-      creditCountLoading.value = false;
+    // Close existing subscription if any
+    if (subscription) {
+      subscription.unsubscribe();
+      subscription = null;
     }
-  });
 
-  watch(selectedCompanyId, async (newValue) => {
+    creditCountLoading.value = true;
+
+    // Subscribe to the tRPC subscription
+    subscription = trpc.company.getCreditCount.subscribe(undefined, {
+      onData: (d) => {
+        creditCount.value = d.data;
+        creditCountLoading.value = false;
+      },
+      onError: (error) => {
+        console.error('Credit count subscription error:', error);
+        creditCountLoading.value = false;
+      },
+    });
+  };
+
+  const disconnectCreditCountSSE = () => {
+    if (subscription) {
+      subscription.unsubscribe();
+      subscription = null;
+    }
+    creditCount.value = null;
+    creditCountLoading.value = false;
+  };
+
+  watch(selectedCompanyId, async (newValue, oldValue) => {
+    // Disconnect SSE when company changes or is cleared
+    if (oldValue !== null || newValue === null) {
+      disconnectCreditCountSSE();
+    }
+
     if (!newValue) return;
+
+    // Connect SSE for new company
+    connectCreditCountSSE();
+
     const instance = getSelectedCompanyInstance();
     const companyCode = instance?.code;
 
@@ -103,6 +132,10 @@ export const useCompaniesStore = defineStore('companies', () => {
     }
   };
 
+  onUnmounted(() => {
+    disconnectCreditCountSSE();
+  });
+
   return {
     companies,
     totalCompaniesCount,
@@ -120,5 +153,7 @@ export const useCompaniesStore = defineStore('companies', () => {
     getSelectedCompanyInstance,
     loadSelectedCompanyId,
     loadSelectedPeriodCode,
+    connectCreditCountSSE,
+    disconnectCreditCountSSE,
   };
 });

@@ -1,24 +1,35 @@
-import { createTRPCProxyClient, httpBatchLink } from '@trpc/client';
+import {
+  createTRPCProxyClient,
+  httpBatchLink,
+  httpSubscriptionLink,
+  splitLink,
+} from '@trpc/client';
 import superjson from 'superjson';
 
 import type { AppRouter } from '@/../../server/src/trpc/router';
 import { API_CONFIG } from '@/config/api.ts';
 
-import emitter from './service-bus';
-
 export const trpc = createTRPCProxyClient<AppRouter>({
   links: [
-    httpBatchLink({
-      url: API_CONFIG.baseURL,
-      fetch: async (input, init) => {
-        if (!String(input).includes('company.getCreditCount')) emitter.emit('creditsMaybeChanged');
-
-        return fetch(input, {
-          ...(init as RequestInit),
-          credentials: 'include',
-        });
-      },
-      transformer: superjson,
+    splitLink({
+      condition: (op) => op.type === 'subscription',
+      true: httpSubscriptionLink({
+        url: API_CONFIG.baseURL,
+        transformer: superjson,
+        eventSourceOptions: {
+          withCredentials: true,
+        },
+      }),
+      false: httpBatchLink({
+        url: API_CONFIG.baseURL,
+        transformer: superjson,
+        fetch: async (input, init) => {
+          return fetch(input, {
+            ...(init as RequestInit),
+            credentials: 'include',
+          });
+        },
+      }),
     }),
   ],
 });
