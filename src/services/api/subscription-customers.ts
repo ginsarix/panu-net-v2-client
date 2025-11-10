@@ -35,3 +35,15 @@ export const patchSubscriptionCustomer = async (
 
 export const deleteSubscriptionCustomer = async (id: number) =>
   await trpc.subscriptionCustomer.deleteSubscriptionCustomer.mutate({ id });
+
+export type TestNotificationInput = Parameters<
+  typeof trpc.subscriptionCustomer.testNotification.mutate
+>[0];
+
+export const testNotification = async (input: TestNotificationInput) =>
+  await trpc.subscriptionCustomer.testNotification.mutate({
+    email: input.email,
+    phone: input.phone,
+    remindExpiryWithEmail: input.remindExpiryWithEmail,
+    remindExpiryWithSms: input.remindExpiryWithSms,
+  });

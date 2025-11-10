@@ -70,6 +70,13 @@ watch(currentMode, (newValue) => {
     resetForm();
   } else if (newValue === ActionMode.Create) {
     showCrudDialog.value = true;
+  } else if (newValue === ActionMode.Edit && selectedSubscription.value) {
+    showCrudDialog.value = true;
+
+    subscriptionForm.startDate.value = selectedSubscription.value.startDate;
+    subscriptionForm.endDate.value = selectedSubscription.value.endDate;
+    subscriptionForm.subscriptionType.value = selectedSubscription.value.subscriptionType;
+    subscriptionForm.userId.value = selectedSubscription.value.userId;
   } else {
     showCrudDialog.value = !!selectedSubscription.value;
   }
@@ -369,6 +376,7 @@ const dialogSubmit = async () => {
             type="submit"
             :loading="isSubmitting"
             :disabled="
+              isSubmitting ||
               (currentMode === ActionMode.Create && !formValid) ||
               (currentMode === ActionMode.Edit && !editFormValid)
             "

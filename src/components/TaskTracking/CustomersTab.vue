@@ -8,6 +8,7 @@ import {
   createSubscriptionCustomer,
   deleteSubscriptionCustomer,
   patchSubscriptionCustomer,
+  testNotification,
 } from '@/services/api/subscription-customers';
 import { cleanPayload } from '@/services/trpc';
 import { useDisplayStore } from '@/stores/display';
@@ -56,6 +57,18 @@ watch(currentMode, (newValue) => {
     resetForm();
   } else if (newValue === ActionMode.Create) {
     showCrudDialog.value = true;
+  } else if (newValue === ActionMode.Edit && selectedCustomer.value) {
+    showCrudDialog.value = true;
+
+    customerForm.customerCode.value = selectedCustomer.value.customerCode ?? 0;
+    customerForm.title.value = selectedCustomer.value.title;
+    customerForm.phone.value = selectedCustomer.value.phone ?? '';
+    customerForm.remindExpiryWithSms.value = selectedCustomer.value.remindExpiryWithSms;
+    customerForm.email.value = selectedCustomer.value.email;
+    customerForm.remindExpiryWithEmail.value = selectedCustomer.value.remindExpiryWithEmail;
+    customerForm.address.value = selectedCustomer.value.address ?? '';
+    customerForm.status.value = selectedCustomer.value.status;
+    customerForm.manager.value = selectedCustomer.value.manager ?? '';
   } else {
     showCrudDialog.value = !!selectedCustomer.value;
   }
@@ -142,6 +155,30 @@ const formValid = computed(() =>
 const editFormValid = computed(() =>
   Object.values(customerForm).some((field) => validateField(field)),
 );
+
+const testNotificationLoading = ref(false);
+const testNotificationClick = async () => {
+  testNotificationLoading.value = true;
+  try {
+    const result = await testNotification({
+      email: customerForm.email.value,
+      phone: customerForm.phone.value,
+      remindExpiryWithEmail: customerForm.remindExpiryWithEmail.value,
+      remindExpiryWithSms: customerForm.remindExpiryWithSms.value,
+    });
+
+    snackbarText.value = `${result.message}, ${result.result.emailsSent} e-posta gönderildi, ${result.result.smsSent} SMS gönderildi`;
+    snackbar.value = true;
+  } catch (error) {
+    console.error(error);
+    snackbarError.value = true;
+    snackbarText.value =
+      error instanceof Error ? error.message : 'Beklenmeyen bir hata ile karşılaşıldı.';
+    snackbar.value = true;
+  } finally {
+    testNotificationLoading.value = false;
+  }
+};
 
 const dialogSubmit = async () => {
   isSubmitting.value = true;
@@ -381,6 +418,18 @@ const dialogSubmit = async () => {
           <template v-else> 🧑‍💻 </template>
         </v-card-text>
         <v-card-actions>
+          <v-btn
+            @click="testNotificationClick"
+            text="Bildirim Testi"
+            color="blue-lighten-2"
+            rounded="lg"
+            :loading="testNotificationLoading"
+            :disabled="
+              testNotificationLoading ||
+              (currentMode === ActionMode.Create && !formValid) ||
+              (currentMode === ActionMode.Edit && !editFormValid)
+            "
+          />
           <v-spacer />
           <v-btn @click="currentMode = ActionMode.Idle" text="İptal" rounded="lg" />
           <v-btn
