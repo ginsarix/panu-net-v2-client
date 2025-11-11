@@ -11,7 +11,11 @@ export const useUsersStore = defineStore('users', () => {
   const loadUsers = async (params?: UserServerDataTableOptions) => {
     const response = await getUsers(params);
 
-    users.value = response.users.map((u) => ({ ...u, companies: u.companyIds }));
+    users.value = response.users.map((u) => ({
+      ...u,
+      companies: u.companyIds,
+      pageRoles: u.pageRoleIds,
+    }));
     totalUsersCount.value = response.total;
   };
 

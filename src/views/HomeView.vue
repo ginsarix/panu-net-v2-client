@@ -3,20 +3,22 @@ import { storeToRefs } from 'pinia';
 import { computed, onMounted, watch } from 'vue';
 
 import AnalyticsTab from '@/components/DebtorsCreditors/AnalyticsTab.vue';
+import { usePageRoleAccess } from '@/composables/usePageRoleAccess';
 import { useSelectedCompany } from '@/composables/useSelectedCompany';
 import { useCompaniesStore } from '@/stores/companies';
 import { useCreditorsStore } from '@/stores/creditors';
-import { useCurrentUserStore } from '@/stores/current-user';
 import { useDebtorsStore } from '@/stores/debtors';
+import { usePageRolesStore } from '@/stores/page-roles';
 import { useUsersStore } from '@/stores/users';
 
 const companiesStore = useCompaniesStore();
 const usersStore = useUsersStore();
 
-const currentUserStore = useCurrentUserStore();
-const { currentUser } = storeToRefs(currentUserStore);
+const pageRolesStore = usePageRolesStore();
+const { hasPageRole, isAdmin } = usePageRoleAccess();
 
 onMounted(async () => {
+  await pageRolesStore.loadPageRoles();
   if (!totalCompanies.value) await loadCompanies();
   if (!totalUsers.value) await loadUsers();
 });
@@ -69,7 +71,17 @@ watch(
   async ([newSelectedCompany, newSelectedPeriod]) => {
     if (newSelectedCompany && newSelectedPeriod !== null && newSelectedPeriod !== undefined) {
       loading.value = true;
-      await Promise.all([loadDebtors(), loadCreditors()]);
+      const loadPromises = [];
+
+      if (hasPageRole('DEBTOR_VIEW')) {
+        loadPromises.push(loadDebtors());
+      }
+
+      if (hasPageRole('CREDITOR_VIEW')) {
+        loadPromises.push(loadCreditors());
+      }
+
+      await Promise.all(loadPromises);
       loading.value = false;
     }
   },
@@ -81,42 +93,79 @@ const totalUsers = computed(() => usersStore.users.length);
 const totalDebtors = computed(() => debtorsStore.debtors.length);
 const totalCreditors = computed(() => creditorsStore.creditors.length);
 
-const baseKpis = [
-  { label: 'Firmalar', value: totalCompanies, icon: 'mdi-domain', theme: 'primary' },
-  {
-    label: 'Borçlular',
-    value: totalDebtors,
-    icon: 'mdi-bank-transfer-out',
-    theme: 'error',
-  },
-  {
-    label: 'Alacaklılar',
-    value: totalCreditors,
-    icon: 'mdi-bank-transfer-in',
-    theme: 'success',
-  },
-];
+const baseKpis = computed(() => {
+  const kpis = [];
+
+  // Always show companies for admins
+  if (isAdmin.value) {
+    kpis.push({ label: 'Firmalar', value: totalCompanies, icon: 'mdi-domain', theme: 'primary' });
+  }
+
+  // Show debtors if user has access
+  if (hasPageRole('DEBTOR_VIEW')) {
+    kpis.push({
+      label: 'Borçlular',
+      value: totalDebtors,
+      icon: 'mdi-bank-transfer-out',
+      theme: 'error',
+    });
+  }
+
+  // Show creditors if user has access
+  if (hasPageRole('CREDITOR_VIEW')) {
+    kpis.push({
+      label: 'Alacaklılar',
+      value: totalCreditors,
+      icon: 'mdi-bank-transfer-in',
+      theme: 'success',
+    });
+  }
+
+  return kpis;
+});
 
 const adminKpis = [
   { label: 'Kullanıcılar', value: totalUsers, icon: 'mdi-account-group', theme: 'info' },
 ];
 
 const kpis = computed(() =>
-  currentUser.value?.role === 'admin'
-    ? [...baseKpis.slice(0, 1), ...adminKpis, ...baseKpis.slice(1)]
-    : baseKpis,
+  isAdmin.value
+    ? [...baseKpis.value.slice(0, 1), ...adminKpis, ...baseKpis.value.slice(1)]
+    : baseKpis.value,
 );
 
-const baseLinks = [
-  { label: 'Borçlular', icon: 'mdi-bank-transfer-out', to: '/dbcr/debtors', theme: 'error' },
-  { label: 'Alacaklılar', icon: 'mdi-bank-transfer-in', to: '/dbcr/creditors', theme: 'success' },
-  {
-    label: 'Genel Rapor',
-    icon: 'mdi-file-document',
-    to: '/reports/general-report',
-    theme: 'primary',
-  },
-];
+const baseLinks = computed(() => {
+  const links = [];
+
+  if (hasPageRole('DEBTOR_VIEW')) {
+    links.push({
+      label: 'Borçlular',
+      icon: 'mdi-bank-transfer-out',
+      to: '/dbcr/debtors',
+      theme: 'error',
+    });
+  }
+
+  if (hasPageRole('CREDITOR_VIEW')) {
+    links.push({
+      label: 'Alacaklılar',
+      icon: 'mdi-bank-transfer-in',
+      to: '/dbcr/creditors',
+      theme: 'success',
+    });
+  }
+
+  if (hasPageRole('REPORT_VIEW')) {
+    links.push({
+      label: 'Genel Rapor',
+      icon: 'mdi-file-document',
+      to: '/reports/general-report',
+      theme: 'primary',
+    });
+  }
+
+  return links;
+});
 
 const adminLinks = [
   { label: 'Kullanıcılar', icon: 'mdi-account-group', to: '/management/users', theme: 'info' },
@@ -124,9 +173,7 @@ const adminLinks = [
 ];
 
 const quickLinks = computed(() =>
-  currentUser.value?.role === 'admin'
-    ? [...baseLinks.slice(0, 2), ...adminLinks, ...baseLinks.slice(2)]
-    : baseLinks,
+  isAdmin.value ? [...baseLinks.value, ...adminLinks] : baseLinks.value,
 );
 </script>
 
@@ -148,13 +195,17 @@ const quickLinks = computed(() =>
     </v-row>
 
     <v-row class="mb-8" align="center" justify="center">
-      <v-col cols="12" md="8">
+      <v-col v-if="hasPageRole('DEBTOR_VIEW') && hasPageRole('CREDITOR_VIEW')" cols="12" md="8">
         <v-card class="pa-4 analytics-card" elevation="10">
           <AnalyticsTab :loading />
         </v-card>
       </v-col>
-      <v-col cols="12" md="4">
-        <v-card class="pa-6 quick-links-card" elevation="10">
+      <v-col
+        :cols="hasPageRole('DEBTOR_VIEW') || hasPageRole('CREDITOR_VIEW') ? 12 : 12"
+        :md="hasPageRole('DEBTOR_VIEW') || hasPageRole('CREDITOR_VIEW') ? 4 : 8"
+        :class="hasPageRole('DEBTOR_VIEW') || hasPageRole('CREDITOR_VIEW') ? '' : 'offset-md-2'"
+      >
+        <v-card v-if="quickLinks.length > 0" class="pa-6 quick-links-card" elevation="10">
           <div class="text-h6 mb-4">Hızlı Erişim</div>
           <v-list rounded="lg" class="pa-2">
             <v-list-item
@@ -172,6 +223,9 @@ const quickLinks = computed(() =>
             </v-list-item>
           </v-list>
         </v-card>
+        <h1 class="font-weight-black text-underline text-h4" v-else>
+          Hiçbir modüle erişiminiz yok.
+        </h1>
       </v-col>
     </v-row>
   </v-container>

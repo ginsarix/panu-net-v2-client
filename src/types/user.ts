@@ -10,4 +10,5 @@ export interface User extends Nullish<CreateUpdateDate> {
   role?: string;
   phone?: string | null;
   companies: number[];
+  pageRoles?: number[];
 }

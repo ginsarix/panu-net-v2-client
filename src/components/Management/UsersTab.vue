@@ -17,6 +17,7 @@ import { cleanPayload } from '@/services/trpc';
 import { useCompaniesStore } from '@/stores/companies';
 import { useCurrentUserStore } from '@/stores/current-user';
 import { useDisplayStore } from '@/stores/display.ts';
+import { usePageRolesStore } from '@/stores/page-roles';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useUsersStore } from '@/stores/users.ts';
 import { ActionMode } from '@/types/action-mode.ts';
@@ -44,6 +45,9 @@ const { currentUser } = storeToRefs(currentUserStore);
 const companiesStore = useCompaniesStore();
 const { companies } = storeToRefs(companiesStore);
 
+const pageRolesStore = usePageRolesStore();
+const { pageRoles } = storeToRefs(pageRolesStore);
+
 const snackbarStore = useSnackbarStore();
 const { snackbar, snackbarError, snackbarText } = storeToRefs(snackbarStore);
 
@@ -51,6 +55,13 @@ onMounted(async () => {
   if (!companies.value.length) {
     try {
       await companiesStore.loadCompanies();
+    } catch (error) {
+      console.error(error);
+    }
+  }
+  if (!pageRoles.value.length) {
+    try {
+      await pageRolesStore.loadPageRoles();
     } catch (error) {
       console.error(error);
     }
@@ -85,6 +96,7 @@ watch(currentMode, (newValue) => {
       userForm.phone.value = u.phone ?? '';
       userForm.role.value = u.role ?? 'user';
       userForm.userCompanies.value = u.companies;
+      userForm.userPageRoles.value = u.pageRoles ?? [];
     }
   }
 });
@@ -116,6 +128,7 @@ const dialogSubmit = async () => {
       password: userForm.password.value,
       role: userForm.role.value,
       companies: userForm.userCompanies.value,
+      pageRoles: userForm.userPageRoles.value,
     };
   };
 
@@ -219,6 +232,10 @@ const userForm = reactive({
     rules: [noEmptyArrayRule],
     value: selectedUser.value?.companies ?? ([] as number[]),
   },
+  userPageRoles: {
+    rules: [],
+    value: selectedUser.value?.pageRoles ?? ([] as number[]),
+  },
 });
 
 const resetForm = () => {
@@ -228,7 +245,7 @@ const resetForm = () => {
   });
 };
 
-const companySelectHidden = ref(false);
+const rolesSelectsHidden = ref(false);
 const showPassword = ref(false);
 const showPasswordAgain = ref(false);
 
@@ -236,7 +253,7 @@ watch(
   () => userForm.role.value,
   (newValue) => {
     const isAdmin = newValue === 'admin';
-    companySelectHidden.value = isAdmin;
+    rolesSelectsHidden.value = isAdmin;
     userForm.userCompanies.rules = isAdmin ? [] : [noEmptyArrayRule];
   },
 );
@@ -436,21 +453,36 @@ const editFormValid = computed(
                   <v-radio value="admin" label="Admin" />
                 </v-radio-group>
 
-                <v-expand-transition class="mb-2">
-                  <v-autocomplete
-                    v-model="userForm.userCompanies.value"
-                    v-show="!companySelectHidden"
-                    variant="outlined"
-                    rounded="lg"
-                    multiple
-                    chips
-                    label="Firmalar"
-                    append-inner-icon="mdi-domain"
-                    :items="companies"
-                    :rules="userForm.userCompanies.rules"
-                    item-title="name"
-                    item-value="id"
-                  />
+                <v-expand-transition class="my-2">
+                  <div v-show="!rolesSelectsHidden">
+                    <v-autocomplete
+                      v-model="userForm.userCompanies.value"
+                      variant="outlined"
+                      rounded="lg"
+                      multiple
+                      chips
+                      closable-chips
+                      label="Firmalar"
+                      append-inner-icon="mdi-domain"
+                      :items="companies"
+                      :rules="userForm.userCompanies.rules"
+                      item-title="name"
+                      item-value="id"
+                    />
+                    <v-autocomplete
+                      v-model="userForm.userPageRoles.value"
+                      variant="outlined"
+                      rounded="lg"
+                      label="Modüller"
+                      multiple
+                      chips
+                      closable-chips
+                      :items="pageRoles"
+                      item-title="name"
+                      item-value="id"
+                      :rules="userForm.userPageRoles.rules"
+                    />
+                  </div>
                 </v-expand-transition>
               </v-card-text>
             </v-card>

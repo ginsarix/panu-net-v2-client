@@ -3,7 +3,9 @@ import { storeToRefs } from 'pinia';
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
+import { usePageRoleAccess } from '@/composables/usePageRoleAccess';
 import { useCurrentUserStore } from '@/stores/current-user';
+import { usePageRolesStore } from '@/stores/page-roles';
 
 import CompanySection from './CompanySection.vue';
 
@@ -21,9 +23,13 @@ const router = useRouter();
 const currentUserStore = useCurrentUserStore();
 const { currentUser } = storeToRefs(currentUserStore);
 
+const pageRolesStore = usePageRolesStore();
+const { hasPageRole, isAdmin } = usePageRoleAccess();
+
 onMounted(async () => {
   try {
     await currentUserStore.loadCurrentUser();
+    await pageRolesStore.loadPageRoles();
 
     if (!currentUser) await router.push('/login');
   } catch (error) {
@@ -86,7 +92,10 @@ const companySectionVisible = ref(false);
     </v-list>
 
     <v-list @click:open="$emit('update:rail')">
-      <v-list-group value="DebtorCreditors">
+      <v-list-group
+        v-if="hasPageRole('DEBTOR_VIEW') || hasPageRole('CREDITOR_VIEW') || isAdmin"
+        value="DebtorCreditors"
+      >
         <template #activator="{ props }">
           <v-list-item
             v-bind="props"
@@ -96,12 +105,14 @@ const companySectionVisible = ref(false);
           />
         </template>
         <v-list-item
+          v-if="hasPageRole('DEBTOR_VIEW') || isAdmin"
           rounded="xl"
           prepend-icon="mdi-bank-transfer-out"
           title="Borçlular"
           to="/dbcr/debtors"
         />
         <v-list-item
+          v-if="hasPageRole('CREDITOR_VIEW') || isAdmin"
           rounded="xl"
           prepend-icon="mdi-bank-transfer-in"
           title="Alacaklılar"
@@ -135,7 +146,10 @@ const companySectionVisible = ref(false);
         </v-list-item>
       </v-list-group> -->
 
-      <v-list-group value="TaskTracking">
+      <v-list-group
+        v-if="hasPageRole('SUBSCRIPTION_VIEW') || hasPageRole('CUSTOMER_VIEW') || isAdmin"
+        value="TaskTracking"
+      >
         <template #activator="{ props }">
           <v-list-item
             v-bind="props"
@@ -146,13 +160,14 @@ const companySectionVisible = ref(false);
         </template>
 
         <v-list-item
+          v-if="hasPageRole('SUBSCRIPTION_VIEW') || isAdmin"
           rounded="xl"
           prepend-icon="mdi-cash-multiple"
           title="Abonelikler"
           to="/task-tracking/subscriptions"
         />
         <v-list-item
-          v-if="currentUser?.role === 'admin'"
+          v-if="hasPageRole('CUSTOMER_VIEW') || isAdmin"
           rounded="xl"
           prepend-icon="mdi-account-cash"
           title="Müşteriler"
@@ -160,7 +175,7 @@ const companySectionVisible = ref(false);
         />
       </v-list-group>
 
-      <v-list-group v-if="currentUser?.role === 'admin'" value="Management">
+      <v-list-group v-if="isAdmin" value="Management">
         <template #activator="{ props }">
           <v-list-item
             v-bind="props"
@@ -188,7 +203,7 @@ const companySectionVisible = ref(false);
           to="/management/modules"
         />
       </v-list-group>
-      <v-list-group value="Reports">
+      <v-list-group v-if="hasPageRole('REPORT_VIEW') || isAdmin" value="Reports">
         <template #activator="{ props }">
           <v-list-item
             v-bind="props"
