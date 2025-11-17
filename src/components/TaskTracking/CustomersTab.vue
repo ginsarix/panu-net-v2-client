@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { computed, reactive, ref, watch } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { VIconBtn, VMaskInput } from 'vuetify/labs/components';
 
 import type { SubscriptionCustomerServerDataTableOptions } from '@/services/api/subscription-customers';
@@ -14,6 +14,7 @@ import { cleanPayload } from '@/services/trpc';
 import { useDisplayStore } from '@/stores/display';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useSubscriptionCustomersStore } from '@/stores/subscription-customers';
+import { useSubscriptionsStore } from '@/stores/subscriptions';
 import { ActionMode } from '@/types/action-mode';
 import type { DataTableHeaders } from '@/types/data-table-headers';
 import type { SubscriptionCustomer } from '@/types/subscription-customer';
@@ -26,6 +27,15 @@ const { mobile } = storeToRefs(useDisplayStore());
 
 const subscriptionCustomersStore = useSubscriptionCustomersStore();
 const { subscriptionCustomers } = storeToRefs(subscriptionCustomersStore);
+
+const subscriptionsStore = useSubscriptionsStore();
+const { subscriptions } = storeToRefs(subscriptionsStore);
+
+onMounted(async () => {
+  if (!subscriptions.value.length) {
+    await subscriptionsStore.loadSubscriptions();
+  }
+});
 
 const snackbarStore = useSnackbarStore();
 const { snackbar, snackbarError, snackbarText } = storeToRefs(snackbarStore);
@@ -60,7 +70,7 @@ watch(currentMode, (newValue) => {
   } else if (newValue === ActionMode.Edit && selectedCustomer.value) {
     showCrudDialog.value = true;
 
-    customerForm.customerCode.value = selectedCustomer.value.customerCode ?? 0;
+    customerForm.customerCode.value = selectedCustomer.value.customerCode ?? '';
     customerForm.title.value = selectedCustomer.value.title;
     customerForm.phone.value = selectedCustomer.value.phone ?? '';
     customerForm.remindExpiryWithSms.value = selectedCustomer.value.remindExpiryWithSms;
@@ -69,6 +79,7 @@ watch(currentMode, (newValue) => {
     customerForm.address.value = selectedCustomer.value.address ?? '';
     customerForm.status.value = selectedCustomer.value.status;
     customerForm.manager.value = selectedCustomer.value.manager ?? '';
+    customerForm.subscriptionIds.value = selectedCustomer.value.subscriptionIds || [];
   } else {
     showCrudDialog.value = !!selectedCustomer.value;
   }
@@ -77,7 +88,7 @@ watch(currentMode, (newValue) => {
 const customersLoaded = ref(false);
 
 const dataTableHeaders = ref<DataTableHeaders[]>([
-  { title: 'ID', key: 'id', sortable: false, toggled: true },
+  { title: 'ID', key: 'id', sortable: false, toggled: false },
   { title: 'Kod', key: 'customerCode', sortable: true, toggled: true },
   { title: 'Başlık', key: 'title', sortable: true, toggled: true },
   { title: 'Telefon', key: 'phone', sortable: true, toggled: true },
@@ -93,7 +104,7 @@ const includedDataTableHeaders = computed(() =>
 );
 
 const customerForm = reactive({
-  customerCode: { rules: [noEmptyRule], value: 0 },
+  customerCode: { rules: [], value: '' },
   title: { rules: [noEmptyRule], value: '' },
   phone: { rules: phoneRules, value: '' },
   remindExpiryWithSms: { rules: [], value: false },
@@ -102,14 +113,20 @@ const customerForm = reactive({
   address: { rules: [], value: '' },
   status: { rules: [], value: true },
   manager: { rules: [], value: '' },
+  subscriptionIds: { rules: [], value: [] as number[] },
 });
 
 const resetForm = () => {
-  Object.values(customerForm).forEach((field) => {
-    if (typeof field.value === 'string') field.value = '';
-    if (typeof field.value === 'number') field.value = 0;
-    if (typeof field.value === 'boolean') field.value = true;
-  });
+  customerForm.customerCode.value = '';
+  customerForm.title.value = '';
+  customerForm.phone.value = '';
+  customerForm.remindExpiryWithSms.value = false;
+  customerForm.email.value = '';
+  customerForm.remindExpiryWithEmail.value = true;
+  customerForm.address.value = '';
+  customerForm.status.value = true;
+  customerForm.manager.value = '';
+  customerForm.subscriptionIds.value = [];
 };
 
 const isSubmitting = ref(false);
@@ -193,6 +210,7 @@ const dialogSubmit = async () => {
     address: customerForm.address.value,
     status: customerForm.status.value,
     manager: customerForm.manager.value,
+    subscriptionIds: customerForm.subscriptionIds.value,
   });
 
   try {
@@ -340,7 +358,6 @@ const dialogSubmit = async () => {
               label="Kod"
               v-model.number="customerForm.customerCode.value"
               :rules="customerForm.customerCode.rules"
-              type="number"
             />
             <v-text-field
               class="mb-2"
@@ -410,6 +427,23 @@ const dialogSubmit = async () => {
               color="primary"
               :true-value="true"
               :false-value="false"
+            />
+
+            <v-autocomplete
+              :items="subscriptions"
+              class="mb-2"
+              variant="outlined"
+              rounded="lg"
+              label="Abonelikler"
+              placeholder="Seçiniz"
+              v-model="customerForm.subscriptionIds.value"
+              item-value="id"
+              :item-title="
+                (item) => `${item.subscriptionType} (${item.startDate} - ${item.endDate})`
+              "
+              multiple
+              chips
+              closable-chips
             />
           </template>
           <template v-else-if="currentMode === ActionMode.Delete">

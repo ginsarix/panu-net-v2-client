@@ -3,7 +3,7 @@ import { TRPCClientError } from '@trpc/client';
 import { addDays, format, isBefore, isEqual } from 'date-fns';
 import { AnimatePresence, motion } from 'motion-v';
 import { storeToRefs } from 'pinia';
-import { computed, ref, watch } from 'vue';
+import { computed, defineAsyncComponent, ref, watch } from 'vue';
 import { VDateInput } from 'vuetify/labs/VDateInput';
 import { VIconBtn } from 'vuetify/labs/VIconBtn';
 
@@ -14,9 +14,10 @@ import type { DataTableHeaders } from '@/types/data-table-headers';
 import { uniqueBy } from '@/utils/array';
 import { formatCurrency } from '@/utils/formatting';
 
-import GixBarChart from '../GixBarChart.vue';
-import GixChart from '../GixChart.vue';
 import GixTogglerMenu from '../GixTogglerMenu.vue';
+
+const GixChart = defineAsyncComponent(() => import('../GixChart.vue'));
+const GixBarChart = defineAsyncComponent(() => import('../GixBarChart.vue'));
 
 const { mobile, xs } = storeToRefs(useDisplayStore());
 
@@ -640,36 +641,28 @@ const scrollToSection = (sectionId: string) => {
           <template #[`item.tutari`]="{ item: { fisno } }">
             {{
               formatCurrency(
-                getWaybillItems(fisno)
-                  ?.map((w) => Number(w.tutari))
-                  .reduce((acc, val) => acc + val, 0) ?? 0,
+                getWaybillItems(fisno)?.reduce((sum, w) => sum + Number(w.tutari), 0) ?? 0,
               )
             }}
           </template>
           <template #[`item.kdvtutari`]="{ item: { fisno } }">
             {{
               formatCurrency(
-                getWaybillItems(fisno)
-                  ?.map((w) => Number(w.kdvtutari))
-                  .reduce((acc, val) => acc + val, 0) ?? 0,
+                getWaybillItems(fisno)?.reduce((sum, w) => sum + Number(w.kdvtutari), 0) ?? 0,
               )
             }}
           </template>
           <template #[`item.indirimtutari`]="{ item: { fisno } }">
             {{
               formatCurrency(
-                getWaybillItems(fisno)
-                  ?.map((w) => Number(w.indirimtutari))
-                  .reduce((acc, val) => acc + val, 0) ?? 0,
+                getWaybillItems(fisno)?.reduce((sum, w) => sum + Number(w.indirimtutari), 0) ?? 0,
               )
             }}
           </template>
           <template #[`item.toplamtutar`]="{ item: { fisno } }">
             {{
               formatCurrency(
-                getWaybillItems(fisno)
-                  ?.map((w) => Number(w.toplamtutar))
-                  .reduce((acc, val) => acc + val, 0) ?? 0,
+                getWaybillItems(fisno)?.reduce((sum, w) => sum + Number(w.toplamtutar), 0) ?? 0,
               )
             }}
           </template>
@@ -789,36 +782,28 @@ const scrollToSection = (sectionId: string) => {
           <template #[`item.tutari`]="{ item: { fisno } }">
             {{
               formatCurrency(
-                getInvoiceItems(fisno)
-                  ?.map((w) => Number(w.kdvharictutar))
-                  .reduce((acc, val) => acc + val, 0) ?? 0,
+                getInvoiceItems(fisno)?.reduce((sum, w) => sum + Number(w.kdvharictutar), 0) ?? 0,
               )
             }}
           </template>
           <template #[`item.kdvtutari`]="{ item: { fisno } }">
             {{
               formatCurrency(
-                getInvoiceItems(fisno)
-                  ?.map((w) => Number(w.kdvtutari))
-                  .reduce((acc, val) => acc + val, 0) ?? 0,
+                getInvoiceItems(fisno)?.reduce((sum, w) => sum + Number(w.kdvtutari), 0) ?? 0,
               )
             }}
           </template>
           <template #[`item.indirimtutari`]="{ item: { fisno } }">
             {{
               formatCurrency(
-                getInvoiceItems(fisno)
-                  ?.map((w) => Number(w.indirimtutari))
-                  .reduce((acc, val) => acc + val, 0) ?? 0,
+                getInvoiceItems(fisno)?.reduce((sum, w) => sum + Number(w.indirimtutari), 0) ?? 0,
               )
             }}
           </template>
           <template #[`item.toplamtutar`]="{ item: { fisno } }">
             {{
               formatCurrency(
-                getInvoiceItems(fisno)
-                  ?.map((w) => Number(w.toplamtutar))
-                  .reduce((acc, val) => acc + val, 0) ?? 0,
+                getInvoiceItems(fisno)?.reduce((sum, w) => sum + Number(w.toplamtutar), 0) ?? 0,
               )
             }}
           </template>
@@ -1055,9 +1040,7 @@ const scrollToSection = (sectionId: string) => {
           <template #[`item.toplam`]="{ item: { fisno } }">
             {{
               formatCurrency(
-                getMaterialReceiptItems(fisno)
-                  ?.map((m) => Number(m.toplam))
-                  .reduce((acc, val) => acc + val, 0) ?? 0,
+                getMaterialReceiptItems(fisno)?.reduce((sum, m) => sum + Number(m.toplam), 0) ?? 0,
               )
             }}
           </template>

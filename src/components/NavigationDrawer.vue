@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { computed, onMounted, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { onMounted, ref } from 'vue';
 
 import { usePageRoleAccess } from '@/composables/usePageRoleAccess';
 import { useCurrentUserStore } from '@/stores/current-user';
 import { usePageRolesStore } from '@/stores/page-roles';
 
 import CompanySection from './CompanySection.vue';
+import UserProfile from './UserProfile.vue';
 
 defineProps<{
   rail: boolean;
@@ -17,8 +17,6 @@ defineProps<{
 defineEmits<{
   (e: 'update:rail'): void;
 }>();
-
-const router = useRouter();
 
 const currentUserStore = useCurrentUserStore();
 const { currentUser } = storeToRefs(currentUserStore);
@@ -30,18 +28,10 @@ onMounted(async () => {
   try {
     await currentUserStore.loadCurrentUser();
     await pageRolesStore.loadPageRoles();
-
-    if (!currentUser) await router.push('/login');
   } catch (error) {
     console.error('Error occurred during getting login details :', error);
   }
 });
-const userIcon = computed(() => (currentUser.value?.role === 'admin' ? 'mdi-key' : 'mdi-account'));
-
-const logout = async () => {
-  if (currentUser) await currentUserStore.logoutCurrentUser();
-  await router.push('/login');
-};
 
 const companySectionVisible = ref(false);
 </script>
@@ -54,7 +44,10 @@ const companySectionVisible = ref(false);
     permanent
   >
     <v-list class="pa-2">
-      <v-list-item :prepend-icon="userIcon" :title="currentUser?.name" nav>
+      <v-list-item class="ps-0" :title="currentUser?.name" nav>
+        <template #prepend>
+          <UserProfile />
+        </template>
         <template #append>
           <v-btn
             v-if="mobile"
@@ -64,18 +57,6 @@ const companySectionVisible = ref(false);
             variant="text"
             size="small"
           />
-          <v-tooltip :text="`${currentUser ? 'Çıkış' : 'Giriş'} Yap`" location="bottom">
-            <template #activator="{ props }">
-              <v-btn
-                v-bind="props"
-                @click="logout"
-                variant="text"
-                size="small"
-                :icon="currentUser ? 'mdi-logout' : 'mdi-login'"
-                :aria-label="`${currentUser ? 'Çıkış' : 'Giriş'} Yap`"
-              />
-            </template>
-          </v-tooltip>
         </template>
       </v-list-item>
       <template v-if="mobile">

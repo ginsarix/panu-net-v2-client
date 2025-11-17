@@ -6,5 +6,5 @@ export interface Subscription extends Nullish<CreateUpdateDate> {
   startDate: string;
   endDate: string;
   subscriptionType: 'domain' | 'ssl' | 'hosting' | 'mail';
-  userId: number;
+  customerIds: number[];
 }

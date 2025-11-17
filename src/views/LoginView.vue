@@ -10,6 +10,7 @@ import { login, resetPassword, verifyEmail, verifyPasswordReset } from '@/servic
 import { useCurrentUserStore } from '@/stores/current-user';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { emailRules, passwordRules } from '@/types/validations.ts';
+import { normalizeEmail } from '@/utils/formatting';
 
 const currentUserStore = useCurrentUserStore();
 
@@ -33,7 +34,8 @@ const showPasswordResetModal = ref(false);
 
 const isEmailValid = computed(() => {
   if (!formSubmitted.value && !email.value) return true;
-  return emailRules.every((rule) => rule(email.value) === true);
+  const normalizedEmail = email.value ? normalizeEmail(email.value) : '';
+  return emailRules.every((rule) => rule(normalizedEmail) === true);
 });
 
 const isPasswordValid = computed(() => {
@@ -49,6 +51,10 @@ const router = useRouter();
 
 const submit = async () => {
   formSubmitted.value = true;
+
+  if (email.value) {
+    email.value = normalizeEmail(email.value);
+  }
 
   if (!isFormValid.value) {
     return;
@@ -115,6 +121,11 @@ const passwordResetOtpValidating = ref(false);
 const passwordResetOtpErrorMessage = ref('');
 
 const resetPasswordSubmit = () => {
+  // Normalize email before submission
+  if (passwordResetEmail.value) {
+    passwordResetEmail.value = normalizeEmail(passwordResetEmail.value);
+  }
+
   resetPassword(passwordResetEmail.value, newPassword.value)
     .then(({ otpIdentifier, ttl }) => {
       passwordResetOtpIdentifier.value = otpIdentifier;
@@ -217,7 +228,7 @@ const resetPasswordResetOtp = () => {
           </div>
         </v-form>
         <template v-else>
-          <GixCountdown v-model="otpTtl" />
+          <GixCountdown @over="resetOtp" v-model="otpTtl" />
 
           <v-row no-gutters>
             <v-col cols="12">

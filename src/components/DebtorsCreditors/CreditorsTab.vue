@@ -11,6 +11,7 @@ import { useSnackbarStore } from '@/stores/snackbar';
 import type { DataTableHeaders } from '@/types/data-table-headers';
 import { formatCurrency } from '@/utils/formatting';
 
+import ExportAsExcel from '../ExportAsExcel.vue';
 import GixTogglerMenu from '../GixTogglerMenu.vue';
 
 const { mobile } = storeToRefs(useDisplayStore());
@@ -79,9 +80,24 @@ const includedDataTableHeaders = computed(() =>
 
         <GixTogglerMenu
           menu-activator-btn-text="Kolonlar"
-          menu-activator-btn-class="rounded-lg border me-5"
+          menu-activator-btn-class="rounded-lg border me-3"
           menu-activator-btn-icon="mdi-filter-variant"
           v-model:toggle-items="dataTableHeaders"
+        />
+
+        <ExportAsExcel
+          class="me-5"
+          :disabled="loading"
+          :items="
+            creditors.map((c) => ({
+              code: c.code,
+              name: c.name,
+              balance: c.balance,
+              currency: c.currency,
+            }))
+          "
+          :filename="`alacaklilar`"
+          :headers="[includedDataTableHeaders.map((header) => header.title)]"
         />
       </v-toolbar>
     </template>

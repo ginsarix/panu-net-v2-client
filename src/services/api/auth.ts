@@ -39,3 +39,6 @@ export const resetPassword = async (email: string, newPassword: string) =>
   await trpc.auth.resetPassword.mutate({ email, newPassword });
 export const verifyPasswordReset = async (identifier: string, verificationCode: string) =>
   await trpc.auth.verifyPasswordReset.mutate({ identifier, verificationCode });
+
+export const changePassword = async (currentPassword: string, newPassword: string) =>
+  await trpc.auth.changePassword.mutate({ currentPassword, newPassword });

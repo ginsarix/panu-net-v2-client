@@ -3,14 +3,10 @@ import { ref } from 'vue';
 
 import { getLogin, logout } from '@/services/api/auth';
 import { getUserPageRoles } from '@/services/api/page-roles';
+import type { User } from '@/types/user';
 
 export const useCurrentUserStore = defineStore('currentUser', () => {
-  const currentUser = ref<{
-    id: string;
-    name: string;
-    role: 'user' | 'admin';
-    pageRoleIds?: number[];
-  } | null>(null);
+  const currentUser = ref<Omit<User, 'companies'> | null>(null);
   const loadCurrentUser = async () => {
     const login = await getLogin();
     if (!login) {
@@ -29,7 +25,7 @@ export const useCurrentUserStore = defineStore('currentUser', () => {
       }
     }
 
-    currentUser.value = { ...login, pageRoleIds };
+    currentUser.value = { ...login, pageRoles: pageRoleIds };
   };
   const logoutCurrentUser = async () => {
     try {

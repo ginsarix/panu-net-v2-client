@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref } from 'vue';
 
+const emit = defineEmits<{
+  (e: 'over'): void;
+}>();
+
 const seconds = defineModel({ type: Number, default: 60 });
 
 const counter = ref(seconds.value);
@@ -11,6 +15,7 @@ const displaySeconds = computed(() => counter.value % 60);
 const tickInterval = setInterval(() => {
   if (counter.value <= 0) {
     clearInterval(tickInterval);
+    emit('over');
     return;
   }
   counter.value--;

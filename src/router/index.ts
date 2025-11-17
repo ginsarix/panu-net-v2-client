@@ -78,6 +78,7 @@ const router = createRouter({
           component: HomeView,
         },
       ],
+      meta: { role: 'admin' },
     },
     {
       path: '/reports',
@@ -103,6 +104,10 @@ router.beforeEach(async (to) => {
     return '/login';
   }
 
+  if (to.meta.role && currentUser.value?.role !== to.meta.role) {
+    return '/';
+  }
+
   // Check page role requirements
   if (currentUser.value && to.meta.requiredPageRole) {
     // Admins bypass page role checks
@@ -112,7 +117,7 @@ router.beforeEach(async (to) => {
 
     // Check if user has the required page role
     const requiredRoleKey = to.meta.requiredPageRole as string;
-    const userPageRoleIds = currentUser.value.pageRoleIds || [];
+    const userPageRoleIds = currentUser.value.pageRoles || [];
 
     // We need to check if the user has a page role that matches the required role key
     // This requires loading page roles and matching by key

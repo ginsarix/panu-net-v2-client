@@ -15,13 +15,13 @@ export const usePageRoleAccess = () => {
   const { pageRoles } = storeToRefs(pageRolesStore);
 
   // Map route meta keys to actual page role keys
-  const roleKeyMap: Record<string, string> = {
+  const roleKeyMap = {
     DEBTOR_VIEW: 'debtor_view',
     CREDITOR_VIEW: 'creditor_view',
     SUBSCRIPTION_VIEW: 'subscription_view',
     CUSTOMER_VIEW: 'customer_view',
     REPORT_VIEW: 'report_view',
-  };
+  } as const;
 
   const hasPageRole = (roleKey: keyof typeof roleKeyMap): boolean => {
     // Admins have access to everything
@@ -30,7 +30,7 @@ export const usePageRoleAccess = () => {
     }
 
     // If user is not logged in, no access
-    if (!currentUser.value || !currentUser.value.pageRoleIds) {
+    if (!currentUser.value || !currentUser.value.pageRoles) {
       return false;
     }
 
@@ -44,7 +44,7 @@ export const usePageRoleAccess = () => {
       return false;
     }
 
-    return currentUser.value.pageRoleIds.includes(requiredRole.id);
+    return currentUser.value.pageRoles.includes(requiredRole.id);
   };
 
   const hasAccessToPath = (path: string): boolean => {

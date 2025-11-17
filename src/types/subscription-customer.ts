@@ -3,7 +3,7 @@ import type { Nullish } from './nullish';
 
 export interface SubscriptionCustomer extends Nullish<CreateUpdateDate> {
   id: number;
-  customerCode: number | null;
+  customerCode: string | null;
   title: string;
   phone: string | null;
   email: string;
@@ -12,4 +12,5 @@ export interface SubscriptionCustomer extends Nullish<CreateUpdateDate> {
   address: string | null;
   status: boolean;
   manager: string | null;
+  subscriptionIds?: number[];
 }

@@ -1,3 +1,5 @@
+import { normalizeEmail } from '@/utils/formatting';
+
 export const noEmptyRule = (v: unknown) => !!v || 'Boş bırakılamaz';
 export const noEmptyArrayRule = (v: unknown[]) => v.length > 0 || 'Boş olamaz.';
 export const emailRule = (v: string) =>
@@ -9,6 +11,12 @@ export const phoneRule = (v: string) => {
   return /^\d{10}$/.test(strippedV) || !v || 'Telefon numarası 10 haneli olmalıdır';
 };
 
-export const emailRules = [noEmptyRule, emailRule];
+const normalizedEmailRule = (v: string) => {
+  if (!v) return true; // Let noEmptyRule handle empty values
+  const normalized = normalizeEmail(v);
+  return emailRule(normalized);
+};
+
+export const emailRules = [noEmptyRule, normalizedEmailRule];
 export const passwordRules = [noEmptyRule, passwordRule];
 export const phoneRules = [phoneRule];

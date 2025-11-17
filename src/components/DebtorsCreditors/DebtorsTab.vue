@@ -12,6 +12,8 @@ import { useSnackbarStore } from '@/stores/snackbar';
 import type { DataTableHeaders } from '@/types/data-table-headers.ts';
 import { formatCurrency } from '@/utils/formatting';
 
+import ExportAsExcel from '../ExportAsExcel.vue';
+
 const { mobile } = storeToRefs(useDisplayStore());
 
 const debtorsStore = useDebtorsStore();
@@ -79,9 +81,28 @@ const includedDataTableHeaders = computed(() =>
 
         <GixTogglerMenu
           menu-activator-btn-text="Kolonlar"
-          menu-activator-btn-class="rounded-lg border me-5"
+          menu-activator-btn-class="rounded-lg border me-3"
           menu-activator-btn-icon="mdi-filter-variant"
           v-model:toggle-items="dataTableHeaders"
+        />
+        <!-- remove debtorsOrCreditors from debtors so it matches the headers, also make sure it matches the order of the headers -->
+        <ExportAsExcel
+          class="me-5"
+          :disabled="loading"
+          :items="
+            debtors.map((d) => ({
+              code: d.code,
+              name: d.name,
+              balance: d.balance,
+              currency: d.currency,
+            }))
+          "
+          :filename="`borclular`"
+          :headers="[
+            includedDataTableHeaders
+              .filter((header) => header.key !== 'actions')
+              .map((header) => header.title),
+          ]"
         />
       </v-toolbar>
     </template>

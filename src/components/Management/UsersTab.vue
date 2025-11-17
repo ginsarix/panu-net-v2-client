@@ -127,6 +127,7 @@ const dialogSubmit = async () => {
       email: userForm.email.value,
       password: userForm.password.value,
       role: userForm.role.value,
+      phone: userForm.phone.value,
       companies: userForm.userCompanies.value,
       pageRoles: userForm.userPageRoles.value,
     };
@@ -207,11 +208,12 @@ const batchDelete = async () => {
 };
 
 const dataTableHeaders = ref<DataTableHeaders[]>([
-  { title: 'ID', key: 'id', sortable: false, toggled: true },
+  { title: 'ID', key: 'id', sortable: false, toggled: false },
   { title: 'Ad', key: 'name', sortable: true, toggled: true },
   { title: 'E-posta', key: 'email', sortable: true, toggled: true },
   { title: 'Rol', key: 'role', sortable: false, toggled: true },
   { title: 'Telefon', key: 'phone', sortable: false, toggled: true },
+  { title: 'Son Giriş Tarihi', key: 'lastLoginAt', sortable: true, toggled: true },
   { title: 'Oluşturulma Tarihi', key: 'creationDate', sortable: true, toggled: true },
   { title: 'Düzenlenme Tarihi', key: 'updatedOn', sortable: true, toggled: true },
   { title: 'İşlemler', key: 'actions', sortable: false, toggled: true },
@@ -378,11 +380,17 @@ const editFormValid = computed(
         {{ item.role === 'admin' ? 'Admin' : 'Kullanıcı' }}
       </v-chip>
     </template>
+    <template #[`item.phone`]="{ item }">
+      {{ item.phone || '-' }}
+    </template>
+    <template #[`item.lastLoginAt`]="{ item }">
+      {{ item.lastLoginAt ? formatDateTime(item.lastLoginAt) : '-' }}
+    </template>
     <template #[`item.creationDate`]="{ item }">
       {{ item.creationDate ? formatDateTime(item.creationDate) : '' }}
     </template>
     <template #[`item.updatedOn`]="{ item }">
-      {{ item.updatedOn ? formatDateTime(item.updatedOn) : 'Düzenlenmedi' }}
+      {{ item.updatedOn ? formatDateTime(item.updatedOn) : '-' }}
     </template>
     <template #[`item.actions`]="{ item }">
       <div class="d-flex justify-end">
@@ -408,7 +416,7 @@ const editFormValid = computed(
     </template>
   </v-data-table-server>
 
-  <v-dialog max-width="450" v-model="showCrudDialog">
+  <v-dialog max-width="450" v-model="showCrudDialog" persistent>
     <v-card rounded="lg">
       <v-card-title>
         <v-icon size="small" :icon="cardIcon" />

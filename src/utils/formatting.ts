@@ -53,3 +53,7 @@ const cashAccountMovementTypes = {
 export const mapCashAccountMovementTypes = (type: keyof typeof cashAccountMovementTypes) => {
   return cashAccountMovementTypes[type];
 };
+
+export const normalizeEmail = (email: string): string => {
+  return email.trim().toLowerCase();
+};

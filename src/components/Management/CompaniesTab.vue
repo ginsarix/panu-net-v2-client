@@ -88,7 +88,6 @@ const resetForm = () => {
 };
 
 const validateField = (field: (typeof companyForm)[keyof typeof companyForm]) =>
-  //                                             fuck you typescript
   field.rules.every((rule) => rule(field.value as never) === true);
 
 const formActionModes = [ActionMode.Create, ActionMode.Edit];
@@ -242,7 +241,7 @@ const batchDelete = async () => {
 };
 
 const dataTableHeaders = ref<DataTableHeaders[]>([
-  { title: 'ID', key: 'id', toggled: true, sortable: true },
+  { title: 'ID', key: 'id', toggled: false, sortable: true },
   { title: 'Kod', key: 'code', toggled: true, sortable: true },
   { title: 'Ad', key: 'name', toggled: true, sortable: true },
   { title: 'Yönetici', key: 'manager', toggled: true, sortable: true },
@@ -364,7 +363,7 @@ const handleSubmit = async () => {
     </template>
   </v-data-table-server>
 
-  <v-dialog v-model="infoDialog" persistent max-width="500">
+  <v-dialog v-model="infoDialog" max-width="500">
     <v-card rounded="lg">
       <v-card-title class="text-h6 text-center">
         {{ selectedCompany?.name }}
@@ -457,7 +456,7 @@ const handleSubmit = async () => {
     </v-card>
   </v-dialog>
 
-  <v-dialog v-model="showCrudDialog" max-width="600">
+  <v-dialog v-model="showCrudDialog" persistent max-width="600">
     <v-card rounded="lg">
       <v-card-title>
         <v-icon size="small" :icon="cardIcon" />

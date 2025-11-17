@@ -76,7 +76,7 @@ watch(currentMode, (newValue) => {
     subscriptionForm.startDate.value = selectedSubscription.value.startDate;
     subscriptionForm.endDate.value = selectedSubscription.value.endDate;
     subscriptionForm.subscriptionType.value = selectedSubscription.value.subscriptionType;
-    subscriptionForm.userId.value = selectedSubscription.value.userId;
+    subscriptionForm.customerIds.value = selectedSubscription.value.customerIds || [];
   } else {
     showCrudDialog.value = !!selectedSubscription.value;
   }
@@ -85,11 +85,11 @@ watch(currentMode, (newValue) => {
 const subscriptionsLoaded = ref(false);
 
 const dataTableHeaders = ref<DataTableHeaders[]>([
-  { title: 'ID', key: 'id', sortable: false, toggled: true },
+  { title: 'ID', key: 'id', sortable: false, toggled: false },
   { title: 'Tip', key: 'subscriptionType', sortable: true, toggled: true },
   { title: 'Başlangıç', key: 'startDate', sortable: true, toggled: true },
   { title: 'Bitiş', key: 'endDate', sortable: true, toggled: true },
-  { title: 'Müşteri', key: 'userId', sortable: false, toggled: true },
+  { title: 'Müşteriler', key: 'customerIds', sortable: false, toggled: true },
   { title: 'İşlemler', key: 'actions', sortable: false, toggled: true },
 ]);
 
@@ -104,7 +104,10 @@ const subscriptionForm = reactive({
     rules: [noEmptyRule],
     value: 'domain' as 'domain' | 'ssl' | 'hosting' | 'mail',
   },
-  userId: { rules: [noEmptyRule], value: null as number | null },
+  customerIds: {
+    rules: [],
+    value: [] as number[],
+  },
 });
 
 const isISODate = (dateOrString: string | Date) =>
@@ -125,11 +128,10 @@ watchDebounced(
 );
 
 const resetForm = () => {
-  Object.values(subscriptionForm).forEach((field) => {
-    if (typeof field.value === 'string') field.value = '';
-    if (typeof field.value === 'number') field.value = 0;
-  });
+  subscriptionForm.startDate.value = '';
+  subscriptionForm.endDate.value = '';
   subscriptionForm.subscriptionType.value = 'domain';
+  subscriptionForm.customerIds.value = [];
 };
 
 const isSubmitting = ref(false);
@@ -163,8 +165,9 @@ const cardTitle = computed(() => {
   }
 });
 
-const validateField = (field: (typeof subscriptionForm)[keyof typeof subscriptionForm]) =>
-  field.rules.every((rule) => rule(field.value) === true);
+const validateField = (field: (typeof subscriptionForm)[keyof typeof subscriptionForm]) => {
+  return field.rules.every((rule) => rule(field.value as unknown) === true);
+};
 const formValid = computed(() =>
   Object.values(subscriptionForm).every((field) => validateField(field)),
 );
@@ -179,7 +182,7 @@ const dialogSubmit = async () => {
     startDate: subscriptionForm.startDate.value,
     endDate: subscriptionForm.endDate.value,
     subscriptionType: subscriptionForm.subscriptionType.value,
-    userId: subscriptionForm.userId.value!,
+    customerIds: subscriptionForm.customerIds.value,
   });
 
   try {
@@ -288,8 +291,12 @@ const dialogSubmit = async () => {
     <template #[`item.endDate`]="{ item }">
       {{ formatDateTime(item.endDate, 'dd.MM.yyyy') }}
     </template>
-    <template #[`item.userId`]="{ item }">
-      <v-chip>{{ subscriptionCustomers.find((sc) => sc.id === item.userId)?.title }}</v-chip>
+    <template #[`item.customerIds`]="{ item }">
+      <div class="d-flex flex-wrap ga-1">
+        <v-chip v-for="customerId in item.customerIds" :key="customerId" size="small">
+          {{ subscriptionCustomers.find((sc) => sc.id === customerId)?.title }}
+        </v-chip>
+      </div>
     </template>
     <template #[`item.actions`]="{ item }">
       <v-icon-btn
@@ -356,12 +363,15 @@ const dialogSubmit = async () => {
               class="mb-2"
               variant="outlined"
               rounded="lg"
-              label="Müşteri"
-              :rules="subscriptionForm.userId.rules"
+              label="Müşteriler"
+              :rules="subscriptionForm.customerIds.rules"
               placeholder="Seçiniz"
-              v-model.number="subscriptionForm.userId.value"
+              v-model="subscriptionForm.customerIds.value"
               item-value="id"
               item-title="title"
+              multiple
+              chips
+              closable-chips
             />
           </template>
           <template v-else-if="currentMode === ActionMode.Delete">
