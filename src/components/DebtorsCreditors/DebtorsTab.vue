@@ -5,7 +5,6 @@ import { computed, ref } from 'vue';
 
 import GixTogglerMenu from '@/components/GixTogglerMenu.vue';
 import { useCompanyPeriodWatcher } from '@/composables/useCompanyPeriodWatcher';
-import { useSelectedCompany } from '@/composables/useSelectedCompany';
 import { useDebtorsStore } from '@/stores/debtors.ts';
 import { useDisplayStore } from '@/stores/display.ts';
 import { useSnackbarStore } from '@/stores/snackbar';
@@ -19,16 +18,12 @@ const { mobile } = storeToRefs(useDisplayStore());
 const debtorsStore = useDebtorsStore();
 const { debtors } = storeToRefs(debtorsStore);
 
-const { selectedCompany } = useSelectedCompany();
-
 const snackbarStore = useSnackbarStore();
 const { snackbar, snackbarError, snackbarText } = storeToRefs(snackbarStore);
 
 const loading = ref(false);
 
 const loadDebtors = async () => {
-  if (!selectedCompany.value) return;
-
   loading.value = true;
   try {
     await debtorsStore.loadDebtors();
@@ -97,7 +92,7 @@ const includedDataTableHeaders = computed(() =>
               currency: d.currency,
             }))
           "
-          :filename="`borclular`"
+          filename="borclular"
           :headers="[
             includedDataTableHeaders
               .filter((header) => header.key !== 'actions')

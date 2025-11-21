@@ -23,6 +23,7 @@ export const useCompanyPeriodWatcher = (
           await fn();
         } catch (error) {
           console.error('Error in company/period watcher callback', error);
+          throw error;
         }
       }
     },

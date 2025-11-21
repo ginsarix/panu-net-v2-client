@@ -74,7 +74,29 @@ const companySectionVisible = ref(false);
 
     <v-list @click:open="$emit('update:rail')">
       <v-list-group
-        v-if="hasPageRole('DEBTOR_VIEW') || hasPageRole('CREDITOR_VIEW') || isAdmin"
+        v-if="hasPageRole('STOCKS_VIEW') || hasPageRole('SERVICES_VIEW')"
+        value="Stocks"
+      >
+        <template #activator="{ props }">
+          <v-list-item v-bind="props" rounded="xl" prepend-icon="mdi-warehouse" title="Stok" />
+        </template>
+        <v-list-item
+          v-if="hasPageRole('STOCKS_VIEW')"
+          rounded="xl"
+          prepend-icon="mdi-view-list"
+          title="Stok Listesi"
+          to="/stocks/list"
+        />
+        <v-list-item
+          v-if="hasPageRole('SERVICES_VIEW')"
+          rounded="xl"
+          prepend-icon="mdi-briefcase"
+          title="Hizmetler"
+          to="/stocks/service-list"
+        />
+      </v-list-group>
+      <v-list-group
+        v-if="hasPageRole('DEBTOR_VIEW') || hasPageRole('CREDITOR_VIEW')"
         value="DebtorCreditors"
       >
         <template #activator="{ props }">
@@ -86,14 +108,14 @@ const companySectionVisible = ref(false);
           />
         </template>
         <v-list-item
-          v-if="hasPageRole('DEBTOR_VIEW') || isAdmin"
+          v-if="hasPageRole('DEBTOR_VIEW')"
           rounded="xl"
           prepend-icon="mdi-bank-transfer-out"
           title="Borçlular"
           to="/dbcr/debtors"
         />
         <v-list-item
-          v-if="hasPageRole('CREDITOR_VIEW') || isAdmin"
+          v-if="hasPageRole('CREDITOR_VIEW')"
           rounded="xl"
           prepend-icon="mdi-bank-transfer-in"
           title="Alacaklılar"
@@ -128,7 +150,7 @@ const companySectionVisible = ref(false);
       </v-list-group> -->
 
       <v-list-group
-        v-if="hasPageRole('SUBSCRIPTION_VIEW') || hasPageRole('CUSTOMER_VIEW') || isAdmin"
+        v-if="hasPageRole('SUBSCRIPTION_VIEW') || hasPageRole('CUSTOMER_VIEW')"
         value="TaskTracking"
       >
         <template #activator="{ props }">
@@ -141,14 +163,14 @@ const companySectionVisible = ref(false);
         </template>
 
         <v-list-item
-          v-if="hasPageRole('SUBSCRIPTION_VIEW') || isAdmin"
+          v-if="hasPageRole('SUBSCRIPTION_VIEW')"
           rounded="xl"
           prepend-icon="mdi-cash-multiple"
           title="Abonelikler"
           to="/task-tracking/subscriptions"
         />
         <v-list-item
-          v-if="hasPageRole('CUSTOMER_VIEW') || isAdmin"
+          v-if="hasPageRole('CUSTOMER_VIEW')"
           rounded="xl"
           prepend-icon="mdi-account-cash"
           title="Müşteriler"
@@ -190,7 +212,7 @@ const companySectionVisible = ref(false);
           to="/management/modules"
         />
       </v-list-group>
-      <v-list-group v-if="hasPageRole('REPORT_VIEW') || isAdmin" value="Reports">
+      <v-list-group v-if="hasPageRole('REPORT_VIEW')" value="Reports">
         <template #activator="{ props }">
           <v-list-item
             v-bind="props"
@@ -208,6 +230,7 @@ const companySectionVisible = ref(false);
         />
       </v-list-group>
       <v-list-item
+        v-if="hasPageRole('CONTRACT_VIEW')"
         rounded="xl"
         prepend-icon="mdi-file-document-outline"
         title="Sözleşmeler"

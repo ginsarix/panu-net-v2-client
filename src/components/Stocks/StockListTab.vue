@@ -3,33 +3,32 @@ import { TRPCClientError } from '@trpc/client';
 import { storeToRefs } from 'pinia';
 import { computed, ref } from 'vue';
 
+import GixTogglerMenu from '@/components/GixTogglerMenu.vue';
 import { useCompanyPeriodWatcher } from '@/composables/useCompanyPeriodWatcher';
-import { useCreditorsStore } from '@/stores/creditors.ts';
-import { useDisplayStore } from '@/stores/display';
+import { useDisplayStore } from '@/stores/display.ts';
 import { useSnackbarStore } from '@/stores/snackbar';
+import { useStocksStore } from '@/stores/stocks';
 import type { DataTableHeaders } from '@/types/data-table-headers';
 import { formatCurrency } from '@/utils/formatting';
 
 import ExportAsExcel from '../ExportAsExcel.vue';
-import GixTogglerMenu from '../GixTogglerMenu.vue';
 
 const { mobile } = storeToRefs(useDisplayStore());
 
-const creditorsStore = useCreditorsStore();
-const { creditors } = storeToRefs(creditorsStore);
+const stocksStore = useStocksStore();
+const { stocks } = storeToRefs(stocksStore);
 
 const snackbarStore = useSnackbarStore();
 const { snackbar, snackbarError, snackbarText } = storeToRefs(snackbarStore);
 
 const loading = ref(false);
 
-const loadCreditors = async () => {
+const loadStocks = async () => {
   loading.value = true;
   try {
-    await creditorsStore.loadCreditors();
+    await stocksStore.loadStocks();
   } catch (error) {
     console.error(error);
-
     if (error instanceof TRPCClientError) {
       snackbarError.value = true;
       snackbarText.value = error.message;
@@ -40,13 +39,14 @@ const loadCreditors = async () => {
   }
 };
 
-useCompanyPeriodWatcher(loadCreditors, true);
+useCompanyPeriodWatcher(loadStocks, true);
 
 const dataTableHeaders = ref<DataTableHeaders[]>([
-  { title: 'Cari Kart Kodu', key: 'code', toggled: true, sortable: true },
-  { title: 'Ünvan', key: 'name', toggled: true, sortable: true },
-  { title: 'Bakiye', key: 'balance', toggled: true, sortable: true },
-  { title: 'Döviz Türü', key: 'currency', toggled: true, sortable: true },
+  { title: 'Kod', key: 'stokkartkodu', toggled: true, sortable: true },
+  { title: 'Açıklama', key: 'aciklama', toggled: true, sortable: true },
+  { title: 'Tür', key: 'stokkartturu', toggled: true, sortable: true },
+  { title: 'Fiili Stok', key: 'fiili_stok', toggled: true, sortable: true },
+  { title: 'Birim', key: 'birimadi', toggled: true, sortable: true },
 ]);
 
 const includedDataTableHeaders = computed(() =>
@@ -56,21 +56,22 @@ const includedDataTableHeaders = computed(() =>
 
 <template>
   <v-data-table
-    :items="creditors"
+    :items="stocks"
     :loading
     class="rounded-lg elevation-0 border"
-    no-data-text="Alacaklılar bulunamadı."
-    loading-text="Alacaklılar yükleniyor..."
-    items-per-page-text="Sayfa başı alacaklılar"
+    no-data-text="Stoklar bulunamadı."
+    loading-text="Stoklar yükleniyor..."
+    items-per-page-text="Sayfa başı stok"
     :mobile="mobile.value"
     fixed-header
     :headers="includedDataTableHeaders"
+    hover
   >
     <template #top>
       <v-toolbar flat rounded class="rounded-b-0">
         <v-toolbar-title>
           <v-icon color="medium-emphasis" icon="mdi-text" size="x-small" start />
-          Borçlular
+          Stoklar
         </v-toolbar-title>
 
         <GixTogglerMenu
@@ -83,21 +84,14 @@ const includedDataTableHeaders = computed(() =>
         <ExportAsExcel
           class="me-5"
           :disabled="loading"
-          :items="
-            creditors.map((c) => ({
-              code: c.code,
-              name: c.name,
-              balance: c.balance,
-              currency: c.currency,
-            }))
-          "
-          :filename="`alacaklilar`"
+          :items="stocks"
+          filename="stoklar"
           :headers="[includedDataTableHeaders.map((header) => header.title)]"
         />
       </v-toolbar>
     </template>
-    <template #[`item.balance`]="{ item }">
-      {{ formatCurrency(item.balance) }}
+    <template #[`item.fiili_stok`]="{ item }">
+      {{ formatCurrency(item.fiili_stok) }}
     </template>
   </v-data-table>
 </template>

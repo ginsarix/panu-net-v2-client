@@ -366,11 +366,11 @@ const materialReceiptsChartData = computed(() => {
 
   return buildGroupedSumChartData<{
     turuack?: string;
-    toplamtutar?: string | number;
+    toplam?: string | number;
   }>(
     generalReport.value.materialReceipts,
     (i) => i.turuack,
-    (i) => i.toplamtutar,
+    (i) => i.toplam,
   );
 });
 

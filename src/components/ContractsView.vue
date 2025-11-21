@@ -4,6 +4,7 @@ import { storeToRefs } from 'pinia';
 import { onMounted, ref } from 'vue';
 
 import GixRefreshButton from '@/components/GixRefreshButton.vue';
+import { useCompanyPeriodWatcher } from '@/composables/useCompanyPeriodWatcher';
 import { API_CONFIG } from '@/config/api';
 import { useContractsStore } from '@/stores/contracts';
 import { useSnackbarStore } from '@/stores/snackbar';
@@ -15,15 +16,11 @@ const { contracts } = storeToRefs(contractsStore);
 const snackbarStore = useSnackbarStore();
 const { snackbar, snackbarError, snackbarText } = storeToRefs(snackbarStore);
 
-onMounted(async () => {
-  await loadContracts();
-});
-
 const contractsLoaded = ref(false);
 
 const loadContracts = async () => {
+  contractsLoaded.value = false;
   try {
-    contractsLoaded.value = false;
     await contractsStore.loadContracts();
   } catch (error) {
     console.error(error);
@@ -35,6 +32,14 @@ const loadContracts = async () => {
     contractsLoaded.value = true;
   }
 };
+
+// loading on mount instead of immediate from useCompanyPeriodWatcher
+// because the company id takes a while to load into the frontend even though its already there in the backend session
+onMounted(async () => {
+  await loadContracts();
+});
+
+useCompanyPeriodWatcher(loadContracts);
 
 const getFileUrl = (fileName: string, isThumbnail = false) => {
   const baseUrl = API_CONFIG.baseURL.replace('/trpc', '');
@@ -53,18 +58,25 @@ const openFileInNewTab = (fileName: string) => {
 
 <template>
   <div>
-    <v-toolbar flat rounded="lg" class="mb-4 border">
+    <v-toolbar flat rounded="lg" class="border mb-4">
       <v-toolbar-title>
         <v-icon color="medium-emphasis" icon="mdi-file-document" size="x-small" start />
         Sözleşmeler
       </v-toolbar-title>
 
+      <v-progress-linear
+        rounded="lg"
+        height="3"
+        location="bottom"
+        absolute
+        :active="!contractsLoaded"
+        indeterminate
+      />
+
       <v-spacer />
 
       <GixRefreshButton :refresh-fn="loadContracts" />
     </v-toolbar>
-
-    <v-progress-linear v-if="!contractsLoaded" indeterminate class="mb-4" />
 
     <div v-if="contractsLoaded && contracts.length === 0" class="text-center py-12">
       <v-icon size="64" color="grey-lighten-1" icon="mdi-file-document-outline" />

@@ -4,6 +4,9 @@ import { createRouter, createWebHashHistory } from 'vue-router';
 import pinia from '@/plugins/pinia';
 import { useCurrentUserStore } from '@/stores/current-user';
 
+const StocksView = () => import('@/views/StocksView.vue');
+const StockListTab = () => import('@/components/Stocks/StockListTab.vue');
+const ServiceCardTab = () => import('@/components/Stocks/ServiceCardTab.vue');
 const CreditorsTab = () => import('@/components/DebtorsCreditors/CreditorsTab.vue');
 const DebtorsTab = () => import('@/components/DebtorsCreditors/DebtorsTab.vue');
 const CompaniesTab = () => import('@/components/Management/CompaniesTab.vue');
@@ -30,6 +33,22 @@ const router = createRouter({
     {
       path: '/login',
       component: LoginView,
+    },
+    {
+      path: '/stocks',
+      component: StocksView,
+      children: [
+        {
+          path: 'list',
+          component: StockListTab,
+          meta: { requiredPageRole: 'STOCKS_VIEW' },
+        },
+        {
+          path: 'service-list',
+          component: ServiceCardTab,
+          meta: { requiredPageRole: 'SERVICES_VIEW' },
+        },
+      ],
     },
     {
       path: '/dbcr',
