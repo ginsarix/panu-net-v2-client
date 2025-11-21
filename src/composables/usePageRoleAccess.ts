@@ -21,6 +21,7 @@ export const usePageRoleAccess = () => {
     SUBSCRIPTION_VIEW: 'subscription_view',
     CUSTOMER_VIEW: 'customer_view',
     REPORT_VIEW: 'report_view',
+    CONTRACT_VIEW: 'contract_view',
   } as const;
 
   const hasPageRole = (roleKey: keyof typeof roleKeyMap): boolean => {
@@ -60,6 +61,7 @@ export const usePageRoleAccess = () => {
       '/task-tracking/subscriptions': 'SUBSCRIPTION_VIEW',
       '/task-tracking/customers': 'CUSTOMER_VIEW',
       '/reports/general-report': 'REPORT_VIEW',
+      '/contracts': 'CONTRACT_VIEW',
     };
 
     const roleKey = pathToRoleMap[path];

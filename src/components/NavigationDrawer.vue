@@ -179,6 +179,12 @@ const companySectionVisible = ref(false);
         />
         <v-list-item
           rounded="xl"
+          prepend-icon="mdi-file-document"
+          title="Sözleşmeler"
+          to="/management/contracts"
+        />
+        <v-list-item
+          rounded="xl"
           prepend-icon="mdi-view-module"
           title="Modüller"
           to="/management/modules"
@@ -201,6 +207,12 @@ const companySectionVisible = ref(false);
           to="/reports/general-report"
         />
       </v-list-group>
+      <v-list-item
+        rounded="xl"
+        prepend-icon="mdi-file-document-outline"
+        title="Sözleşmeler"
+        to="/contracts"
+      />
     </v-list>
   </v-navigation-drawer>
 </template>

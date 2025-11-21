@@ -7,6 +7,8 @@ import { useCurrentUserStore } from '@/stores/current-user';
 const CreditorsTab = () => import('@/components/DebtorsCreditors/CreditorsTab.vue');
 const DebtorsTab = () => import('@/components/DebtorsCreditors/DebtorsTab.vue');
 const CompaniesTab = () => import('@/components/Management/CompaniesTab.vue');
+const ContractsTab = () => import('@/components/Management/ContractsTab.vue');
+const ContractsView = () => import('@/components/ContractsView.vue');
 const UsersTab = () => import('@/components/Management/UsersTab.vue');
 const CustomersTab = () => import('@/components/TaskTracking/CustomersTab.vue');
 const SubscriptionsTab = () => import('@/components/TaskTracking/SubscriptionsTab.vue');
@@ -74,6 +76,10 @@ const router = createRouter({
           component: CompaniesTab,
         },
         {
+          path: 'contracts',
+          component: ContractsTab,
+        },
+        {
           path: 'modules',
           component: HomeView,
         },
@@ -90,6 +96,11 @@ const router = createRouter({
           meta: { requiredPageRole: 'REPORT_VIEW' },
         },
       ],
+    },
+    {
+      path: '/contracts',
+      component: ContractsView,
+      meta: { requiredPageRole: 'CONTRACT_VIEW' },
     },
   ],
 });
