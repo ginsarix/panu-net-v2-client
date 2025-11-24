@@ -85,6 +85,9 @@ export const useCompaniesStore = defineStore('companies', () => {
         startDate: p.baslangic,
         endDate: p.bitis,
       }));
+
+      // after selected company change selected period code in the session is set to 0 by the backend.
+      selectedPeriodCode.value = 0;
     } catch (error) {
       console.error(error);
     } finally {

@@ -26,6 +26,7 @@ import { noEmptyRule, phoneRules } from '@/types/validations.ts';
 import { formatDateTime } from '@/utils/formatting.ts';
 
 import GixRefreshButton from '../GixRefreshButton.vue';
+import CompanyCloner from './CompanyCloner.vue';
 
 const { mobile } = storeToRefs(useDisplayStore());
 
@@ -313,6 +314,8 @@ const handleSubmit = async () => {
         >
           Ekle
         </v-btn>
+
+        <CompanyCloner :companies class="me-3" />
 
         <GixRefreshButton class="me-5" :refresh-fn="() => loadCompanies()" />
       </v-toolbar>

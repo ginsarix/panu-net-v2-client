@@ -67,8 +67,6 @@ watch(
 );
 
 emitter.on('companyNotSelected', () => {
-  if (!selectedCompanyId) return;
-
   snackbarError.value = true;
   snackbarText.value = 'Lütfen şirket seçiniz.';
   snackbar.value = true;
@@ -116,46 +114,49 @@ const ExpandTransition = computed(() => (props.mobile ? VExpandTransition : VExp
 </script>
 
 <template>
-  <v-select
-    :loading="selectCompanyLoading"
-    append-inner-icon="mdi-domain"
-    v-model="selectedCompanyIdPassthrough"
-    v-model:menu="menu"
-    :items="companies"
-    item-title="name"
-    item-value="id"
-    clearable
-    @click:clear="selectedCompanyIdPassthrough = null"
-    label="Firma"
-    :no-data-text="noDataText"
-    class="mt-4 me-4"
-    variant="underlined"
-    max-width="250"
-  >
-    <template #item="{ props: itemProps, item }">
-      <v-list-item
-        v-bind="itemProps"
-        :subtitle="`${item.raw.webServiceSource.replace('https://', '')}`"
-      /> </template
-  ></v-select>
-
-  <component :is="ExpandTransition" v-show="selectedCompanyIdPassthrough">
-    <span class="text-overline mt-3 mx-3 text-no-wrap"
-      >Lisans Tarihi:
-      {{
-        selectedCompanyInstance?.licenseDate
-          ? formatDateTime(selectedCompanyInstance.licenseDate, 'dd.MM.yyyy')
-          : ''
-      }}</span
+  <!-- display: contents is used here to prevent div from affecting the layout -->
+  <div style="display: contents">
+    <v-select
+      :loading="selectCompanyLoading"
+      append-inner-icon="mdi-domain"
+      v-model="selectedCompanyIdPassthrough"
+      v-model:menu="menu"
+      :items="companies"
+      item-title="name"
+      item-value="id"
+      clearable
+      @click:clear="selectedCompanyIdPassthrough = null"
+      label="Firma"
+      :no-data-text="noDataText"
+      class="mt-4 me-4"
+      variant="underlined"
+      max-width="250"
     >
-  </component>
-  <component :is="ExpandTransition" v-show="selectedCompanyIdPassthrough">
-    <PeriodSelector :class="mobile ? 'me-3' : 'mt-1 me-3'" />
-  </component>
-  <component :is="ExpandTransition" v-show="selectedCompanyIdPassthrough">
-    <span class="text-overline mt-3 me-3 text-no-wrap">
-      Kontör:
-      {{ creditCount }}
-    </span>
-  </component>
+      <template #item="{ props: itemProps, item }">
+        <v-list-item
+          v-bind="itemProps"
+          :subtitle="`${item.raw.webServiceSource.replace('https://', '')} &nbsp; Kod: ${item.raw.code}`"
+        /> </template
+    ></v-select>
+
+    <component :is="ExpandTransition" v-show="selectedCompanyIdPassthrough">
+      <span class="text-overline mt-3 mx-3 text-no-wrap"
+        >Lisans Tarihi:
+        {{
+          selectedCompanyInstance?.licenseDate
+            ? formatDateTime(selectedCompanyInstance.licenseDate, 'dd.MM.yyyy')
+            : ''
+        }}</span
+      >
+    </component>
+    <component :is="ExpandTransition" v-show="selectedCompanyIdPassthrough">
+      <PeriodSelector :class="mobile ? 'me-3' : 'mt-1 me-3'" />
+    </component>
+    <component :is="ExpandTransition" v-show="selectedCompanyIdPassthrough">
+      <span class="text-overline mt-3 me-3 text-no-wrap">
+        Kontör:
+        {{ creditCount }}
+      </span>
+    </component>
+  </div>
 </template>

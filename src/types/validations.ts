@@ -11,6 +11,20 @@ export const phoneRule = (v: string) => {
   return /^\d{10}$/.test(strippedV) || !v || 'Telefon numarası 10 haneli olmalıdır';
 };
 
+const mustBeNumberMessage = 'Sayı olmalıdır';
+
+export const nonNegativeNumberRule = (v: unknown) => {
+  if (typeof v !== 'number') return mustBeNumberMessage;
+  if (v < 0) return 'Pozitif sayı olmalıdır';
+  return true;
+};
+
+export const integerRule = (v: unknown) => {
+  if (typeof v !== 'number') return mustBeNumberMessage;
+  if (!Number.isInteger(v)) return 'Tam sayı olmalıdır';
+  return true;
+};
+
 const normalizedEmailRule = (v: string) => {
   if (!v) return true; // Let noEmptyRule handle empty values
   const normalized = normalizeEmail(v);
