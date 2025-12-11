@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { motion } from 'motion-v';
 import { storeToRefs } from 'pinia';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { VIconBtn } from 'vuetify/labs/components';
 
@@ -10,6 +10,7 @@ import GixFooter from '@/components/GixFooter.vue';
 import GixSnackbar from '@/components/GixSnackbar.vue';
 import NavigationDrawer from '@/components/NavigationDrawer.vue';
 import { useCurrentUserStore } from '@/stores/current-user';
+import { useDefinitionsStore } from '@/stores/definitions';
 import { useDisplayStore } from '@/stores/display';
 import { useSnackbarStore } from '@/stores/snackbar';
 
@@ -19,6 +20,20 @@ const { currentUser } = storeToRefs(currentUserStore);
 const displayStore = useDisplayStore();
 const { mobile } = storeToRefs(displayStore);
 
+const definitionsStore = useDefinitionsStore();
+
+watch(
+  currentUser,
+  async () => {
+    try {
+      await definitionsStore.loadCurrentDefinition();
+    } catch (error) {
+      console.error(error);
+    }
+  },
+  { immediate: true },
+);
+
 const router = useRouter();
 
 const rail = ref(true);
@@ -26,11 +41,7 @@ const rail = ref(true);
 const snackbarStore = useSnackbarStore();
 const { snackbar, snackbarText, snackbarError } = storeToRefs(snackbarStore);
 
-const railToggleIcon = computed(() => {
-  if (mobile.value.value) return 'mdi-menu';
-  if (rail.value) return 'mdi-menu-close';
-  return 'mdi-menu-open';
-});
+const railToggleIcon = computed(() => (rail.value ? 'mdi-menu-close' : 'mdi-menu-open'));
 </script>
 
 <template>
@@ -39,7 +50,7 @@ const railToggleIcon = computed(() => {
       <NavigationDrawer
         v-if="currentUser"
         :rail="rail"
-        @update:rail="rail = false"
+        @update:rail="rail = $event"
         :mobile="mobile.value"
       />
 

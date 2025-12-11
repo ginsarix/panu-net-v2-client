@@ -3,7 +3,7 @@ import type { CreateUpdateDate } from '@/types/create-update-date.ts';
 import type { Nullish } from './nullish';
 
 export interface Company extends Nullish<CreateUpdateDate> {
-  id?: number;
+  id?: number | null;
   code: number;
   name: string;
   manager: string;

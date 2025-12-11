@@ -1,21 +1,22 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 
 import { usePageRoleAccess } from '@/composables/usePageRoleAccess';
 import { useCurrentUserStore } from '@/stores/current-user';
+import { useDefinitionsStore } from '@/stores/definitions';
 import { usePageRolesStore } from '@/stores/page-roles';
 
 import CompanySection from './CompanySection.vue';
 import UserProfile from './UserProfile.vue';
 
-defineProps<{
+const props = defineProps<{
   rail: boolean;
   mobile: boolean;
 }>();
 
 defineEmits<{
-  (e: 'update:rail'): void;
+  (e: 'update:rail', value: boolean): void;
 }>();
 
 const currentUserStore = useCurrentUserStore();
@@ -23,6 +24,9 @@ const { currentUser } = storeToRefs(currentUserStore);
 
 const pageRolesStore = usePageRolesStore();
 const { hasPageRole, isAdmin } = usePageRoleAccess();
+
+const definitionsStore = useDefinitionsStore();
+const { currentDefinition } = storeToRefs(definitionsStore);
 
 onMounted(async () => {
   try {
@@ -34,14 +38,32 @@ onMounted(async () => {
 });
 
 const companySectionVisible = ref(false);
+const railToggleIcon = computed(() => (props.rail ? 'mdi-menu-close' : 'mdi-menu-open'));
+
+const permanent = ref(true);
+
+watch(
+  () => [props.mobile, props.rail],
+  ([newMobile, newRail]) => {
+    // if screen is mobile and the drawer isn't open, completely hide the drawer
+    if (newMobile && newRail) {
+      permanent.value = false;
+    } else {
+      // if screen is desktop or the drawer is open, make the drawer permanent
+      permanent.value = true;
+    }
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
   <v-navigation-drawer
-    :class="'position-fixed' + (rail ? '' : ' pa-2')"
-    :location="!mobile ? 'left' : 'bottom'"
+    :style="{ ...(mobile && !rail && { width: '100vh' }) }"
+    class="position-fixed"
+    :class="{ 'pa-2': !rail }"
     :rail
-    permanent
+    :permanent
   >
     <v-list class="pa-2">
       <v-list-item class="ps-0" :title="currentUser?.name" nav>
@@ -49,14 +71,21 @@ const companySectionVisible = ref(false);
           <UserProfile />
         </template>
         <template #append>
-          <v-btn
-            v-if="mobile"
-            aria-label="Ayarlar"
-            @click="companySectionVisible = !companySectionVisible"
-            icon="mdi-cog"
-            variant="text"
-            size="small"
-          />
+          <template v-if="mobile">
+            <v-btn
+              aria-label="Ayarlar"
+              @click="companySectionVisible = !companySectionVisible"
+              icon="mdi-cog"
+              variant="text"
+              size="small"
+            />
+            <v-btn
+              class="mr-3"
+              :icon="railToggleIcon"
+              @click="$emit('update:rail', !rail)"
+              aria-label="Navigasyon menüsünü aç"
+            />
+          </template>
         </template>
       </v-list-item>
       <template v-if="mobile">
@@ -72,7 +101,8 @@ const companySectionVisible = ref(false);
       <v-list-item rounded="xl" prepend-icon="mdi-view-dashboard" title="Panel" to="/" />
     </v-list>
 
-    <v-list @click:open="$emit('update:rail')">
+    <v-list @click:open="$emit('update:rail', mobile)">
+      <!-- if mobile, close the drawer on navigation otherwise open it -->
       <v-list-group
         v-if="hasPageRole('STOCKS_VIEW') || hasPageRole('SERVICES_VIEW')"
         value="Stocks"
@@ -207,6 +237,12 @@ const companySectionVisible = ref(false);
         />
         <v-list-item
           rounded="xl"
+          prepend-icon="mdi-format-list-bulleted"
+          title="Tanımlar"
+          to="/management/definitions"
+        />
+        <v-list-item
+          rounded="xl"
           prepend-icon="mdi-view-module"
           title="Modüller"
           to="/management/modules"
@@ -235,6 +271,13 @@ const companySectionVisible = ref(false);
         prepend-icon="mdi-file-document-outline"
         title="Sözleşmeler"
         to="/contracts"
+      />
+      <v-list-item
+        rounded="xl"
+        prepend-icon="mdi-credit-card-outline"
+        title="Ödeme"
+        :href="currentDefinition?.paymentLink || ''"
+        target="_blank"
       />
     </v-list>
   </v-navigation-drawer>

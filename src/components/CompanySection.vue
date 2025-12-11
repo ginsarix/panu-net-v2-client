@@ -55,6 +55,16 @@ const selectedCompanyInstance = ref<Company>();
 onMounted(async () => {
   await loadCompanies();
   await loadSelectedCompanyId();
+
+  // if no company is selected and there is only one company, select it automatically
+  if (selectedCompanyId.value === null && companies.value.length === 1) {
+    const companyId = companies.value[0].id;
+    if (companyId) {
+      selectedCompanyId.value = companyId;
+      await setSelectedCompany(companyId);
+    }
+  }
+
   selectedCompanyIdPassthrough.value = selectedCompanyId.value;
 });
 
@@ -114,8 +124,15 @@ const ExpandTransition = computed(() => (props.mobile ? VExpandTransition : VExp
 </script>
 
 <template>
-  <!-- display: contents is used here to prevent div from affecting the layout -->
-  <div style="display: contents">
+  <!-- Flex container that stacks vertically on mobile, horizontally on desktop -->
+  <div
+    :style="{
+      display: 'flex',
+      flexDirection: mobile ? 'column' : 'row',
+      alignItems: 'center',
+      gap: 0,
+    }"
+  >
     <v-select
       :loading="selectCompanyLoading"
       append-inner-icon="mdi-domain"
@@ -128,9 +145,9 @@ const ExpandTransition = computed(() => (props.mobile ? VExpandTransition : VExp
       @click:clear="selectedCompanyIdPassthrough = null"
       label="Firma"
       :no-data-text="noDataText"
-      class="mt-4 me-4"
+      class="me-4 mt-md-4"
       variant="underlined"
-      max-width="250"
+      width="250"
     >
       <template #item="{ props: itemProps, item }">
         <v-list-item
@@ -140,7 +157,7 @@ const ExpandTransition = computed(() => (props.mobile ? VExpandTransition : VExp
     ></v-select>
 
     <component :is="ExpandTransition" v-show="selectedCompanyIdPassthrough">
-      <span class="text-overline mt-3 mx-3 text-no-wrap"
+      <span class="text-overline mx-3 text-no-wrap mt-md-3"
         >Lisans Tarihi:
         {{
           selectedCompanyInstance?.licenseDate
@@ -150,10 +167,10 @@ const ExpandTransition = computed(() => (props.mobile ? VExpandTransition : VExp
       >
     </component>
     <component :is="ExpandTransition" v-show="selectedCompanyIdPassthrough">
-      <PeriodSelector :class="mobile ? 'me-3' : 'mt-1 me-3'" />
+      <PeriodSelector class="me-3 mt-md-1" />
     </component>
     <component :is="ExpandTransition" v-show="selectedCompanyIdPassthrough">
-      <span class="text-overline mt-3 me-3 text-no-wrap">
+      <span class="text-overline me-3 mt-md-3 text-no-wrap">
         Kontör:
         {{ creditCount }}
       </span>

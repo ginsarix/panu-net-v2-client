@@ -22,9 +22,9 @@ export const useUsersStore = defineStore('users', () => {
   const addUserToList = (user: User, addToStart = false) =>
     addToStart ? users.value.unshift(user) : users.value.push(user);
 
-  const updateUserById = (id: string | number, data: Partial<User>) =>
-    (users.value = users.value.map((u) => (u.id === id ? { ...u, ...data } : u)));
-
+  const updateUserById = (id: string | number, data: Partial<User>) => {
+    users.value = users.value.map((u) => (u.id === id ? { ...u, ...data } : u));
+  };
   const removeUsersById = (ids: Array<string | number>) => {
     const idSet = new Set(ids);
 

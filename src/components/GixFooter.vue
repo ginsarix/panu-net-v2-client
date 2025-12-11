@@ -1,60 +1,79 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
+import { computed } from 'vue';
 
 import { useCurrentUserStore } from '@/stores/current-user';
+import { useDefinitionsStore } from '@/stores/definitions';
 
 const currentUserStore = useCurrentUserStore();
 const { currentUser } = storeToRefs(currentUserStore);
 
-const socials = [
+const definitionsStore = useDefinitionsStore();
+const { currentDefinition, loadingCurrentDefinition } = storeToRefs(definitionsStore);
+
+const socials = computed(() => [
   {
+    enabled: currentDefinition.value?.socialLinks?.facebook,
     icon: 'mdi-facebook',
-    href: 'https://www.facebook.com/panuteknolojii/',
+    href: currentDefinition.value?.socialLinks?.facebookLink || '',
     ariaLabel: 'Facebook',
     color: '#0866ff',
   },
   {
+    enabled: currentDefinition.value?.socialLinks?.twitter,
     icon: 'mdi-twitter',
-    href: 'https://twitter.com/panuteknoloji',
+    href: currentDefinition.value?.socialLinks?.twitterLink || '',
     ariaLabel: 'Twitter',
     color: '#1da1f2',
   },
   {
+    enabled: currentDefinition.value?.socialLinks?.linkedin,
     icon: 'mdi-linkedin',
-    href: 'https://www.linkedin.com/company/panu-teknoloji-ltd-sti/?originalSubdomain=tr',
+    href: currentDefinition.value?.socialLinks?.linkedinLink || '',
     ariaLabel: 'LinkedIn',
     color: '#4267b2',
   },
   {
+    enabled: currentDefinition.value?.socialLinks?.instagram,
     icon: 'mdi-instagram',
-    href: 'https://www.instagram.com/panuteknoloji/?hl=tr',
+    href: currentDefinition.value?.socialLinks?.instagramLink || '',
     ariaLabel: 'Instagram',
     class: 'instagram',
   },
   {
+    enabled: currentDefinition.value?.socialLinks?.youtube,
     icon: 'mdi-youtube',
-    href: 'https://www.youtube.com/channel/UCy1M15JA5g_zMuBh_-fu5mw',
+    href: currentDefinition.value?.socialLinks?.youtubeLink || '',
     ariaLabel: 'Youtube',
     color: '#cd201f',
   },
-];
+]);
 </script>
 
 <template>
   <v-footer class="text-center d-flex flex-column ga-2 py-4">
     <div class="d-flex ga-3">
-      <v-btn
-        v-for="social in socials"
-        :key="social.icon"
-        :icon="social.icon"
-        :href="social.href"
-        :aria-label="social.ariaLabel"
-        :color="social.color"
-        :class="social.class"
-        target="_blank"
-        density="comfortable"
-        variant="text"
-      ></v-btn>
+      <template v-if="!loadingCurrentDefinition">
+        <v-btn
+          v-for="social in socials.filter((social) => social.enabled)"
+          :key="social.icon"
+          :icon="social.icon"
+          :href="social.href"
+          :aria-label="social.ariaLabel"
+          :color="social.color"
+          :class="social.class"
+          target="_blank"
+          density="comfortable"
+          variant="text"
+        />
+      </template>
+      <template v-else>
+        <v-skeleton-loader type="button" width="32" height="32" />
+        <v-skeleton-loader type="button" width="32" height="32" />
+        <v-skeleton-loader type="button" width="32" height="32" />
+        <v-skeleton-loader type="button" width="32" height="32" />
+        <v-skeleton-loader type="button" width="32" height="32" />
+      </template>
     </div>
 
     <v-divider thickness="2" width="50" />

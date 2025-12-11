@@ -13,7 +13,7 @@ const emit = defineEmits<{
 }>();
 
 const toggle = (key: string) => {
-  const newMenuItems = props.toggleItems.map(item => {
+  const newMenuItems = props.toggleItems.map((item) => {
     if (item.key === key) {
       return { ...item, toggled: !item.toggled };
     }
@@ -28,7 +28,7 @@ const toggle = (key: string) => {
   <v-menu :close-on-content-click="false">
     <template #activator="{ props }">
       <v-btn
-        v-bind="props"
+        v-bind="{ ...props, ...$attrs }"
         :class="menuActivatorBtnClass ?? ''"
         :prepend-icon="menuActivatorBtnIcon"
       >
@@ -38,7 +38,7 @@ const toggle = (key: string) => {
 
     <v-list class="py-0 border-s border-e">
       <v-list-item
-        v-for="item in toggleItems.filter(item => item.title)"
+        v-for="item in toggleItems.filter((item) => item.title)"
         :key="item.key"
         :value="item.key"
         class="border-b"

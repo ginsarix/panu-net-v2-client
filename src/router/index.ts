@@ -12,6 +12,7 @@ const DebtorsTab = () => import('@/components/DebtorsCreditors/DebtorsTab.vue');
 const CompaniesTab = () => import('@/components/Management/CompaniesTab.vue');
 const ContractsTab = () => import('@/components/Management/ContractsTab.vue');
 const ContractsView = () => import('@/components/ContractsView.vue');
+const DefinitionsView = () => import('@/views/DefinitionsView.vue');
 const UsersTab = () => import('@/components/Management/UsersTab.vue');
 const CustomersTab = () => import('@/components/TaskTracking/CustomersTab.vue');
 const SubscriptionsTab = () => import('@/components/TaskTracking/SubscriptionsTab.vue');
@@ -97,6 +98,10 @@ const router = createRouter({
         {
           path: 'contracts',
           component: ContractsTab,
+        },
+        {
+          path: 'definitions',
+          component: DefinitionsView,
         },
         {
           path: 'modules',

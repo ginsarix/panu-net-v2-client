@@ -44,6 +44,85 @@ const getInvoiceItems = (fisno: string) =>
 const getMaterialReceiptItems = (fisno: string) =>
   generalReport.value?.materialReceipts.result.filter((m) => m.fisno === fisno);
 
+const waybillFiltersTogglerItems = ref([
+  { key: '1', title: 'Mal Alım', toggled: true },
+  { key: '4', title: 'Konsinye Giriş', toggled: true },
+  { key: '6', title: 'Mal Alım İade', toggled: true },
+  { key: '9', title: 'Konsinye Giriş İade', toggled: true },
+  { key: '12', title: 'Özel Giriş', toggled: true },
+  { key: '15', title: 'Müstahsil İrsaliyesi', toggled: true },
+  { key: '2', title: 'Perakende Satış', toggled: true },
+  { key: '3', title: 'Toptan Satış', toggled: true },
+  { key: '5', title: 'Konsinye Çıkış', toggled: true },
+  { key: '7', title: 'Perakende Satış İade', toggled: true },
+  { key: '8', title: 'Toptan Satış İade', toggled: true },
+  { key: '11', title: 'Konsinye Çıkış İade', toggled: true },
+  { key: '13', title: 'Özel Çıkış', toggled: true },
+]);
+
+const invoiceFiltersTogglerItems = ref([
+  { key: '1', title: 'Mal Alım', toggled: true },
+  { key: '4', title: 'Alınan Hizmet', toggled: true },
+  { key: '6', title: 'Alım İade', toggled: true },
+  { key: '15', title: 'Müstahsil Makbuzu', toggled: true },
+  { key: '7', title: 'Perakende Satış İade', toggled: true },
+  { key: '8', title: 'Toptan Satış İade', toggled: true },
+  { key: '2', title: 'Perakende Satış', toggled: true },
+  { key: '3', title: 'Toptan Satış', toggled: true },
+  { key: '5', title: 'Verilen Hizmet', toggled: true },
+  { key: '9', title: 'Alınan Fiyat Farkı', toggled: true },
+  { key: '10', title: 'Verilen Fiyat Farkı', toggled: true },
+]);
+
+const materialReceiptsFiltersTogglerItems = ref([
+  { key: '1', title: 'Depo Fişi (Transfer)', toggled: true },
+  { key: '3', title: 'Sarf Fişi', toggled: true },
+  { key: '8', title: 'Sair Giriş', toggled: true },
+  { key: '9', title: 'Sair Çıkış', toggled: true },
+]);
+
+// get toggled keys from filter items
+const getToggledKeys = (items: { key: string; toggled: boolean }[]) =>
+  items.filter((item) => item.toggled).map((item) => item.key);
+
+// toggle filtered data
+const filteredWaybills = computed(() => {
+  if (!generalReportUniques.value.waybills) return [];
+  const toggledKeys = getToggledKeys(waybillFiltersTogglerItems.value);
+  return generalReportUniques.value.waybills.filter((w) => toggledKeys.includes(w.turu));
+});
+
+const filteredInvoices = computed(() => {
+  if (!generalReportUniques.value.invoices) return [];
+  const toggledKeys = getToggledKeys(invoiceFiltersTogglerItems.value);
+  return generalReportUniques.value.invoices.filter((i) => toggledKeys.includes(i.turu));
+});
+
+const filteredMaterialReceipts = computed(() => {
+  if (!generalReportUniques.value.materialReceipts) return [];
+  const toggledKeys = getToggledKeys(materialReceiptsFiltersTogglerItems.value);
+  return generalReportUniques.value.materialReceipts.filter((m) => toggledKeys.includes(m.turu));
+});
+
+// toggle filtered raw data for chart
+const filteredWaybillsRaw = computed(() => {
+  if (!generalReport.value?.waybills) return [];
+  const toggledKeys = getToggledKeys(waybillFiltersTogglerItems.value);
+  return generalReport.value.waybills.result.filter((w) => toggledKeys.includes(w.turu));
+});
+
+const filteredInvoicesRaw = computed(() => {
+  if (!generalReport.value?.invoices) return [];
+  const toggledKeys = getToggledKeys(invoiceFiltersTogglerItems.value);
+  return generalReport.value.invoices.result.filter((i) => toggledKeys.includes(i.turu));
+});
+
+const filteredMaterialReceiptsRaw = computed(() => {
+  if (!generalReport.value?.materialReceipts) return [];
+  const toggledKeys = getToggledKeys(materialReceiptsFiltersTogglerItems.value);
+  return generalReport.value.materialReceipts.result.filter((m) => toggledKeys.includes(m.turu));
+});
+
 const cashAccountMovements = ref<Awaited<ReturnType<typeof getCashAccountMovements>>>();
 
 const cashAccountMovementsLoadingStates = ref<Record<string, boolean>>({});
@@ -184,7 +263,7 @@ function buildGroupedSumChartData<T>(
 }
 
 const waybillChartData = computed(() => {
-  if (!generalReport.value || !generalReport.value.waybills) {
+  if (!filteredWaybillsRaw.value.length) {
     return { legendData: [], seriesData: [] };
   }
 
@@ -192,7 +271,7 @@ const waybillChartData = computed(() => {
     turuack?: string;
     toplamtutar?: string | number;
   }>(
-    generalReport.value.waybills,
+    filteredWaybillsRaw.value,
     (w) => w.turuack,
     (w) => w.toplamtutar,
   );
@@ -227,7 +306,7 @@ const invoiceItemsDataTableHeaders = ref<DataTableHeaders[]>([
 ]);
 
 const invoiceChartData = computed(() => {
-  if (!generalReport.value || !generalReport.value.invoices) {
+  if (!filteredInvoicesRaw.value.length) {
     return { legendData: [], seriesData: [] };
   }
 
@@ -235,7 +314,7 @@ const invoiceChartData = computed(() => {
     turuack?: string;
     toplamtutar?: string | number;
   }>(
-    generalReport.value.invoices,
+    filteredInvoicesRaw.value,
     (i) => i.turuack,
     (i) => i.toplamtutar,
   );
@@ -360,7 +439,7 @@ const materialReceiptsItemsDataTableHeaders = ref<DataTableHeaders[]>([
 ]);
 
 const materialReceiptsChartData = computed(() => {
-  if (!generalReport.value || !generalReport.value.materialReceipts) {
+  if (!filteredMaterialReceiptsRaw.value.length) {
     return { legendData: [], seriesData: [] };
   }
 
@@ -368,9 +447,9 @@ const materialReceiptsChartData = computed(() => {
     turuack?: string;
     toplam?: string | number;
   }>(
-    generalReport.value.materialReceipts,
-    (i) => i.turuack,
-    (i) => i.toplam,
+    filteredMaterialReceiptsRaw.value,
+    (m) => m.turuack,
+    (m) => m.toplam,
   );
 });
 
@@ -586,13 +665,24 @@ const scrollToSection = (sectionId: string) => {
               <div>
                 <div class="text-subtitle-1 text-sm-h6 font-weight-bold">İrsaliyeler</div>
                 <div class="text-caption text-medium-emphasis">
+                  {{ filteredWaybills.length }} /
                   {{ generalReportUniques.waybills?.length || 0 }} adet irsaliye
                 </div>
               </div>
             </div>
             <v-spacer class="d-none d-sm-flex" />
-            <div class="d-flex flex-wrap gap-2 w-100 w-sm-auto justify-end">
+            <div
+              class="d-flex flex-wrap gap-2 w-100 w-sm-auto justify-sm-end mt-sm-0 justify-space-between mt-3"
+            >
               <GixTogglerMenu
+                menu-activator-btn-text="Türler"
+                menu-activator-btn-class="rounded-lg border"
+                menu-activator-btn-icon="mdi-filter"
+                v-model:toggle-items="waybillFiltersTogglerItems"
+              />
+
+              <GixTogglerMenu
+                class="ms-3"
                 menu-activator-btn-text="Kolonlar"
                 menu-activator-btn-class="rounded-lg border"
                 menu-activator-btn-icon="mdi-filter-variant"
@@ -627,7 +717,7 @@ const scrollToSection = (sectionId: string) => {
 
         <v-divider class="my-4" />
         <v-data-table
-          :items="generalReportUniques.waybills"
+          :items="filteredWaybills"
           class="rounded-b-lg"
           no-data-text="İrsaliye bulunamadı."
           items-per-page-text="Sayfa başı irsaliye"
@@ -728,13 +818,24 @@ const scrollToSection = (sectionId: string) => {
               <div>
                 <div class="text-subtitle-1 text-sm-h6 font-weight-bold">Faturalar</div>
                 <div class="text-caption text-medium-emphasis">
+                  {{ filteredInvoices.length }} /
                   {{ generalReportUniques.invoices?.length || 0 }} adet fatura
                 </div>
               </div>
             </div>
             <v-spacer class="d-none d-sm-flex" />
-            <div class="d-flex flex-wrap gap-2 w-100 w-sm-auto justify-end">
+            <div
+              class="d-flex flex-wrap gap-2 w-100 w-sm-auto justify-sm-end mt-sm-0 justify-center mt-2"
+            >
               <GixTogglerMenu
+                menu-activator-btn-text="Türler"
+                menu-activator-btn-class="rounded-lg border"
+                menu-activator-btn-icon="mdi-filter"
+                v-model:toggle-items="invoiceFiltersTogglerItems"
+              />
+
+              <GixTogglerMenu
+                class="ms-3"
                 menu-activator-btn-text="Kolonlar"
                 menu-activator-btn-class="rounded-lg border"
                 menu-activator-btn-icon="mdi-filter-variant"
@@ -768,7 +869,7 @@ const scrollToSection = (sectionId: string) => {
         </v-expand-transition>
 
         <v-data-table
-          :items="generalReportUniques.invoices"
+          :items="filteredInvoices"
           class="rounded-b-lg"
           no-data-text="Fatura bulunamadı."
           items-per-page-text="Sayfa başı fatura"
@@ -985,6 +1086,7 @@ const scrollToSection = (sectionId: string) => {
               <div>
                 <div class="text-subtitle-1 text-sm-h6 font-weight-bold">Malzeme Fişleri</div>
                 <div class="text-caption text-medium-emphasis">
+                  {{ filteredMaterialReceipts.length }} /
                   {{ generalReportUniques.materialReceipts?.length || 0 }} adet malzeme fişi
                 </div>
               </div>
@@ -992,6 +1094,14 @@ const scrollToSection = (sectionId: string) => {
             <v-spacer class="d-none d-sm-flex" />
             <div class="d-flex flex-wrap gap-2 w-100 w-sm-auto justify-end">
               <GixTogglerMenu
+                menu-activator-btn-text="Türler"
+                menu-activator-btn-class="rounded-lg border"
+                menu-activator-btn-icon="mdi-filter"
+                v-model:toggle-items="materialReceiptsFiltersTogglerItems"
+              />
+
+              <GixTogglerMenu
+                class="ms-3"
                 menu-activator-btn-text="Kolonlar"
                 menu-activator-btn-class="rounded-lg border"
                 menu-activator-btn-icon="mdi-filter-variant"
@@ -1026,7 +1136,7 @@ const scrollToSection = (sectionId: string) => {
         </v-expand-transition>
 
         <v-data-table
-          :items="generalReportUniques.materialReceipts"
+          :items="filteredMaterialReceipts"
           class="rounded-b-lg"
           no-data-text="Malzeme fişi bulunamadı."
           items-per-page-text="Sayfa başı malzeme fişi"
