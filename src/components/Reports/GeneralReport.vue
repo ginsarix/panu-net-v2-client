@@ -7,6 +7,8 @@ import { computed, defineAsyncComponent, ref, watch } from 'vue';
 import { VDateInput } from 'vuetify/labs/VDateInput';
 import { VIconBtn } from 'vuetify/labs/VIconBtn';
 
+import { useColumnFilters } from '@/composables/useColumnFilters';
+import { useColumnVisibility } from '@/composables/useColumnVisibility';
 import { useCompanyPeriodWatcher } from '@/composables/useCompanyPeriodWatcher';
 import { getCashAccountMovements, getGeneralReport } from '@/services/api/reports';
 import { useDisplayStore } from '@/stores/display';
@@ -122,6 +124,10 @@ const filteredMaterialReceiptsRaw = computed(() => {
   const toggledKeys = getToggledKeys(materialReceiptsFiltersTogglerItems.value);
   return generalReport.value.materialReceipts.result.filter((m) => toggledKeys.includes(m.turu));
 });
+
+useColumnFilters('waybills', waybillFiltersTogglerItems);
+useColumnFilters('invoices', invoiceFiltersTogglerItems);
+useColumnFilters('material-receipts', materialReceiptsFiltersTogglerItems);
 
 const cashAccountMovements = ref<Awaited<ReturnType<typeof getCashAccountMovements>>>();
 
@@ -513,6 +519,13 @@ const scrollToSection = (sectionId: string) => {
     });
   }
 };
+
+useColumnVisibility('waybills', waybillDataTableHeaders);
+useColumnVisibility('invoices', invoiceDataTableHeaders);
+useColumnVisibility('bank-receipts', bankReceiptsDataTableHeaders);
+useColumnVisibility('material-receipts', materialReceiptsDataTableHeaders);
+useColumnVisibility('check-entries', checkEntriesDataTableHeaders);
+useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
 </script>
 
 <template>

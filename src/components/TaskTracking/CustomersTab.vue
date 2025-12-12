@@ -3,6 +3,7 @@ import { storeToRefs } from 'pinia';
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { VIconBtn, VMaskInput } from 'vuetify/labs/components';
 
+import { useColumnVisibility } from '@/composables/useColumnVisibility';
 import type { SubscriptionCustomerServerDataTableOptions } from '@/services/api/subscription-customers';
 import {
   createSubscriptionCustomer,
@@ -273,6 +274,8 @@ const dialogSubmit = async () => {
     currentMode.value = ActionMode.Idle;
   }
 };
+
+useColumnVisibility('subscription-customers', dataTableHeaders);
 </script>
 
 <template>

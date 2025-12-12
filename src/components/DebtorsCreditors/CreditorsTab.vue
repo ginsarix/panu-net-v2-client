@@ -3,6 +3,7 @@ import { TRPCClientError } from '@trpc/client';
 import { storeToRefs } from 'pinia';
 import { computed, ref } from 'vue';
 
+import { useColumnVisibility } from '@/composables/useColumnVisibility';
 import { useCompanyPeriodWatcher } from '@/composables/useCompanyPeriodWatcher';
 import { useCreditorsStore } from '@/stores/creditors.ts';
 import { useDisplayStore } from '@/stores/display';
@@ -52,6 +53,8 @@ const dataTableHeaders = ref<DataTableHeaders[]>([
 const includedDataTableHeaders = computed(() =>
   dataTableHeaders.value.filter((header) => header.toggled),
 );
+
+useColumnVisibility('creditors', dataTableHeaders);
 </script>
 
 <template>

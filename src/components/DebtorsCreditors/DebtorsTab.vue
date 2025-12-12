@@ -4,6 +4,7 @@ import { storeToRefs } from 'pinia';
 import { computed, ref } from 'vue';
 
 import GixTogglerMenu from '@/components/GixTogglerMenu.vue';
+import { useColumnVisibility } from '@/composables/useColumnVisibility';
 import { useCompanyPeriodWatcher } from '@/composables/useCompanyPeriodWatcher';
 import { useDebtorsStore } from '@/stores/debtors.ts';
 import { useDisplayStore } from '@/stores/display.ts';
@@ -52,6 +53,8 @@ const dataTableHeaders = ref<DataTableHeaders[]>([
 const includedDataTableHeaders = computed(() =>
   dataTableHeaders.value.filter((header) => header.toggled),
 );
+
+useColumnVisibility('debtors', dataTableHeaders);
 </script>
 
 <template>

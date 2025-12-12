@@ -6,6 +6,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { reactive } from 'vue';
 import { VDateInput, VIconBtn } from 'vuetify/labs/components';
 
+import { useColumnVisibility } from '@/composables/useColumnVisibility';
 import type { SubscriptionServerDataTableOptions } from '@/services/api/subscriptions';
 import {
   createSubscription,
@@ -242,6 +243,8 @@ const dialogSubmit = async () => {
     currentMode.value = ActionMode.Idle;
   }
 };
+
+useColumnVisibility('subscriptions', dataTableHeaders);
 </script>
 
 <template>

@@ -6,6 +6,7 @@ import { VIconBtn, VMaskInput } from 'vuetify/labs/components';
 
 import GixSelectionInfoBar from '@/components/GixSelectionInfoBar.vue';
 import GixTogglerMenu from '@/components/GixTogglerMenu.vue';
+import { useColumnVisibility } from '@/composables/useColumnVisibility';
 import {
   type UserServerDataTableOptions,
   createUser,
@@ -311,6 +312,8 @@ const editFormValid = computed(
     Object.values(userForm).some((field) => validateField(field)) &&
     passwordAgainErrorMessage.value === '',
 );
+
+useColumnVisibility('users', dataTableHeaders);
 </script>
 
 <template>

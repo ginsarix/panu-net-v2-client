@@ -7,6 +7,7 @@ import { VDateInput, VIconBtn, VMaskInput } from 'vuetify/labs/components';
 
 import GixSelectionInfoBar from '@/components/GixSelectionInfoBar.vue';
 import GixTogglerMenu from '@/components/GixTogglerMenu.vue';
+import { useColumnVisibility } from '@/composables/useColumnVisibility';
 import {
   type CompanyServerDataTableOptions,
   createCompany,
@@ -273,6 +274,8 @@ const handleSubmit = async () => {
   currentMode.value = ActionMode.Idle;
   isSubmitting.value = false;
 };
+
+useColumnVisibility('companies', dataTableHeaders);
 </script>
 
 <template>
