@@ -41,14 +41,57 @@ const generalReportUniques = computed(() => ({
     : undefined,
 }));
 
-const getWaybillItems = (fisno: string) =>
-  generalReport.value?.waybills.result.filter((w) => w.fisno === fisno);
-const getInvoiceItems = (fisno: string) =>
-  generalReport.value?.invoices.result.filter((i) => i.fisno === fisno);
-const getMaterialReceiptItems = (fisno: string) =>
-  generalReport.value?.materialReceipts.result.filter((m) => m.fisno === fisno);
-const getBankReceiptItems = (fisno: string) =>
-  generalReport.value?.bankReceipts.result.filter((b) => b.fisno === fisno);
+// precompute items for o(1) lookups
+type WaybillItem = GeneralReportReturnType['waybills']['result'][number];
+type InvoiceItem = GeneralReportReturnType['invoices']['result'][number];
+type MaterialReceiptItem = GeneralReportReturnType['materialReceipts']['result'][number];
+type BankReceiptItem = GeneralReportReturnType['bankReceipts']['result'][number];
+
+const waybillItemsByFisno = computed(() => {
+  const map = new Map<string, WaybillItem[]>();
+  if (!generalReport.value) return map;
+  for (const item of generalReport.value.waybills.result) {
+    const group = map.get(item.fisno);
+    if (group) group.push(item);
+    else map.set(item.fisno, [item]);
+  }
+  return map;
+});
+
+const invoiceItemsByFisno = computed(() => {
+  const map = new Map<string, InvoiceItem[]>();
+  if (!generalReport.value) return map;
+  for (const item of generalReport.value.invoices.result) {
+    const group = map.get(item.fisno);
+    if (group) group.push(item);
+    else map.set(item.fisno, [item]);
+  }
+  return map;
+});
+
+const materialReceiptItemsByFisno = computed(() => {
+  const map = new Map<string, MaterialReceiptItem[]>();
+  if (!generalReport.value) return map;
+  for (const item of generalReport.value.materialReceipts.result) {
+    const group = map.get(item.fisno);
+    if (group) group.push(item);
+    else map.set(item.fisno, [item]);
+  }
+  return map;
+});
+
+const bankReceiptItemsByFisno = computed(() => {
+  const map = new Map<string, BankReceiptItem[]>();
+  if (!generalReport.value) return map;
+  for (const item of generalReport.value.bankReceipts.result) {
+    const group = map.get(item.fisno);
+    if (group) group.push(item);
+    else map.set(item.fisno, [item]);
+  }
+  return map;
+});
+
+//
 
 const waybillFiltersTogglerItems = ref([
   { key: '1', title: 'Mal Alım', toggled: true },
@@ -767,28 +810,33 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
           <template #[`item.tutari`]="{ item: { fisno } }">
             {{
               formatCurrency(
-                getWaybillItems(fisno)?.reduce((sum, w) => sum + Number(w.tutari), 0) ?? 0,
+                waybillItemsByFisno.get(fisno)?.reduce((sum, w) => sum + Number(w.tutari), 0) ?? 0,
               )
             }}
           </template>
           <template #[`item.kdvtutari`]="{ item: { fisno } }">
             {{
               formatCurrency(
-                getWaybillItems(fisno)?.reduce((sum, w) => sum + Number(w.kdvtutari), 0) ?? 0,
+                waybillItemsByFisno.get(fisno)?.reduce((sum, w) => sum + Number(w.kdvtutari), 0) ??
+                  0,
               )
             }}
           </template>
           <template #[`item.indirimtutari`]="{ item: { fisno } }">
             {{
               formatCurrency(
-                getWaybillItems(fisno)?.reduce((sum, w) => sum + Number(w.indirimtutari), 0) ?? 0,
+                waybillItemsByFisno
+                  .get(fisno)
+                  ?.reduce((sum, w) => sum + Number(w.indirimtutari), 0) ?? 0,
               )
             }}
           </template>
           <template #[`item.toplamtutar`]="{ item: { fisno } }">
             {{
               formatCurrency(
-                getWaybillItems(fisno)?.reduce((sum, w) => sum + Number(w.toplamtutar), 0) ?? 0,
+                waybillItemsByFisno
+                  .get(fisno)
+                  ?.reduce((sum, w) => sum + Number(w.toplamtutar), 0) ?? 0,
               )
             }}
           </template>
@@ -816,7 +864,7 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
                   <v-data-table
                     :mobile="mobile.value"
                     :headers="waybillItemsDataTableHeaders"
-                    :items="getWaybillItems(item.fisno)"
+                    :items="waybillItemsByFisno.get(item.fisno)"
                     hide-default-footer
                   >
                     <template #[`item.miktar`]>
@@ -919,28 +967,35 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
           <template #[`item.tutari`]="{ item: { fisno } }">
             {{
               formatCurrency(
-                getInvoiceItems(fisno)?.reduce((sum, i) => sum + Number(i.kdvharictutar), 0) ?? 0,
+                invoiceItemsByFisno
+                  .get(fisno)
+                  ?.reduce((sum, i) => sum + Number(i.kdvharictutar), 0) ?? 0,
               )
             }}
           </template>
           <template #[`item.kdvtutari`]="{ item: { fisno } }">
             {{
               formatCurrency(
-                getInvoiceItems(fisno)?.reduce((sum, i) => sum + Number(i.kdvtutari), 0) ?? 0,
+                invoiceItemsByFisno.get(fisno)?.reduce((sum, i) => sum + Number(i.kdvtutari), 0) ??
+                  0,
               )
             }}
           </template>
           <template #[`item.indirimtutari`]="{ item: { fisno } }">
             {{
               formatCurrency(
-                getInvoiceItems(fisno)?.reduce((sum, i) => sum + Number(i.indirimtutari), 0) ?? 0,
+                invoiceItemsByFisno
+                  .get(fisno)
+                  ?.reduce((sum, i) => sum + Number(i.indirimtutari), 0) ?? 0,
               )
             }}
           </template>
           <template #[`item.toplamtutar`]="{ item: { fisno } }">
             {{
               formatCurrency(
-                getInvoiceItems(fisno)?.reduce((sum, i) => sum + Number(i.toplamtutar), 0) ?? 0,
+                invoiceItemsByFisno
+                  .get(fisno)
+                  ?.reduce((sum, i) => sum + Number(i.toplamtutar), 0) ?? 0,
               )
             }}
           </template>
@@ -967,7 +1022,7 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
                   <v-data-table
                     :mobile="mobile.value"
                     :headers="invoiceItemsDataTableHeaders"
-                    :items="getInvoiceItems(item.fisno)"
+                    :items="invoiceItemsByFisno.get(item.fisno)"
                     hide-default-footer
                   >
                     <template #[`item.miktar`]>
@@ -1058,14 +1113,18 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
           <template #[`item.alacak`]="{ item }">
             {{
               formatCurrency(
-                getBankReceiptItems(item.fisno)?.reduce((sum, r) => sum + Number(r.alacak), 0) ?? 0,
+                bankReceiptItemsByFisno
+                  .get(item.fisno)
+                  ?.reduce((sum, r) => sum + Number(r.alacak), 0) ?? 0,
               )
             }}
           </template>
           <template #[`item.borc`]="{ item }">
             {{
               formatCurrency(
-                getBankReceiptItems(item.fisno)?.reduce((sum, r) => sum + Number(r.borc), 0) ?? 0,
+                bankReceiptItemsByFisno
+                  .get(item.fisno)
+                  ?.reduce((sum, r) => sum + Number(r.borc), 0) ?? 0,
               )
             }}
           </template>
@@ -1093,7 +1152,7 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
                   <v-data-table
                     :mobile="mobile.value"
                     :headers="bankReceiptsItemsDataTableHeaders"
-                    :items="getBankReceiptItems(item.fisno)"
+                    :items="bankReceiptItemsByFisno.get(item.fisno)"
                     hide-default-footer
                   >
                     <template #[`item.alacak`]="{ item }">
@@ -1237,7 +1296,9 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
           <template #[`item.toplam`]="{ item: { fisno } }">
             {{
               formatCurrency(
-                getMaterialReceiptItems(fisno)?.reduce((sum, m) => sum + Number(m.toplam), 0) ?? 0,
+                materialReceiptItemsByFisno
+                  .get(fisno)
+                  ?.reduce((sum, m) => sum + Number(m.toplam), 0) ?? 0,
               )
             }}
           </template>
@@ -1265,7 +1326,7 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
                   <v-data-table
                     :mobile="mobile.value"
                     :headers="materialReceiptsItemsDataTableHeaders"
-                    :items="getMaterialReceiptItems(item.fisno)"
+                    :items="materialReceiptItemsByFisno.get(item.fisno)"
                     hide-default-footer
                   >
                     <template #[`item.miktar`]="{ item }">
