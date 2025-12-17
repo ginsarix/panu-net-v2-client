@@ -11,6 +11,7 @@ import {
   getDefinitions,
   updateDefinition,
 } from '@/services/api/definitions';
+import { useDefinitionsStore } from '@/stores/definitions';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { noEmptyRule } from '@/types/validations';
 
@@ -26,6 +27,31 @@ const selectedDefinitionId = ref<number | null>(null);
 const isSubmitting = ref(false);
 const isLoadingDefinition = ref(false);
 const showDeleteDialog = ref(false);
+
+const definitionsStore = useDefinitionsStore();
+const { currentDefinition, loadingCurrentDefinition } = storeToRefs(definitionsStore);
+const { setCurrentDefinition, loadCurrentDefinition } = definitionsStore;
+
+const isCurrentDefinition = computed(
+  () =>
+    selectedDefinitionId.value !== null &&
+    currentDefinition.value?.id === selectedDefinitionId.value,
+);
+
+const handleSetCurrentDefinition = async () => {
+  if (!selectedDefinitionId.value) return;
+  try {
+    await setCurrentDefinition(selectedDefinitionId.value);
+    snackbarError.value = false;
+    snackbarText.value = 'Tanım başarıyla seçildi.';
+    snackbar.value = true;
+  } catch (error) {
+    console.error(error);
+    snackbarError.value = true;
+    snackbarText.value = 'Tanım seçilirken bir hata oluştu.';
+    snackbar.value = true;
+  }
+};
 
 const socialPlatforms = [
   { key: 'facebook', label: 'Facebook', icon: 'mdi-facebook', linkKey: 'facebookLink' },
@@ -213,7 +239,7 @@ const handleDelete = async () => {
 };
 
 onMounted(async () => {
-  await loadDefinitionSummaries();
+  await Promise.all([loadDefinitionSummaries(), loadCurrentDefinition()]);
 });
 </script>
 
@@ -256,6 +282,13 @@ onMounted(async () => {
           @update:model-value="handleDefinitionSelect"
           class="mb-4"
         >
+          <template #item="{ props: itemProps, item }">
+            <v-list-item v-bind="itemProps" :title="item.raw.title">
+              <template v-if="currentDefinition?.id === item.raw.value" #subtitle>
+                <v-chip size="x-small" color="success" variant="flat">Aktif</v-chip>
+              </template>
+            </v-list-item>
+          </template>
           <template #no-data>
             <div class="text-center pa-4">
               <v-icon icon="mdi-information" class="mb-2" />
@@ -314,6 +347,21 @@ onMounted(async () => {
           </v-card>
 
           <div class="d-flex justify-end ga-2">
+            <div class="mr-auto">
+              <v-btn
+                v-if="!isCurrentDefinition"
+                color="secondary"
+                variant="outlined"
+                rounded="lg"
+                prepend-icon="mdi-check-circle-outline"
+                :loading="loadingCurrentDefinition"
+                :disabled="isSubmitting"
+                @click="handleSetCurrentDefinition"
+              >
+                Aktif Tanım Yap
+              </v-btn>
+              <v-chip prepend-icon="mdi-check-circle" color="secondary" v-else>Aktif Tanım</v-chip>
+            </div>
             <v-btn
               v-if="selectedDefinitionId"
               color="error"

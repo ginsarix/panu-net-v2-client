@@ -20,3 +20,10 @@ export const deleteDefinition = async (input: DeleteDefinitionInput) =>
   await trpc.definitions.deleteDefinition.mutate(input);
 
 export const getCurrentDefinition = async () => await trpc.definitions.getCurrentDefinition.query();
+
+export type SetCurrentDefinitionInput = Parameters<
+  typeof trpc.definitions.setCurrentDefinition.mutate
+>[0];
+
+export const setCurrentDefinition = async (input: SetCurrentDefinitionInput) =>
+  await trpc.definitions.setCurrentDefinition.mutate(input);

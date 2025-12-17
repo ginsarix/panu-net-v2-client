@@ -24,7 +24,9 @@ const definitionsStore = useDefinitionsStore();
 
 watch(
   currentUser,
-  async () => {
+  async (newCurrentUser) => {
+    if (!newCurrentUser) return;
+
     try {
       await definitionsStore.loadCurrentDefinition();
     } catch (error) {

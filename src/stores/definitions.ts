@@ -1,7 +1,12 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
-import { getCurrentDefinition, getDefinition, getDefinitions } from '@/services/api/definitions';
+import {
+  getCurrentDefinition,
+  getDefinition,
+  getDefinitions,
+  setCurrentDefinition as setCurrentDefinitionApi,
+} from '@/services/api/definitions';
 
 type Definition = Awaited<ReturnType<typeof getDefinition>>['definition'];
 type DefinitionSummary = Awaited<ReturnType<typeof getDefinitions>>['definitions'][number];
@@ -17,6 +22,16 @@ export const useDefinitionsStore = defineStore('definitions', () => {
       currentDefinition.value = definition;
     } catch (error) {
       throw error;
+    } finally {
+      loadingCurrentDefinition.value = false;
+    }
+  };
+
+  const setCurrentDefinition = async (definitionId: number) => {
+    loadingCurrentDefinition.value = true;
+    try {
+      await setCurrentDefinitionApi({ definitionId });
+      await loadCurrentDefinition();
     } finally {
       loadingCurrentDefinition.value = false;
     }
@@ -66,5 +81,6 @@ export const useDefinitionsStore = defineStore('definitions', () => {
     currentDefinition,
     loadingCurrentDefinition,
     loadCurrentDefinition,
+    setCurrentDefinition,
   };
 });

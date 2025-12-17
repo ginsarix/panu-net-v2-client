@@ -30,6 +30,7 @@ export const useColumnVisibility = (
 
         tableSettingsStore.setColumnVisibility(table, column.key, column.toggled)
       }
+
       syncingStore = false;
     },
     { deep: true }

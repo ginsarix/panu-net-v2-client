@@ -5,7 +5,6 @@ import { AnimatePresence, motion } from 'motion-v';
 import { storeToRefs } from 'pinia';
 import { computed, defineAsyncComponent, ref, watch } from 'vue';
 import { VDateInput } from 'vuetify/labs/VDateInput';
-import { VIconBtn } from 'vuetify/labs/VIconBtn';
 
 import { useColumnFilters } from '@/composables/useColumnFilters';
 import { useColumnVisibility } from '@/composables/useColumnVisibility';
@@ -37,14 +36,19 @@ const generalReportUniques = computed(() => ({
   materialReceipts: generalReport.value
     ? uniqueBy(generalReport.value.materialReceipts.result, 'fisno')
     : undefined,
+  bankReceipts: generalReport.value
+    ? uniqueBy(generalReport.value.bankReceipts.result, 'fisno')
+    : undefined,
 }));
 
 const getWaybillItems = (fisno: string) =>
   generalReport.value?.waybills.result.filter((w) => w.fisno === fisno);
 const getInvoiceItems = (fisno: string) =>
-  generalReport.value?.invoices.result.filter((w) => w.fisno === fisno);
+  generalReport.value?.invoices.result.filter((i) => i.fisno === fisno);
 const getMaterialReceiptItems = (fisno: string) =>
   generalReport.value?.materialReceipts.result.filter((m) => m.fisno === fisno);
+const getBankReceiptItems = (fisno: string) =>
+  generalReport.value?.bankReceipts.result.filter((b) => b.fisno === fisno);
 
 const waybillFiltersTogglerItems = ref([
   { key: '1', title: 'Mal Alım', toggled: true },
@@ -332,6 +336,7 @@ const includedInvoiceDataTableHeaders = computed(() =>
 const bankReceiptsDataTableHeaders = ref<DataTableHeaders[]>([
   { title: 'Fiş No', key: 'fisno', toggled: true, sortable: true },
   { title: 'Tür', key: 'turuack', toggled: true, sortable: true },
+  { title: 'Alacak', key: 'alacak', toggled: true, sortable: true },
   { title: 'Borç', key: 'borc', toggled: true, sortable: true },
   { title: 'Açıklama', key: 'aciklama', toggled: true, sortable: false },
   { title: 'Oluşturulma Tarihi', key: '_cdate', toggled: true, sortable: true },
@@ -355,6 +360,14 @@ const bankReceiptsChartData = computed(() => {
 const includedBankReceiptsDataTableHeaders = computed(() =>
   bankReceiptsDataTableHeaders.value.filter((header) => header.toggled),
 );
+
+const bankReceiptsItemsDataTableHeaders = ref<DataTableHeaders[]>([
+  { title: 'Cari Ünvan', key: 'cariunvan', toggled: true, sortable: false },
+  { title: 'Açıklama', key: 'kalemaciklama', toggled: true, sortable: false },
+  { title: 'Döviz', key: 'doviz', toggled: true, sortable: true },
+  { title: 'Alacak', key: 'alacak', toggled: true, sortable: true },
+  { title: 'Borç', key: 'borc', toggled: true, sortable: true },
+]);
 
 const creditCardCollectionsDataTableHeaders = ref<DataTableHeaders[]>([
   { title: 'Devir Fiş No', key: 'devirfisno', toggled: true, sortable: true },
@@ -598,28 +611,38 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
 
       <v-col class="mt-2 pt-0 mt-sm-0 d-flex align-center" cols="12" sm="2" md="auto">
         <AnimatePresence>
-          <motion.button
+          <motion.div
             v-if="generalReport && datesValid"
             key="refreshBtn"
             :initial="{ scale: 0, opacity: 0 }"
-            :animate="{ scale: 1, opacity: 1, rotate: !xs.value ? refreshRotation : undefined }"
+            :animate="{ scale: 1, opacity: 1 }"
             :exit="{ scale: 0, opacity: 0 }"
             :transition="{ type: 'spring', stiffness: 200, damping: 20 }"
-            @click="refresh"
           >
             <v-tooltip text="Raporu yenile" location="bottom">
               <template #activator="{ props }">
-                <v-icon-btn
+                <v-btn
                   v-show="!xs.value"
                   v-bind="props"
                   class="mb-2"
-                  icon="mdi-refresh"
+                  icon
+                  height="40"
+                  width="40"
                   :disabled="loading"
-                />
+                  @click="refresh"
+                >
+                  <motion.span
+                    :animate="{ rotate: refreshRotation }"
+                    :transition="{ type: 'spring', stiffness: 200, damping: 20 }"
+                    style="display: flex"
+                  >
+                    <v-icon>mdi-refresh</v-icon>
+                  </motion.span>
+                </v-btn>
               </template>
             </v-tooltip>
-            <v-btn v-show="xs.value" class="text-none">Yenile</v-btn>
-          </motion.button>
+            <v-btn v-show="xs.value" class="text-none" @click="refresh">Yenile</v-btn>
+          </motion.div>
         </AnimatePresence>
       </v-col>
     </v-row>
@@ -896,28 +919,28 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
           <template #[`item.tutari`]="{ item: { fisno } }">
             {{
               formatCurrency(
-                getInvoiceItems(fisno)?.reduce((sum, w) => sum + Number(w.kdvharictutar), 0) ?? 0,
+                getInvoiceItems(fisno)?.reduce((sum, i) => sum + Number(i.kdvharictutar), 0) ?? 0,
               )
             }}
           </template>
           <template #[`item.kdvtutari`]="{ item: { fisno } }">
             {{
               formatCurrency(
-                getInvoiceItems(fisno)?.reduce((sum, w) => sum + Number(w.kdvtutari), 0) ?? 0,
+                getInvoiceItems(fisno)?.reduce((sum, i) => sum + Number(i.kdvtutari), 0) ?? 0,
               )
             }}
           </template>
           <template #[`item.indirimtutari`]="{ item: { fisno } }">
             {{
               formatCurrency(
-                getInvoiceItems(fisno)?.reduce((sum, w) => sum + Number(w.indirimtutari), 0) ?? 0,
+                getInvoiceItems(fisno)?.reduce((sum, i) => sum + Number(i.indirimtutari), 0) ?? 0,
               )
             }}
           </template>
           <template #[`item.toplamtutar`]="{ item: { fisno } }">
             {{
               formatCurrency(
-                getInvoiceItems(fisno)?.reduce((sum, w) => sum + Number(w.toplamtutar), 0) ?? 0,
+                getInvoiceItems(fisno)?.reduce((sum, i) => sum + Number(i.toplamtutar), 0) ?? 0,
               )
             }}
           </template>
@@ -982,7 +1005,7 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
               <div>
                 <div class="text-subtitle-1 text-sm-h6 font-weight-bold">Banka Giriş Fişleri</div>
                 <div class="text-caption text-medium-emphasis">
-                  {{ generalReport.bankReceipts.result?.length || 0 }} adet fiş
+                  {{ generalReportUniques.bankReceipts?.length || 0 }} adet fiş
                 </div>
               </div>
             </div>
@@ -1021,17 +1044,68 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
           />
         </v-expand-transition>
         <v-data-table
-          :items="generalReport.bankReceipts.result"
+          :items="generalReportUniques.bankReceipts"
           class="rounded-b-lg"
           no-data-text="Fiş bulunamadı."
           items-per-page-text="Sayfa başı fiş"
           :mobile="mobile.value"
           fixed-header
+          show-expand
+          item-value="fisno"
           :headers="includedBankReceiptsDataTableHeaders"
           hover
         >
+          <template #[`item.alacak`]="{ item }">
+            {{
+              formatCurrency(
+                getBankReceiptItems(item.fisno)?.reduce((sum, r) => sum + Number(r.alacak), 0) ?? 0,
+              )
+            }}
+          </template>
           <template #[`item.borc`]="{ item }">
-            {{ formatCurrency(item.borc) }}
+            {{
+              formatCurrency(
+                getBankReceiptItems(item.fisno)?.reduce((sum, r) => sum + Number(r.borc), 0) ?? 0,
+              )
+            }}
+          </template>
+
+          <template #[`item.data-table-expand`]="{ internalItem, isExpanded, toggleExpand }">
+            <v-btn
+              :append-icon="isExpanded(internalItem) ? 'mdi-chevron-up' : 'mdi-chevron-down'"
+              text="Kalemler"
+              rounded="lg"
+              class="text-none"
+              color="medium-emphasis"
+              size="small"
+              variant="text"
+              width="105"
+              border
+              slim
+              @click="toggleExpand(internalItem)"
+            />
+          </template>
+
+          <template #expanded-row="{ columns, item }">
+            <tr>
+              <td :colspan="columns.length" class="py-2">
+                <v-sheet rounded="lg" border>
+                  <v-data-table
+                    :mobile="mobile.value"
+                    :headers="bankReceiptsItemsDataTableHeaders"
+                    :items="getBankReceiptItems(item.fisno)"
+                    hide-default-footer
+                  >
+                    <template #[`item.alacak`]="{ item }">
+                      {{ formatCurrency(item.alacak) }}
+                    </template>
+                    <template #[`item.borc`]="{ item }">
+                      {{ formatCurrency(item.borc) }}
+                    </template>
+                  </v-data-table>
+                </v-sheet>
+              </td>
+            </tr>
           </template>
         </v-data-table>
       </v-card>
