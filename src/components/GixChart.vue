@@ -22,6 +22,7 @@ const props = defineProps<{
   seriesName: string;
   seriesData: { value: number; name: string }[];
   height?: string;
+  width?: string;
   currency?: string;
 }>();
 
@@ -113,7 +114,10 @@ const chartOptions = computed(
 </script>
 
 <template>
-  <div class="chart-container" :style="{ height: props.height ?? '70vh' }">
+  <div
+    class="chart-container"
+    :style="{ height: props.height ?? '70vh', width: props.width ?? '100%' }"
+  >
     <div v-if="loading" class="d-flex align-center justify-center" :style="{ height: '100%' }">
       <v-progress-circular indeterminate color="primary" />
     </div>

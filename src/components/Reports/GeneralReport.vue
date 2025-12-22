@@ -36,16 +36,12 @@ const generalReportUniques = computed(() => ({
   materialReceipts: generalReport.value
     ? uniqueBy(generalReport.value.materialReceipts.result, 'fisno')
     : undefined,
-  bankReceipts: generalReport.value
-    ? uniqueBy(generalReport.value.bankReceipts.result, 'fisno')
-    : undefined,
 }));
 
 // precompute items for o(1) lookups
 type WaybillItem = GeneralReportReturnType['waybills']['result'][number];
 type InvoiceItem = GeneralReportReturnType['invoices']['result'][number];
 type MaterialReceiptItem = GeneralReportReturnType['materialReceipts']['result'][number];
-type BankReceiptItem = GeneralReportReturnType['bankReceipts']['result'][number];
 
 const waybillItemsByFisno = computed(() => {
   const map = new Map<string, WaybillItem[]>();
@@ -73,17 +69,6 @@ const materialReceiptItemsByFisno = computed(() => {
   const map = new Map<string, MaterialReceiptItem[]>();
   if (!generalReport.value) return map;
   for (const item of generalReport.value.materialReceipts.result) {
-    const group = map.get(item.fisno);
-    if (group) group.push(item);
-    else map.set(item.fisno, [item]);
-  }
-  return map;
-});
-
-const bankReceiptItemsByFisno = computed(() => {
-  const map = new Map<string, BankReceiptItem[]>();
-  if (!generalReport.value) return map;
-  for (const item of generalReport.value.bankReceipts.result) {
     const group = map.get(item.fisno);
     if (group) group.push(item);
     else map.set(item.fisno, [item]);
@@ -130,6 +115,15 @@ const materialReceiptsFiltersTogglerItems = ref([
   { key: '9', title: 'Sair Çıkış', toggled: true },
 ]);
 
+const bankReceiptsFiltersTogglerItems = ref([
+  { key: 'BNK', title: 'Banka Fişi', toggled: true },
+  { key: 'VRM', title: 'Virman', toggled: true },
+  { key: 'GOHVL', title: 'Gönderici Hesap', toggled: true },
+  { key: 'GEHVL', title: 'Gelen Havale', toggled: true },
+  { key: 'KF', title: 'Kur Farkı Fişi', toggled: true },
+  { key: 'ACLS', title: 'Açılış Fişi', toggled: true },
+]);
+
 // get toggled keys from filter items
 const getToggledKeys = (items: { key: string; toggled: boolean }[]) =>
   items.filter((item) => item.toggled).map((item) => item.key);
@@ -153,6 +147,12 @@ const filteredMaterialReceipts = computed(() => {
   return generalReportUniques.value.materialReceipts.filter((m) => toggledKeys.includes(m.turu));
 });
 
+const filteredBankReceipts = computed(() => {
+  if (!generalReport.value?.bankReceipts) return [];
+  const toggledKeys = getToggledKeys(bankReceiptsFiltersTogglerItems.value);
+  return generalReport.value.bankReceipts.result.filter((b) => toggledKeys.includes(b.turu));
+});
+
 // toggle filtered raw data for chart
 const filteredWaybillsRaw = computed(() => {
   if (!generalReport.value?.waybills) return [];
@@ -172,9 +172,16 @@ const filteredMaterialReceiptsRaw = computed(() => {
   return generalReport.value.materialReceipts.result.filter((m) => toggledKeys.includes(m.turu));
 });
 
+const filteredBankReceiptsRaw = computed(() => {
+  if (!generalReport.value?.bankReceipts) return [];
+  const toggledKeys = getToggledKeys(bankReceiptsFiltersTogglerItems.value);
+  return generalReport.value.bankReceipts.result.filter((b) => toggledKeys.includes(b.turu));
+});
+
 useColumnFilters('waybills', waybillFiltersTogglerItems);
 useColumnFilters('invoices', invoiceFiltersTogglerItems);
 useColumnFilters('material-receipts', materialReceiptsFiltersTogglerItems);
+useColumnFilters('bank-receipts', bankReceiptsFiltersTogglerItems);
 
 const cashAccountMovements = ref<Awaited<ReturnType<typeof getCashAccountMovements>>>();
 
@@ -303,6 +310,9 @@ function buildGroupedSumChartData<T>(
       const rawGroup = getGroup(item);
       const group = rawGroup && String(rawGroup).trim() ? String(rawGroup) : unknownLabel;
       const value = Number(getValue(item)) || 0;
+
+      if (value === 0) return acc;
+
       acc[group] = (acc[group] ?? 0) + value;
       return acc;
     },
@@ -378,39 +388,44 @@ const includedInvoiceDataTableHeaders = computed(() =>
 
 const bankReceiptsDataTableHeaders = ref<DataTableHeaders[]>([
   { title: 'Fiş No', key: 'fisno', toggled: true, sortable: true },
+  { title: 'Cari Ünvan/Hizmet Açıklama', key: 'cariunvan', toggled: true, sortable: false },
   { title: 'Tür', key: 'turuack', toggled: true, sortable: true },
+  { title: 'Döviz', key: 'doviz', toggled: true, sortable: true },
   { title: 'Alacak', key: 'alacak', toggled: true, sortable: true },
   { title: 'Borç', key: 'borc', toggled: true, sortable: true },
-  { title: 'Açıklama', key: 'aciklama', toggled: true, sortable: false },
+  { title: 'Açıklama', key: 'kalemaciklama', toggled: true, sortable: false },
+  { title: 'Fiş Açıklaması', key: 'aciklama', toggled: true, sortable: false },
   { title: 'Oluşturulma Tarihi', key: '_cdate', toggled: true, sortable: true },
 ]);
 
 const bankReceiptsChartData = computed(() => {
-  if (!generalReport.value || !generalReport.value.bankReceipts) {
-    return { legendData: [], seriesData: [] };
+  if (!filteredBankReceiptsRaw.value.length) {
+    return { credit: { legendData: [], seriesData: [] }, debt: { legendData: [], seriesData: [] } };
   }
 
-  return buildGroupedSumChartData<{
-    turuack?: string;
-    borc?: string | number;
-  }>(
-    generalReport.value.bankReceipts,
-    (i) => i.turuack,
-    (i) => i.borc,
-  );
+  return {
+    credit: buildGroupedSumChartData<{
+      turuack?: string;
+      alacak?: string | number;
+    }>(
+      filteredBankReceiptsRaw.value,
+      (i) => i.turuack,
+      (i) => i.alacak,
+    ),
+    debt: buildGroupedSumChartData<{
+      turuack?: string;
+      borc?: string | number;
+    }>(
+      filteredBankReceiptsRaw.value,
+      (i) => i.turuack,
+      (i) => i.borc,
+    ),
+  };
 });
 
 const includedBankReceiptsDataTableHeaders = computed(() =>
   bankReceiptsDataTableHeaders.value.filter((header) => header.toggled),
 );
-
-const bankReceiptsItemsDataTableHeaders = ref<DataTableHeaders[]>([
-  { title: 'Cari Ünvan', key: 'cariunvan', toggled: true, sortable: false },
-  { title: 'Açıklama', key: 'kalemaciklama', toggled: true, sortable: false },
-  { title: 'Döviz', key: 'doviz', toggled: true, sortable: true },
-  { title: 'Alacak', key: 'alacak', toggled: true, sortable: true },
-  { title: 'Borç', key: 'borc', toggled: true, sortable: true },
-]);
 
 const creditCardCollectionsDataTableHeaders = ref<DataTableHeaders[]>([
   { title: 'Devir Fiş No', key: 'devirfisno', toggled: true, sortable: true },
@@ -548,7 +563,7 @@ const showScrollNav = computed(() => generalReport.value && !loading.value);
 const scrollNavItems = ref([
   { id: 'waybills', label: 'İrsaliyeler', icon: 'mdi-text' },
   { id: 'invoices', label: 'Faturalar', icon: 'mdi-file-document' },
-  { id: 'bank-receipts', label: 'Banka Fişleri', icon: 'mdi-bank' },
+  { id: 'bank-receipts', label: 'Banka Fiş Kalemleri', icon: 'mdi-bank' },
   { id: 'credit-card-collections', label: 'Kredi Kartı Tahsilatları', icon: 'mdi-credit-card' },
   { id: 'material-receipts', label: 'Malzeme Fişleri', icon: 'mdi-package-variant' },
   { id: 'check-entries', label: 'Çek Girişleri', icon: 'mdi-checkbook' },
@@ -1058,15 +1073,24 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
                 <v-icon icon="mdi-bank" color="white" />
               </v-avatar>
               <div>
-                <div class="text-subtitle-1 text-sm-h6 font-weight-bold">Banka Giriş Fişleri</div>
+                <div class="text-subtitle-1 text-sm-h6 font-weight-bold">Banka Fiş Kalemleri</div>
                 <div class="text-caption text-medium-emphasis">
-                  {{ generalReportUniques.bankReceipts?.length || 0 }} adet fiş
+                  {{ filteredBankReceipts.length }} /
+                  {{ generalReport?.bankReceipts.result.length || 0 }} adet kalem
                 </div>
               </div>
             </div>
             <v-spacer class="d-none d-sm-flex" />
             <div class="d-flex flex-wrap gap-2 w-100 w-sm-auto justify-end">
               <GixTogglerMenu
+                menu-activator-btn-text="Türler"
+                menu-activator-btn-class="rounded-lg border"
+                menu-activator-btn-icon="mdi-filter"
+                v-model:toggle-items="bankReceiptsFiltersTogglerItems"
+              />
+
+              <GixTogglerMenu
+                class="ms-3"
                 menu-activator-btn-text="Kolonlar"
                 menu-activator-btn-class="rounded-lg border"
                 menu-activator-btn-icon="mdi-filter-variant"
@@ -1090,81 +1114,44 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
         </v-card-title>
 
         <v-expand-transition v-show="showBankReceiptsChart">
-          <GixChart
-            seriesName="Toplam Tutar"
-            :seriesData="bankReceiptsChartData.seriesData"
-            :data-formatter="formatCurrency"
-            currency="TL"
-            height="55vh"
-          />
+          <div>
+            <div :class="mobile.value ? 'd-flex flex-column' : 'd-flex'">
+              <GixChart
+                title="Alacak"
+                seriesName="Alacak"
+                :seriesData="bankReceiptsChartData.credit.seriesData"
+                :data-formatter="formatCurrency"
+                currency="TL"
+                height="55vh"
+                :width="mobile.value ? '100%' : '50%'"
+              />
+              <GixChart
+                title="Borç"
+                seriesName="Borç"
+                :seriesData="bankReceiptsChartData.debt.seriesData"
+                :data-formatter="formatCurrency"
+                currency="TL"
+                height="55vh"
+                :width="mobile.value ? '100%' : '50%'"
+              />
+            </div>
+          </div>
         </v-expand-transition>
         <v-data-table
-          :items="generalReportUniques.bankReceipts"
+          :items="filteredBankReceipts"
           class="rounded-b-lg"
           no-data-text="Fiş bulunamadı."
           items-per-page-text="Sayfa başı fiş"
           :mobile="mobile.value"
           fixed-header
-          show-expand
-          item-value="fisno"
           :headers="includedBankReceiptsDataTableHeaders"
           hover
         >
           <template #[`item.alacak`]="{ item }">
-            {{
-              formatCurrency(
-                bankReceiptItemsByFisno
-                  .get(item.fisno)
-                  ?.reduce((sum, r) => sum + Number(r.alacak), 0) ?? 0,
-              )
-            }}
+            {{ formatCurrency(item.alacak) }}
           </template>
           <template #[`item.borc`]="{ item }">
-            {{
-              formatCurrency(
-                bankReceiptItemsByFisno
-                  .get(item.fisno)
-                  ?.reduce((sum, r) => sum + Number(r.borc), 0) ?? 0,
-              )
-            }}
-          </template>
-
-          <template #[`item.data-table-expand`]="{ internalItem, isExpanded, toggleExpand }">
-            <v-btn
-              :append-icon="isExpanded(internalItem) ? 'mdi-chevron-up' : 'mdi-chevron-down'"
-              text="Kalemler"
-              rounded="lg"
-              class="text-none"
-              color="medium-emphasis"
-              size="small"
-              variant="text"
-              width="105"
-              border
-              slim
-              @click="toggleExpand(internalItem)"
-            />
-          </template>
-
-          <template #expanded-row="{ columns, item }">
-            <tr>
-              <td :colspan="columns.length" class="py-2">
-                <v-sheet rounded="lg" border>
-                  <v-data-table
-                    :mobile="mobile.value"
-                    :headers="bankReceiptsItemsDataTableHeaders"
-                    :items="bankReceiptItemsByFisno.get(item.fisno)"
-                    hide-default-footer
-                  >
-                    <template #[`item.alacak`]="{ item }">
-                      {{ formatCurrency(item.alacak) }}
-                    </template>
-                    <template #[`item.borc`]="{ item }">
-                      {{ formatCurrency(item.borc) }}
-                    </template>
-                  </v-data-table>
-                </v-sheet>
-              </td>
-            </tr>
+            {{ formatCurrency(item.borc) }}
           </template>
         </v-data-table>
       </v-card>

@@ -279,6 +279,13 @@ watch(
         :href="currentDefinition?.paymentLink || ''"
         target="_blank"
       />
+      <v-list-item
+        rounded="xl"
+        prepend-icon="mdi-qrcode-scan"
+        title="Fiyat Gör"
+        href="https://demo.fiyatgor.panunet.com.tr/"
+        target="_blank"
+      />
     </v-list>
   </v-navigation-drawer>
 </template>
