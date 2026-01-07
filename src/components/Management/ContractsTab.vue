@@ -486,14 +486,12 @@ const openFileInNewTab = (fileName: string) => {
         <v-card-text>
           <template v-if="isForm">
             <v-text-field
-              class="mb-2"
               variant="outlined"
               rounded="lg"
               label="Başlık"
               autocomplete="off"
               :rules="contractForm.title.rules"
               v-model="contractForm.title.value"
-              hint="Boş bırakılırsa dosya adı kullanılır"
               persistent-hint
             />
             <v-file-upload

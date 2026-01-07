@@ -11,6 +11,7 @@ import {
 } from 'chart.js';
 import { computed } from 'vue';
 import { Pie } from 'vue-chartjs';
+import { useTheme } from 'vuetify';
 
 import { formatCurrency } from '@/utils/formatting';
 
@@ -25,6 +26,19 @@ const props = defineProps<{
   width?: string;
   currency?: string;
 }>();
+
+const theme = useTheme();
+const isDark = computed(() => theme.global.current.value.dark);
+
+const textColor = computed(() =>
+  isDark.value ? 'rgba(255, 255, 255, 0.87)' : 'rgba(27, 33, 25, 0.87)',
+);
+const tooltipBg = computed(() =>
+  isDark.value ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.95)',
+);
+const tooltipBorder = computed(() =>
+  isDark.value ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+);
 
 const chartData = computed(
   () =>
@@ -73,7 +87,7 @@ const chartOptions = computed(
         legend: {
           position: 'top' as const,
           labels: {
-            color: 'rgba(255, 255, 255, 0.87)',
+            color: textColor.value,
             font: {
               size: 12,
             },
@@ -83,7 +97,7 @@ const chartOptions = computed(
         title: {
           display: !!props.title,
           text: props.title ?? '',
-          color: 'rgba(255, 255, 255, 0.87)',
+          color: textColor.value,
           font: {
             size: 16,
             weight: 'bold' as const,
@@ -91,10 +105,10 @@ const chartOptions = computed(
           position: 'top' as const,
         },
         tooltip: {
-          backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          titleColor: 'rgba(255, 255, 255, 0.87)',
-          bodyColor: 'rgba(255, 255, 255, 0.87)',
-          borderColor: 'rgba(255, 255, 255, 0.1)',
+          backgroundColor: tooltipBg.value,
+          titleColor: textColor.value,
+          bodyColor: textColor.value,
+          borderColor: tooltipBorder.value,
           borderWidth: 1,
           callbacks: {
             label: (tooltipItem: TooltipItem<'pie'>) => {

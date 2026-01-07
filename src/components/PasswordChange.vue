@@ -57,7 +57,6 @@ const passwordAgainErrorMessage = computed(() =>
 
 const showCurrentPassword = ref(false);
 const showNewPassword = ref(false);
-const showNewPasswordAgain = ref(false);
 </script>
 
 <template>
@@ -75,6 +74,7 @@ const showNewPasswordAgain = ref(false);
       density="comfortable"
       :rules="passwordChangeForm.currentPassword.rules"
       label="Şifreniz"
+      class="mb-2"
       variant="outlined"
       :type="showCurrentPassword ? 'text' : 'password'"
       :append-inner-icon="showCurrentPassword ? 'mdi-eye-off' : 'mdi-eye'"
@@ -87,6 +87,7 @@ const showNewPasswordAgain = ref(false);
       :rules="passwordChangeForm.newPassword.rules"
       label="Yeni Şifreniz"
       variant="outlined"
+      class="mb-2"
       :type="showNewPassword ? 'text' : 'password'"
       :append-inner-icon="showNewPassword ? 'mdi-eye-off' : 'mdi-eye'"
       @click:append-inner="showNewPassword = !showNewPassword"
@@ -98,9 +99,7 @@ const showNewPasswordAgain = ref(false);
       label="Yeni Şifreniz Tekrar"
       :error-messages="passwordAgainErrorMessage"
       variant="outlined"
-      :type="showNewPasswordAgain ? 'text' : 'password'"
-      :append-inner-icon="showNewPasswordAgain ? 'mdi-eye-off' : 'mdi-eye'"
-      @click:append-inner="showNewPasswordAgain = !showNewPasswordAgain"
+      :type="showNewPassword ? 'text' : 'password'"
       rounded="lg"
     />
     <div class="d-flex justify-end">
@@ -110,6 +109,7 @@ const showNewPasswordAgain = ref(false);
         append-icon="mdi-lock-reset"
         text="Tamam"
         rounded="lg"
+        variant="tonal"
       />
     </div>
   </v-form>

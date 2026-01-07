@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router';
 
 import PasswordChange from '@/components/PasswordChange.vue';
 import { useCurrentUserStore } from '@/stores/current-user';
+import { formatDateTime } from '@/utils/formatting';
 
 const currentUserStore = useCurrentUserStore();
 const { currentUser } = storeToRefs(currentUserStore);
@@ -67,9 +68,9 @@ const logout = async () => {
             <v-list-item-title>
               <v-icon start icon="mdi-calendar" class="mr-2 text-primary"></v-icon>
               Oluşturulma Tarihi:
-              <span class="font-weight-medium ml-1">{{
-                currentUser.creationDate && new Date(currentUser.creationDate).toLocaleDateString()
-              }}</span>
+              <span class="font-weight-medium ml-1" v-if="currentUser.creationDate">
+                {{ formatDateTime(currentUser.creationDate, 'dd.MM.yyyy') }}
+              </span>
             </v-list-item-title>
           </v-list-item>
           <v-list-item>
@@ -81,6 +82,8 @@ const logout = async () => {
                 class="mb-3"
                 :append-icon="showPasswordChangeForm ? 'mdi-chevron-up' : 'mdi-chevron-down'"
                 @click="showPasswordChangeForm = !showPasswordChangeForm"
+                variant="outlined"
+                border="sm"
               />
             </v-list-item-title>
             <v-expand-transition v-show="showPasswordChangeForm">

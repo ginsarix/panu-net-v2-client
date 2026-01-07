@@ -8,6 +8,7 @@ import { VIconBtn } from 'vuetify/labs/components';
 import CompanySection from '@/components/CompanySection.vue';
 import GixFooter from '@/components/GixFooter.vue';
 import GixSnackbar from '@/components/GixSnackbar.vue';
+import GixThemeToggle from '@/components/GixThemeToggle.vue';
 import NavigationDrawer from '@/components/NavigationDrawer.vue';
 import { useCurrentUserStore } from '@/stores/current-user';
 import { useDefinitionsStore } from '@/stores/definitions';
@@ -89,6 +90,7 @@ const railToggleIcon = computed(() => (rail.value ? 'mdi-menu-close' : 'mdi-menu
         </v-app-bar-title>
 
         <CompanySection :mobile="mobile.value" v-if="currentUser && !mobile.value" />
+        <GixThemeToggle />
       </v-app-bar>
       <v-main>
         <v-container>

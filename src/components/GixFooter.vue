@@ -104,5 +104,6 @@ const socials = computed(() => [
     #a237b6 75%,
     #3e57bc 100%
   );
+  color: #dde5d8;
 }
 </style>
