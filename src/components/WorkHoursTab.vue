@@ -11,7 +11,7 @@ import { useSnackbarStore } from '@/stores/snackbar';
 import { useWorkHoursStore } from '@/stores/work-hours';
 import type { DataTableHeaders } from '@/types/data-table-headers';
 import { buildGroupedSumChartData } from '@/utils/chart';
-import { formatCurrency } from '@/utils/formatting';
+import { formatToLocale } from '@/utils/formatting';
 
 import ExportAsExcel from './ExportAsExcel.vue';
 import GixBarChart from './GixBarChart.vue';
@@ -159,16 +159,16 @@ useColumnVisibility('work-hours', dataTableHeaders);
       </v-toolbar>
     </template>
     <template #[`item.normalmesaisaat`]="{ item }">
-      {{ formatCurrency(item.normalmesaisaat) }}
+      {{ formatToLocale(item.normalmesaisaat) }}
     </template>
     <template #[`item.toplamfazlamesaisaat`]="{ item }">
-      {{ formatCurrency(item.toplamfazlamesaisaat) }}
+      {{ formatToLocale(item.toplamfazlamesaisaat) }}
     </template>
     <template #[`item.gecemesaisisaat`]="{ item }">
-      {{ formatCurrency(item.gecemesaisisaat) }}
+      {{ formatToLocale(item.gecemesaisisaat) }}
     </template>
     <template #[`item.haftasonumesaisisaat`]="{ item }">
-      {{ formatCurrency(item.haftasonumesaisisaat) }}
+      {{ formatToLocale(item.haftasonumesaisisaat) }}
     </template>
   </v-data-table>
 

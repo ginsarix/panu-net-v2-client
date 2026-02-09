@@ -10,7 +10,7 @@ import { useDisplayStore } from '@/stores/display.ts';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useStocksStore } from '@/stores/stocks';
 import type { DataTableHeaders } from '@/types/data-table-headers';
-import { formatCurrency } from '@/utils/formatting';
+import { formatToLocale } from '@/utils/formatting';
 
 import ExportAsExcel from '../ExportAsExcel.vue';
 
@@ -93,6 +93,6 @@ useColumnVisibility('services', dataTableHeaders);
         />
       </v-toolbar>
     </template>
-    <template #[`item.miktar`]="{ item }"> {{ formatCurrency(item.miktar) }} </template>
+    <template #[`item.miktar`]="{ item }"> {{ formatToLocale(item.miktar) }} </template>
   </v-data-table>
 </template>

@@ -1,12 +1,17 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
-import type { Order } from '@/types/order.ts';
-import type { ShippedOrder } from '@/types/shipped-order.ts';
+import { getOrders } from '@/services/api/orders';
+
+type Orders = Awaited<ReturnType<typeof getOrders>>['orders']['result'];
 
 export const useOrdersStore = defineStore('orders', () => {
-  const orders = ref<Order[]>([]);
-  const shippedOrders = ref<ShippedOrder[]>([]);
+  const orders = ref<Orders>([]);
 
-  return { orders, shippedOrders };
+  const loadOrders = async () => {
+    const response = await getOrders();
+    orders.value = response.orders.result;
+  };
+
+  return { orders, loadOrders };
 });

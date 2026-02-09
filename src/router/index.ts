@@ -24,6 +24,7 @@ const TaskTrackingView = () => import('@/views/TaskTrackingView.vue');
 const HomeView = () => import('@/views/HomeView.vue');
 const ReportsView = () => import('@/views/ReportsView.vue');
 const WorkHoursTab = () => import('@/components/WorkHoursTab.vue');
+const OrdersTab = () => import('@/components/OrdersTab.vue');
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -132,6 +133,11 @@ const router = createRouter({
       component: WorkHoursTab,
       meta: { requiredPageRole: 'WORK_HOURS_VIEW' },
     },
+    {
+      path: '/orders',
+      component: OrdersTab,
+      meta: { requiredPageRole: 'ORDERS_VIEW' },
+    },
   ],
 });
 
@@ -178,6 +184,7 @@ router.beforeEach(async (to) => {
       STOCKS_VIEW: 'stocks_view',
       SERVICES_VIEW: 'services_view',
       WORK_HOURS_VIEW: 'work_hours_view',
+      ORDERS_VIEW: 'orders_view',
     };
 
     const requiredRoleKeyValue = roleKeyMap[requiredRoleKey] || requiredRoleKey.toLowerCase();

@@ -10,7 +10,7 @@ import { useDisplayStore } from '@/stores/display.ts';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { useStocksStore } from '@/stores/stocks';
 import type { DataTableHeaders } from '@/types/data-table-headers';
-import { formatCurrency } from '@/utils/formatting';
+import { formatToLocale } from '@/utils/formatting';
 
 import ExportAsExcel from '../ExportAsExcel.vue';
 
@@ -94,7 +94,7 @@ useColumnVisibility('stocks', dataTableHeaders);
       </v-toolbar>
     </template>
     <template #[`item.fiili_stok`]="{ item }">
-      {{ formatCurrency(item.fiili_stok) }}
+      {{ formatToLocale(item.fiili_stok) }}
     </template>
   </v-data-table>
 </template>

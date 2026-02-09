@@ -15,7 +15,7 @@ import { computed } from 'vue';
 import { Bar } from 'vue-chartjs';
 import { useTheme } from 'vuetify';
 
-import { formatCurrency } from '@/utils/formatting';
+import { formatToLocale } from '@/utils/formatting';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend, Title);
 
@@ -93,7 +93,7 @@ const chartOptions = computed(() => {
           label: (tooltipItem: TooltipItem<'bar'>) => {
             const value =
               indexAxis === 'x' ? (tooltipItem.parsed.y ?? 0) : (tooltipItem.parsed.x ?? 0);
-            const formattedValue = formatCurrency(value);
+            const formattedValue = formatToLocale(value);
             return `${tooltipItem.label}: ${formattedValue} ${props.currency ?? ''}`;
           },
         },
@@ -108,7 +108,7 @@ const chartOptions = computed(() => {
             ? {
                 callback: (value: string | number) => {
                   if (typeof value === 'number') {
-                    return formatCurrency(value);
+                    return formatToLocale(value);
                   }
                   return value;
                 },
@@ -128,7 +128,7 @@ const chartOptions = computed(() => {
             : {
                 callback: (value: string | number) => {
                   if (typeof value === 'number') {
-                    return formatCurrency(value);
+                    return formatToLocale(value);
                   }
                   return value;
                 },

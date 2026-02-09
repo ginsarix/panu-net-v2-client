@@ -27,6 +27,7 @@ export const usePageRoleAccess = () => {
     STOCKS_VIEW: 'stocks_view',
     SERVICES_VIEW: 'services_view',
     WORK_HOURS_VIEW: 'work_hours_view',
+    ORDERS_VIEW: 'orders_view',
   } as const;
 
   const hasPageRole = (roleKey: keyof typeof roleKeyMap): boolean => {
@@ -69,6 +70,7 @@ export const usePageRoleAccess = () => {
       '/contracts': 'CONTRACT_VIEW',
       '/stocks': 'STOCKS_VIEW',
       '/stocks/service-list': 'SERVICES_VIEW',
+      '/orders': 'ORDERS_VIEW',
     };
 
     const roleKey = pathToRoleMap[path];

@@ -10,7 +10,7 @@ import { useDebtorsStore } from '@/stores/debtors.ts';
 import { useDisplayStore } from '@/stores/display.ts';
 import { useSnackbarStore } from '@/stores/snackbar';
 import type { DataTableHeaders } from '@/types/data-table-headers.ts';
-import { formatCurrency } from '@/utils/formatting';
+import { formatToLocale } from '@/utils/formatting';
 
 import ExportAsExcel from '../ExportAsExcel.vue';
 
@@ -105,7 +105,7 @@ useColumnVisibility('debtors', dataTableHeaders);
       </v-toolbar>
     </template>
     <template #[`item.balance`]="{ item }">
-      {{ formatCurrency(item.balance) }}
+      {{ formatToLocale(item.balance) }}
     </template>
   </v-data-table>
 </template>

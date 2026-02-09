@@ -13,7 +13,7 @@ import { computed } from 'vue';
 import { Pie } from 'vue-chartjs';
 import { useTheme } from 'vuetify';
 
-import { formatCurrency } from '@/utils/formatting';
+import { formatToLocale } from '@/utils/formatting';
 
 ChartJS.register(ArcElement, Tooltip, Legend, Title);
 
@@ -116,7 +116,7 @@ const chartOptions = computed(
               const dataset = tooltipItem.dataset;
               const total = dataset.data.reduce((a: number, b: number) => a + b, 0);
               const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0';
-              const formattedValue = formatCurrency(value);
+              const formattedValue = formatToLocale(value);
               const label = dataset.label ?? props.seriesName;
               return `${label} - ${tooltipItem.label}: ${formattedValue} ${props.currency ?? ''} (${percentage}%)`;
             },

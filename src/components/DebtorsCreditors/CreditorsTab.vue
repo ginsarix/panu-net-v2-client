@@ -9,7 +9,7 @@ import { useCreditorsStore } from '@/stores/creditors.ts';
 import { useDisplayStore } from '@/stores/display';
 import { useSnackbarStore } from '@/stores/snackbar';
 import type { DataTableHeaders } from '@/types/data-table-headers';
-import { formatCurrency } from '@/utils/formatting';
+import { formatToLocale } from '@/utils/formatting';
 
 import ExportAsExcel from '../ExportAsExcel.vue';
 import GixTogglerMenu from '../GixTogglerMenu.vue';
@@ -100,7 +100,7 @@ useColumnVisibility('creditors', dataTableHeaders);
       </v-toolbar>
     </template>
     <template #[`item.balance`]="{ item }">
-      {{ formatCurrency(item.balance) }}
+      {{ formatToLocale(item.balance) }}
     </template>
   </v-data-table>
 </template>

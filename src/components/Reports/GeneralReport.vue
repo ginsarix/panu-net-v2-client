@@ -14,7 +14,7 @@ import { useDisplayStore } from '@/stores/display';
 import type { DataTableHeaders } from '@/types/data-table-headers';
 import { uniqueBy } from '@/utils/array';
 import { buildGroupedSumChartData } from '@/utils/chart';
-import { formatCurrency } from '@/utils/formatting';
+import { formatToLocale } from '@/utils/formatting';
 
 import GixTogglerMenu from '../GixTogglerMenu.vue';
 
@@ -774,7 +774,7 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
           <GixChart
             seriesName="Toplam Tutar"
             :seriesData="waybillChartData.seriesData"
-            :data-formatter="formatCurrency"
+            :data-formatter="formatToLocale"
             currency="TL"
             height="55vh"
           />
@@ -795,14 +795,14 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
         >
           <template #[`item.tutari`]="{ item: { fisno } }">
             {{
-              formatCurrency(
+              formatToLocale(
                 waybillItemsByFisno.get(fisno)?.reduce((sum, w) => sum + Number(w.tutari), 0) ?? 0,
               )
             }}
           </template>
           <template #[`item.kdvtutari`]="{ item: { fisno } }">
             {{
-              formatCurrency(
+              formatToLocale(
                 waybillItemsByFisno.get(fisno)?.reduce((sum, w) => sum + Number(w.kdvtutari), 0) ??
                   0,
               )
@@ -810,7 +810,7 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
           </template>
           <template #[`item.indirimtutari`]="{ item: { fisno } }">
             {{
-              formatCurrency(
+              formatToLocale(
                 waybillItemsByFisno
                   .get(fisno)
                   ?.reduce((sum, w) => sum + Number(w.indirimtutari), 0) ?? 0,
@@ -819,7 +819,7 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
           </template>
           <template #[`item.toplamtutar`]="{ item: { fisno } }">
             {{
-              formatCurrency(
+              formatToLocale(
                 waybillItemsByFisno
                   .get(fisno)
                   ?.reduce((sum, w) => sum + Number(w.toplamtutar), 0) ?? 0,
@@ -857,16 +857,16 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
                       {{ Number(item.miktar).toFixed(2) }}
                     </template>
                     <template #[`item.tutari`]="{ item }">
-                      {{ formatCurrency(item.tutari) }}
+                      {{ formatToLocale(item.tutari) }}
                     </template>
                     <template #[`item.kdvtutari`]="{ item }">
-                      {{ formatCurrency(item.kdvtutari) }}
+                      {{ formatToLocale(item.kdvtutari) }}
                     </template>
                     <template #[`item.indirimtutari`]="{ item }">
-                      {{ formatCurrency(item.indirimtutari) }}
+                      {{ formatToLocale(item.indirimtutari) }}
                     </template>
                     <template #[`item.toplamtutar`]="{ item }">
-                      {{ formatCurrency(item.toplamtutar) }}
+                      {{ formatToLocale(item.toplamtutar) }}
                     </template>
                   </v-data-table>
                 </v-sheet>
@@ -932,7 +932,7 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
           <GixChart
             seriesName="Toplam Tutar"
             :seriesData="invoiceChartData.seriesData"
-            :data-formatter="formatCurrency"
+            :data-formatter="formatToLocale"
             currency="TL"
             height="55vh"
           />
@@ -952,7 +952,7 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
         >
           <template #[`item.tutari`]="{ item: { fisno } }">
             {{
-              formatCurrency(
+              formatToLocale(
                 invoiceItemsByFisno
                   .get(fisno)
                   ?.reduce((sum, i) => sum + Number(i.kdvharictutar), 0) ?? 0,
@@ -961,7 +961,7 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
           </template>
           <template #[`item.kdvtutari`]="{ item: { fisno } }">
             {{
-              formatCurrency(
+              formatToLocale(
                 invoiceItemsByFisno.get(fisno)?.reduce((sum, i) => sum + Number(i.kdvtutari), 0) ??
                   0,
               )
@@ -969,7 +969,7 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
           </template>
           <template #[`item.indirimtutari`]="{ item: { fisno } }">
             {{
-              formatCurrency(
+              formatToLocale(
                 invoiceItemsByFisno
                   .get(fisno)
                   ?.reduce((sum, i) => sum + Number(i.indirimtutari), 0) ?? 0,
@@ -978,7 +978,7 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
           </template>
           <template #[`item.toplamtutar`]="{ item: { fisno } }">
             {{
-              formatCurrency(
+              formatToLocale(
                 invoiceItemsByFisno
                   .get(fisno)
                   ?.reduce((sum, i) => sum + Number(i.toplamtutar), 0) ?? 0,
@@ -1015,16 +1015,16 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
                       {{ Number(item.miktar).toFixed(2) }}
                     </template>
                     <template #[`item.kdvharictutar`]="{ item }">
-                      {{ formatCurrency(item.kdvharictutar) }}
+                      {{ formatToLocale(item.kdvharictutar) }}
                     </template>
                     <template #[`item.kdvtutari`]="{ item }">
-                      {{ formatCurrency(item.kdvtutari) }}
+                      {{ formatToLocale(item.kdvtutari) }}
                     </template>
                     <template #[`item.indirimtutari`]="{ item }">
-                      {{ formatCurrency(item.indirimtutari) }}
+                      {{ formatToLocale(item.indirimtutari) }}
                     </template>
                     <template #[`item.toplamtutar`]="{ item }">
-                      {{ formatCurrency(item.toplamtutar) }}
+                      {{ formatToLocale(item.toplamtutar) }}
                     </template>
                   </v-data-table>
                 </v-sheet>
@@ -1091,7 +1091,7 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
                 title="Alacak"
                 seriesName="Alacak"
                 :seriesData="bankReceiptsChartData.credit.seriesData"
-                :data-formatter="formatCurrency"
+                :data-formatter="formatToLocale"
                 currency="TL"
                 height="55vh"
                 :width="mobile.value ? '100%' : '50%'"
@@ -1100,7 +1100,7 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
                 title="Borç"
                 seriesName="Borç"
                 :seriesData="bankReceiptsChartData.debt.seriesData"
-                :data-formatter="formatCurrency"
+                :data-formatter="formatToLocale"
                 currency="TL"
                 height="55vh"
                 :width="mobile.value ? '100%' : '50%'"
@@ -1119,10 +1119,10 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
           hover
         >
           <template #[`item.alacak`]="{ item }">
-            {{ formatCurrency(item.alacak) }}
+            {{ formatToLocale(item.alacak) }}
           </template>
           <template #[`item.borc`]="{ item }">
-            {{ formatCurrency(item.borc) }}
+            {{ formatToLocale(item.borc) }}
           </template>
         </v-data-table>
       </v-card>
@@ -1173,7 +1173,7 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
           hover
         >
           <template #[`item.toplamtutar`]="{ item }">
-            {{ formatCurrency(item.toplamtutar) }}
+            {{ formatToLocale(item.toplamtutar) }}
           </template>
         </v-data-table>
       </v-card>
@@ -1233,7 +1233,7 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
             :legendData="materialReceiptsChartData.legendData"
             seriesName="Toplam Tutar"
             :seriesData="materialReceiptsChartData.seriesData"
-            :data-formatter="formatCurrency"
+            :data-formatter="formatToLocale"
             currency="TL"
             height="55vh"
           />
@@ -1253,7 +1253,7 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
         >
           <template #[`item.toplam`]="{ item: { fisno } }">
             {{
-              formatCurrency(
+              formatToLocale(
                 materialReceiptItemsByFisno
                   .get(fisno)
                   ?.reduce((sum, m) => sum + Number(m.toplam), 0) ?? 0,
@@ -1291,7 +1291,7 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
                       {{ Number(item.miktar).toFixed(2) }}
                     </template>
                     <template #[`item.toplam`]="{ item }">
-                      {{ formatCurrency(item.toplam) }}
+                      {{ formatToLocale(item.toplam) }}
                     </template>
                   </v-data-table>
                 </v-sheet>
@@ -1340,7 +1340,7 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
           hover
         >
           <template #[`item.tutar`]="{ item }">
-            {{ formatCurrency(item.tutar) }}
+            {{ formatToLocale(item.tutar) }}
           </template>
           <template #[`item.vade`]="{ item }">
             {{ format(item.vade, 'dd.MM.yyyy') }}
@@ -1403,7 +1403,7 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
             :legendData="cashAccountChartData.legendData"
             seriesName="Bakiye"
             :seriesData="cashAccountChartData.seriesData"
-            :data-formatter="formatCurrency"
+            :data-formatter="formatToLocale"
             currency="TL"
             height="50vh"
           />
@@ -1422,13 +1422,13 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
           hover
         >
           <template #[`item.bakiye`]="{ item }">
-            {{ formatCurrency(item.bakiye) }}
+            {{ formatToLocale(item.bakiye) }}
           </template>
           <template #[`item.borc`]="{ item }">
-            {{ formatCurrency(item.borc) }}
+            {{ formatToLocale(item.borc) }}
           </template>
           <template #[`item.alacak`]="{ item }">
-            {{ formatCurrency(item.alacak) }}
+            {{ formatToLocale(item.alacak) }}
           </template>
 
           <template #[`item.data-table-expand`]="{ internalItem, isExpanded, toggleExpand }">
@@ -1500,7 +1500,7 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
                             :bar-series-data="
                               getCashAccountMovementsChartData(item._key).barSeriesData
                             "
-                            :data-formatter="formatCurrency"
+                            :data-formatter="formatToLocale"
                             currency="TL"
                             :index-axis="xs.value ? 'x' : 'y'"
                           />
@@ -1508,13 +1508,13 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
                       </v-card>
                     </template>
                     <template #[`item.alacak`]="{ item }">
-                      {{ formatCurrency(item.alacak) }}
+                      {{ formatToLocale(item.alacak) }}
                     </template>
                     <template #[`item.borc`]="{ item }">
-                      {{ formatCurrency(item.borc) }}
+                      {{ formatToLocale(item.borc) }}
                     </template>
                     <template #[`item.bakiye`]="{ item }">
-                      {{ formatCurrency(item.bakiye) }}
+                      {{ formatToLocale(item.bakiye) }}
                     </template>
                   </v-data-table>
                 </v-sheet>
@@ -1555,7 +1555,7 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
               </div>
               <div class="text-left text-sm-right w-100 w-sm-auto">
                 <div class="text-h6 text-sm-h5 text-md-h4 font-weight-bold text-success">
-                  {{ formatCurrency(generalReport.accountCardsCreditorSum) }} TL
+                  {{ formatToLocale(generalReport.accountCardsCreditorSum) }} TL
                 </div>
                 <div class="text-caption text-medium-emphasis">Alacak bakiyesi</div>
               </div>
@@ -1571,7 +1571,7 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
               </div>
               <div class="text-left text-sm-right w-100 w-sm-auto">
                 <div class="text-h6 text-sm-h5 text-md-h4 font-weight-bold text-error">
-                  {{ formatCurrency(generalReport.accountCardsDebtorSum) }} TL
+                  {{ formatToLocale(generalReport.accountCardsDebtorSum) }} TL
                 </div>
                 <div class="text-caption text-medium-emphasis">Borç bakiyesi</div>
               </div>
@@ -1611,7 +1611,7 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
               </div>
               <div class="text-left text-sm-right w-100 w-sm-auto">
                 <div class="text-h6 text-sm-h5 text-md-h4 font-weight-bold text-warning">
-                  {{ formatCurrency(generalReport.purchasedServicesInvoicesSum) }} TL
+                  {{ formatToLocale(generalReport.purchasedServicesInvoicesSum) }} TL
                 </div>
                 <div class="text-caption text-medium-emphasis">Toplam hizmet tutarı</div>
               </div>
