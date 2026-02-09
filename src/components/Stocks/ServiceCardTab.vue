@@ -93,8 +93,6 @@ useColumnVisibility('services', dataTableHeaders);
         />
       </v-toolbar>
     </template>
-    <template #[`item.miktar`]="{ item }">
-      {{ formatCurrency(item.miktar) }}
-    </template>
+    <template #[`item.miktar`]="{ item }"> {{ formatCurrency(item.miktar) }} </template>
   </v-data-table>
 </template>

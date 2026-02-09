@@ -103,6 +103,11 @@ watch(
 
     <v-list @click:open="$emit('update:rail', mobile)">
       <!-- if mobile, close the drawer on navigation otherwise open it -->
+      <!-- FIX: expanding the list groups closes the drawer on mobile
+
+      ... there is no way of knowing if the user clicked on a list group or a list item in the event,
+      seems like it might need to be handled by putting seperate events for all list groups and list items.
+      -->
       <v-list-group
         v-if="hasPageRole('STOCKS_VIEW') || hasPageRole('SERVICES_VIEW')"
         value="Stocks"
@@ -208,6 +213,14 @@ watch(
         />
       </v-list-group>
 
+      <v-list-item
+        v-if="hasPageRole('WORK_HOURS_VIEW')"
+        rounded="xl"
+        prepend-icon="mdi-account-clock"
+        title="Mesai Saatleri"
+        to="/work-hours"
+      ></v-list-item>
+
       <v-list-group v-if="isAdmin" value="Management">
         <template #activator="{ props }">
           <v-list-item
@@ -276,6 +289,7 @@ watch(
         rounded="xl"
         prepend-icon="mdi-credit-card-outline"
         title="Ödeme"
+        :style="{ ...(!currentDefinition?.paymentLink && { cursor: 'wait' }) }"
         :href="currentDefinition?.paymentLink || ''"
         target="_blank"
       />

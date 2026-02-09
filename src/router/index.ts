@@ -21,8 +21,9 @@ const DebtorsCreditorsView = () => import('@/views/DebtorsCreditorsView.vue');
 const LoginView = () => import('@/views/LoginView.vue');
 const ManagementView = () => import('@/views/ManagementView.vue');
 const TaskTrackingView = () => import('@/views/TaskTrackingView.vue');
-const HomeView = () => import('../views/HomeView.vue');
+const HomeView = () => import('@/views/HomeView.vue');
 const ReportsView = () => import('@/views/ReportsView.vue');
+const WorkHoursTab = () => import('@/components/WorkHoursTab.vue');
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -126,6 +127,11 @@ const router = createRouter({
       component: ContractsView,
       meta: { requiredPageRole: 'CONTRACT_VIEW' },
     },
+    {
+      path: '/work-hours',
+      component: WorkHoursTab,
+      meta: { requiredPageRole: 'WORK_HOURS_VIEW' },
+    },
   ],
 });
 
@@ -166,6 +172,12 @@ router.beforeEach(async (to) => {
       SUBSCRIPTION_VIEW: 'subscription_view',
       CUSTOMER_VIEW: 'customer_view',
       REPORT_VIEW: 'report_view',
+      RECEIVED_ORDER_VIEW: 'received_order_view',
+      DISPATCHED_ORDER_VIEW: 'dispatched_order_view',
+      CONTRACT_VIEW: 'contract_view',
+      STOCKS_VIEW: 'stocks_view',
+      SERVICES_VIEW: 'services_view',
+      WORK_HOURS_VIEW: 'work_hours_view',
     };
 
     const requiredRoleKeyValue = roleKeyMap[requiredRoleKey] || requiredRoleKey.toLowerCase();

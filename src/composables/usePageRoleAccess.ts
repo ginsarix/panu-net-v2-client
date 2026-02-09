@@ -21,9 +21,12 @@ export const usePageRoleAccess = () => {
     SUBSCRIPTION_VIEW: 'subscription_view',
     CUSTOMER_VIEW: 'customer_view',
     REPORT_VIEW: 'report_view',
+    RECEIVED_ORDER_VIEW: 'received_order_view',
+    DISPATCHED_ORDER_VIEW: 'dispatched_order_view',
     CONTRACT_VIEW: 'contract_view',
     STOCKS_VIEW: 'stocks_view',
     SERVICES_VIEW: 'services_view',
+    WORK_HOURS_VIEW: 'work_hours_view',
   } as const;
 
   const hasPageRole = (roleKey: keyof typeof roleKeyMap): boolean => {

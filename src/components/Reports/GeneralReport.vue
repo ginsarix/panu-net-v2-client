@@ -13,6 +13,7 @@ import { getCashAccountMovements, getGeneralReport } from '@/services/api/report
 import { useDisplayStore } from '@/stores/display';
 import type { DataTableHeaders } from '@/types/data-table-headers';
 import { uniqueBy } from '@/utils/array';
+import { buildGroupedSumChartData } from '@/utils/chart';
 import { formatCurrency } from '@/utils/formatting';
 
 import GixTogglerMenu from '../GixTogglerMenu.vue';
@@ -294,36 +295,6 @@ const waybillItemsDataTableHeaders = ref<DataTableHeaders[]>([
   { title: 'İndirim', key: 'indirimtutari', toggled: true, sortable: true },
   { title: 'Genel Tutar', key: 'toplamtutar', toggled: true, sortable: true },
 ]);
-
-// group items by a label and sum a numeric value
-function buildGroupedSumChartData<T>(
-  collection: { result: T[] } | T[] | undefined,
-  getGroup: (item: T) => string | undefined,
-  getValue: (item: T) => number | string | undefined,
-  options?: { unknownLabel?: string },
-) {
-  const items = Array.isArray(collection) ? collection : (collection?.result ?? []);
-
-  const unknownLabel = options?.unknownLabel ?? 'Diğer';
-  const totalsByGroup = items.reduce(
-    (acc, item) => {
-      const rawGroup = getGroup(item);
-      const group = rawGroup && String(rawGroup).trim() ? String(rawGroup) : unknownLabel;
-      const value = Number(getValue(item)) || 0;
-
-      if (value === 0) return acc;
-
-      acc[group] = (acc[group] ?? 0) + value;
-      return acc;
-    },
-    {} as Record<string, number>,
-  );
-
-  const legendData = Object.keys(totalsByGroup);
-  const seriesData = legendData.map((name) => ({ name, value: totalsByGroup[name] }));
-
-  return { legendData, seriesData };
-}
 
 const waybillChartData = computed(() => {
   if (!filteredWaybillsRaw.value.length) {
