@@ -3,10 +3,10 @@ import { ref } from 'vue';
 
 import { getWorkHours } from '@/services/api/work-hours';
 
-type WorkHoursType = Awaited<ReturnType<typeof getWorkHours>>['employeeTallies']['result'];
+type WorkHours = Awaited<ReturnType<typeof getWorkHours>>['employeeTallies']['result'];
 
 export const useWorkHoursStore = defineStore('workHours', () => {
-  const workHours = ref<WorkHoursType>([]);
+  const workHours = ref<WorkHours>([]);
 
   const loadWorkHours = async () => {
     const response = await getWorkHours();

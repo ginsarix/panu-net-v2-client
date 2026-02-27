@@ -3,12 +3,12 @@ import { ref } from 'vue';
 
 import { getServices, getStocks } from '@/services/api/stocks';
 
-type StockType = Awaited<ReturnType<typeof getStocks>>['payload']['result'];
-type ServiceType = Awaited<ReturnType<typeof getServices>>['payload']['result'];
+type Stock = Awaited<ReturnType<typeof getStocks>>['payload']['result'];
+type Service = Awaited<ReturnType<typeof getServices>>['payload']['result'];
 
 export const useStocksStore = defineStore('stocks', () => {
-  const stocks = ref<StockType>([]);
-  const services = ref<ServiceType>([]);
+  const stocks = ref<Stock>([]);
+  const services = ref<Service>([]);
 
   const loadStocks = async () => {
     const response = await getStocks();

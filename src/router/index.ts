@@ -25,6 +25,7 @@ const HomeView = () => import('@/views/HomeView.vue');
 const ReportsView = () => import('@/views/ReportsView.vue');
 const WorkHoursTab = () => import('@/components/WorkHoursTab.vue');
 const OrdersTab = () => import('@/components/OrdersTab.vue');
+const WaybillsTab = () => import('@/components/WaybillsTab.vue');
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -138,6 +139,11 @@ const router = createRouter({
       component: OrdersTab,
       meta: { requiredPageRole: 'ORDERS_VIEW' },
     },
+    {
+      path: '/waybills',
+      component: WaybillsTab,
+      meta: { requiredPageRole: 'WAYBILLS_VIEW' },
+    },
   ],
 });
 
@@ -185,6 +191,7 @@ router.beforeEach(async (to) => {
       SERVICES_VIEW: 'services_view',
       WORK_HOURS_VIEW: 'work_hours_view',
       ORDERS_VIEW: 'orders_view',
+      WAYBILL_VIEW: 'waybill_view',
     };
 
     const requiredRoleKeyValue = roleKeyMap[requiredRoleKey] || requiredRoleKey.toLowerCase();

@@ -127,6 +127,15 @@ watch(
         />
       </v-list-group>
 
+      <v-list-item
+        v-if="hasPageRole('WAYBILL_VIEW')"
+        rounded="xl"
+        prepend-icon="mdi-text-box-multiple"
+        title="İrsaliye"
+        to="/waybills"
+        @click="mobile ? $emit('update:rail', true) : null"
+      />
+
       <v-list-group
         v-if="hasPageRole('DEBTOR_VIEW') || hasPageRole('CREDITOR_VIEW')"
         value="DebtorCreditors"
