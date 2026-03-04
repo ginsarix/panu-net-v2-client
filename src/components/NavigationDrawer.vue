@@ -301,8 +301,16 @@ watch(
         rounded="xl"
         prepend-icon="mdi-qrcode-scan"
         title="Fiyat Gör"
-        href="https://demo.fiyatgor.panunet.com.tr/"
+        href="https://diademo.fiyatgor.panunet.com.tr/"
         target="_blank"
+        @click="mobile ? $emit('update:rail', true) : null"
+      />
+
+      <v-list-item
+        rounded="xl"
+        prepend-icon="mdi-forum"
+        title="Destek"
+        to="/support"
         @click="mobile ? $emit('update:rail', true) : null"
       />
     </v-list>

@@ -260,6 +260,7 @@ useColumnVisibility('subscriptions', dataTableHeaders);
     loading-text="Abonelikler yükleniyor..."
     no-data-text="Abonelikler bulunamadı."
     items-per-page-text="Sayfa başı abonelikler"
+    :items-per-page-options="[10, 25, 50, 100]"
   >
     <template #top>
       <v-toolbar flat rounded class="rounded-b-0">

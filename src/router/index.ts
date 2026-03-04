@@ -26,6 +26,8 @@ const ReportsView = () => import('@/views/ReportsView.vue');
 const WorkHoursTab = () => import('@/components/WorkHoursTab.vue');
 const OrdersTab = () => import('@/components/OrdersTab.vue');
 const WaybillsTab = () => import('@/components/WaybillsTab.vue');
+const SupportTab = () => import('@/components/SupportTab.vue');
+const TicketPage = () => import('@/components/TicketPage.vue');
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -143,6 +145,15 @@ const router = createRouter({
       path: '/waybills',
       component: WaybillsTab,
       meta: { requiredPageRole: 'WAYBILLS_VIEW' },
+    },
+    {
+      path: '/support',
+      component: SupportTab,
+    },
+    {
+      path: '/support/tickets/:ticketId',
+      component: TicketPage,
+      props: (route) => ({ ticketId: Number(route.params.ticketId) }),
     },
   ],
 });

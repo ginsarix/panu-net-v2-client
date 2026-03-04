@@ -181,6 +181,8 @@ const resetPasswordResetOtp = () => {
           variant="tonal"
           closable
           class="mb-5"
+          role="alert"
+          aria-live="assertive"
           @click:close="errorMessage = ''"
         >
           {{ errorMessage }}
@@ -190,6 +192,7 @@ const resetPasswordResetOtp = () => {
           <v-text-field
             v-model="email"
             variant="outlined"
+            autofocus
             prepend-inner-icon="mdi-email"
             label="E-posta"
             class="mb-3"
@@ -223,7 +226,7 @@ const resetPasswordResetOtp = () => {
               :disabled="!isFormValid && formSubmitted"
               append-icon="mdi-login"
             >
-              Devam
+              Devam Et
             </v-btn>
           </div>
         </v-form>
@@ -296,7 +299,9 @@ const resetPasswordResetOtp = () => {
                 />
               </v-col>
               <v-col cols="12" class="text-center">
-                <span class="text-h6 text-error">{{ passwordResetOtpErrorMessage }}</span>
+                <span role="alert" aria-live="assertive" class="text-h6 text-error">{{
+                  passwordResetOtpErrorMessage
+                }}</span>
               </v-col>
             </v-row>
             <p class="text-medium-emphasis">

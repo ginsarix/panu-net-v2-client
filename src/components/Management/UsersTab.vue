@@ -332,6 +332,7 @@ useColumnVisibility('users', dataTableHeaders);
     no-data-text="Kullanıcılar bulunamadı."
     items-per-page-text="Sayfa başı kullanıcılar"
     show-select
+    :items-per-page-options="[10, 25, 50, 100]"
   >
     <template #top>
       <v-toolbar flat rounded class="rounded-b-0">
