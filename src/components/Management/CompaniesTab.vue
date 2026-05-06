@@ -525,7 +525,7 @@ useColumnVisibility('companies', dataTableHeaders);
               <!-- Step 2: Lisans & Durum -->
               <template #[`item.2`]>
                 <v-date-input
-                  :display-format="(date: Date) => format(date, 'dd.MM.yyyy')"
+                  :display-format="(date) => format(date as string | number | Date, 'dd.MM.yyyy')"
                   label="Lisans tarihi"
                   placeholder="gg.aa.yyyy"
                   variant="outlined"
