@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 
 import { setSelectedPeriod } from '@/services/api/companies';
 import { useAsyncGateStore } from '@/stores/async-gate';
@@ -12,14 +12,16 @@ const asyncGateStore = useAsyncGateStore();
 const companiesStore = useCompaniesStore();
 const { periods, periodsLoading, selectedPeriodCode } = storeToRefs(companiesStore);
 
-const isInitialLoad = ref(true);
 const tempSelectedPeriodCode = ref<number>();
 
 onMounted(async () => {
   await companiesStore.loadSelectedPeriodCode();
   tempSelectedPeriodCode.value =
     selectedPeriodCode.value === 0 ? undefined : selectedPeriodCode.value;
-  isInitialLoad.value = false;
+});
+
+watch(selectedPeriodCode, (newValue) => {
+  tempSelectedPeriodCode.value = newValue === 0 ? undefined : newValue;
 });
 
 const periodSelectorText = computed(() =>
