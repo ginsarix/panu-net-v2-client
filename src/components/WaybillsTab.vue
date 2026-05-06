@@ -1,19 +1,23 @@
 <script setup lang="ts">
 import { TRPCClientError } from '@trpc/client';
 import { storeToRefs } from 'pinia';
-import { computed, defineAsyncComponent, ref } from 'vue';
+import { computed, defineAsyncComponent, ref, watch } from 'vue';
 
 import GixTogglerMenu from '@/components/GixTogglerMenu.vue';
+import GixUserSelector from '@/components/GixUserSelector.vue';
 import { useColumnFilters } from '@/composables/useColumnFilters';
 import { useColumnVisibility } from '@/composables/useColumnVisibility';
 import { useCompanyPeriodWatcher } from '@/composables/useCompanyPeriodWatcher';
+import { getUsersInSelectedCompany } from '@/services/api/companies';
+import { forwardWaybillsToUsers } from '@/services/api/waybills';
+import { useCompaniesStore } from '@/stores/companies';
 import { useDisplayStore } from '@/stores/display.ts';
 import { useSnackbarStore } from '@/stores/snackbar';
 import { type Waybills, useWaybillsStore } from '@/stores/waybills';
 import type { DataTableHeaders } from '@/types/data-table-headers';
 import { uniqueBy } from '@/utils/array';
 import { buildGroupedSumChartData } from '@/utils/chart';
-import { formatToLocale } from '@/utils/formatting';
+import { formatDateTime, formatToLocale } from '@/utils/formatting';
 
 import ExportAsExcel from './ExportAsExcel.vue';
 
@@ -154,6 +158,76 @@ const waybillChartData = computed(() => {
 
 useColumnFilters('waybills-standalone', filtersTogglerItems);
 useColumnVisibility('waybills-standalone', dataTableHeaders);
+
+const forwardingDialog = ref(false);
+
+const usersInSelectedCompany =
+  ref<Awaited<ReturnType<typeof getUsersInSelectedCompany>>['users']>();
+
+const companiesStore = useCompaniesStore();
+const { selectedCompanyId } = storeToRefs(companiesStore);
+
+watch(selectedCompanyId, () => {
+  usersInSelectedCompany.value = [];
+});
+
+const updateUsersInSelectedCompany = async () => {
+  try {
+    const response = await getUsersInSelectedCompany();
+    usersInSelectedCompany.value = response.users;
+  } catch (err) {
+    console.error('Failed to update users in selected company:', err);
+  }
+};
+
+const openForwardingDialog = () => {
+  if (!usersInSelectedCompany.value?.length) updateUsersInSelectedCompany();
+  forwardingDialog.value = true;
+};
+
+type ForwardingFaturaFilter = 'F' | '-' | null;
+
+const forwardingFaturaFilter = ref<ForwardingFaturaFilter>(null);
+
+const forwardingFaturaOptions = ref<{ title: string; value: ForwardingFaturaFilter }[]>([
+  { title: 'Hepsi', value: null },
+  { title: 'Faturalandırılan', value: 'F' },
+  { title: 'Faturalandırılmayan', value: '-' },
+]);
+
+const forwardingFilteredWaybills = computed(() =>
+  uniqueWaybills.value.filter(
+    (w) => forwardingFaturaFilter.value === null || w.__fatura === forwardingFaturaFilter.value,
+  ),
+);
+
+const selectedWaybillFisNosToForward = ref<string[]>([]);
+
+const selectedUsersToForward = ref<number[]>([]);
+
+const forwarding = ref(false);
+
+const forwardWaybills = async () => {
+  const waybillItems = selectedWaybillFisNosToForward.value.flatMap(
+    (fisno) => itemsByFisno.value.get(fisno) ?? [],
+  );
+
+  forwarding.value = true;
+  try {
+    await forwardWaybillsToUsers({ waybills: waybillItems, userIds: selectedUsersToForward.value });
+    forwardingDialog.value = false;
+    snackbarText.value = 'İrsaliyeler başarıyla iletildi.';
+    snackbar.value = true;
+  } catch (error) {
+    if (error instanceof TRPCClientError) {
+      snackbarError.value = true;
+      snackbarText.value = error.message;
+      snackbar.value = true;
+    }
+  } finally {
+    forwarding.value = false;
+  }
+};
 </script>
 
 <template>
@@ -217,6 +291,14 @@ useColumnVisibility('waybills-standalone', dataTableHeaders);
           border
           @click="showWaybillChart = !showWaybillChart"
         />
+
+        <v-btn
+          @click="openForwardingDialog"
+          prepend-icon="mdi-share"
+          rounded="lg"
+          class="border me-3"
+          >Personellere İlet</v-btn
+        >
 
         <ExportAsExcel
           class="me-5"
@@ -315,6 +397,112 @@ useColumnVisibility('waybills-standalone', dataTableHeaders);
       </tr>
     </template>
   </v-data-table>
+
+  <v-dialog v-model="forwardingDialog" max-width="1000">
+    <v-card
+      rounded="lg"
+      title="Personellere İrsaliye İlet"
+      subtitle="Firmanızdaki personellere e-posta aracılığıyla irsaliye seçip iletin"
+      tag="form"
+      @submit.prevent="forwardWaybills"
+    >
+      <v-card-text>
+        <v-stepper
+          :items="['İrsaliye Seçimi', 'Personel Seçimi']"
+          editable
+          :mobile="mobile.value"
+          rounded="lg"
+          prev-text="Önceki"
+          next-text="Sonraki"
+        >
+          <template #[`item.1`]>
+            <v-select
+              label="Fatura Filtresi"
+              v-model="forwardingFaturaFilter"
+              variant="outlined"
+              :items="forwardingFaturaOptions"
+              rounded="lg"
+              class="mt-1"
+            />
+
+            <v-data-table
+              no-data-text="İrsaliye bulunamadı."
+              loading-text="İrsaliyeler yükleniyor..."
+              items-per-page-text="Sayfa başı irsaliye"
+              class="border rounded-lg"
+              v-model="selectedWaybillFisNosToForward"
+              item-value="fisno"
+              show-select
+              hover
+              select-strategy="all"
+              :items="forwardingFilteredWaybills"
+              :headers="dataTableHeaders"
+            >
+              <template #[`item.tutari`]="{ item: { fisno } }">
+                {{
+                  formatToLocale(
+                    itemsByFisno.get(fisno)?.reduce((sum, w) => sum + Number(w.tutari), 0) ?? 0,
+                  )
+                }}
+              </template>
+              <template #[`item.kdvtutari`]="{ item: { fisno } }">
+                {{
+                  formatToLocale(
+                    itemsByFisno.get(fisno)?.reduce((sum, w) => sum + Number(w.kdvtutari), 0) ?? 0,
+                  )
+                }}
+              </template>
+              <template #[`item.indirimtutari`]="{ item: { fisno } }">
+                {{
+                  formatToLocale(
+                    itemsByFisno
+                      .get(fisno)
+                      ?.reduce((sum, w) => sum + Number(w.indirimtutari), 0) ?? 0,
+                  )
+                }}
+              </template>
+              <template #[`item.toplamtutar`]="{ item: { fisno } }">
+                {{
+                  formatToLocale(
+                    itemsByFisno
+                      .get(fisno)
+                      ?.reduce((sum, w) => sum + Number(w.toplamtutar), 0) ?? 0,
+                  )
+                }}
+              </template>
+              <template #[`item.__fatura`]="{ item: { __fatura } }">
+                <v-chip :color="__fatura === 'F' ? 'primary' : 'error'">{{
+                  __fatura === 'F' ? 'Evet' : 'Hayır'
+                }}</v-chip>
+              </template>
+              <template #[`item._cdate`]="{ item: { _cdate } }">
+                {{ formatDateTime(_cdate) }}
+              </template>
+            </v-data-table>
+          </template>
+
+          <template #[`item.2`]>
+            <GixUserSelector
+              :users="usersInSelectedCompany"
+              v-model="selectedUsersToForward"
+              empty-text="Personel bulunamadı."
+            />
+          </template>
+        </v-stepper>
+      </v-card-text>
+      <v-card-actions>
+        <v-btn rounded="lg" @click="forwardingDialog = false">İptal</v-btn>
+        <v-btn
+          type="submit"
+          color="primary"
+          rounded="lg"
+          :loading="forwarding"
+          :disabled="!selectedWaybillFisNosToForward.length || !selectedUsersToForward.length"
+          >İlet</v-btn
+        >
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <style>
