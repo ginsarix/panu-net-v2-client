@@ -71,16 +71,11 @@ export const useCompaniesStore = defineStore('companies', () => {
     // Connect SSE for new company
     connectCreditCountSSE();
 
-    const instance = getSelectedCompanyInstance();
-    const companyCode = instance?.code;
-
-    if (companyCode === undefined) return;
-
     periods.value = [];
 
     periodsLoading.value = true;
     try {
-      periods.value = (await getPeriods(companyCode)).map((p) => ({
+      periods.value = (await getPeriods()).map((p) => ({
         code: p.donemkodu,
         startDate: p.baslangic,
         endDate: p.bitis,

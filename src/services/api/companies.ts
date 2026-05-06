@@ -33,4 +33,4 @@ export const setSelectedPeriod = (periodCode: number) =>
 
 export const getSelectedPeriod = () => trpc.company.getSelectedPeriod.query();
 
-export const getPeriods = (companyCode: number) => trpc.company.getPeriods.query({ companyCode });
+export const getPeriods = () => trpc.company.getPeriods.query();
