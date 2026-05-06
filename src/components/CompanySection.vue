@@ -58,7 +58,7 @@ onMounted(async () => {
 
   // if no company is selected and there is only one company, select it automatically
   if (selectedCompanyId.value === null && companies.value.length === 1) {
-    const companyId = companies.value[0].id;
+    const companyId = companies.value[0]?.id;
     if (companyId) {
       selectedCompanyId.value = companyId;
       await setSelectedCompany(companyId);
@@ -121,6 +121,12 @@ watchDebounced(
 );
 
 const ExpandTransition = computed(() => (props.mobile ? VExpandTransition : VExpandXTransition));
+
+const licenseChipColor = computed(() => {
+  const licenseDate = selectedCompanyInstance.value?.licenseDate;
+  if (!licenseDate) return 'gray';
+  return licenseDate >= new Date() ? 'white' : 'error';
+});
 </script>
 
 <template>
@@ -157,14 +163,22 @@ const ExpandTransition = computed(() => (props.mobile ? VExpandTransition : VExp
     ></v-select>
 
     <component :is="ExpandTransition" v-show="selectedCompanyIdPassthrough">
-      <span class="text-overline mx-3 text-no-wrap mt-md-3"
-        >Lisans Tarihi:
-        {{
-          selectedCompanyInstance?.licenseDate
-            ? formatDateTime(selectedCompanyInstance.licenseDate, 'dd.MM.yyyy')
-            : ''
-        }}</span
+      <v-tooltip
+        text="Lisansınız Geçerli!"
+        location="bottom"
+        :disabled="licenseChipColor !== 'white'"
       >
+        <template #activator="{ props: tooltipProps }">
+          <v-chip v-bind="tooltipProps" :color="licenseChipColor" class="mx-3 mt-md-3" size="small">
+            Lisans Tarihi:
+            {{
+              selectedCompanyInstance?.licenseDate
+                ? formatDateTime(selectedCompanyInstance.licenseDate, 'dd.MM.yyyy')
+                : ''
+            }}
+          </v-chip>
+        </template>
+      </v-tooltip>
     </component>
     <component :is="ExpandTransition" v-show="selectedCompanyIdPassthrough">
       <PeriodSelector class="me-3 mt-md-1" />
