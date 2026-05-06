@@ -181,7 +181,7 @@ const updateUsersInSelectedCompany = async () => {
 };
 
 const openForwardingDialog = () => {
-  if (!usersInSelectedCompany.value?.length) updateUsersInSelectedCompany();
+  if (!usersInSelectedCompany.value?.length) void updateUsersInSelectedCompany();
   forwardingDialog.value = true;
 };
 
@@ -212,9 +212,22 @@ const forwardWaybills = async () => {
     (fisno) => itemsByFisno.value.get(fisno) ?? [],
   );
 
+  const formattedWaybillItems = waybillItems.map((w) => ({
+    ...w,
+    tutari: formatToLocale(w.tutari),
+    kdvtutari: formatToLocale(w.kdvtutari),
+    indirimtutari: formatToLocale(w.indirimtutari),
+    toplamtutar: formatToLocale(w.toplamtutar),
+    miktar: formatToLocale(w.miktar),
+    _cdate: formatDateTime(w._cdate),
+  }));
+
   forwarding.value = true;
   try {
-    await forwardWaybillsToUsers({ waybills: waybillItems, userIds: selectedUsersToForward.value });
+    await forwardWaybillsToUsers({
+      waybills: formattedWaybillItems,
+      userIds: selectedUsersToForward.value,
+    });
     forwardingDialog.value = false;
     snackbarText.value = 'İrsaliyeler başarıyla iletildi.';
     snackbar.value = true;
@@ -455,18 +468,16 @@ const forwardWaybills = async () => {
               <template #[`item.indirimtutari`]="{ item: { fisno } }">
                 {{
                   formatToLocale(
-                    itemsByFisno
-                      .get(fisno)
-                      ?.reduce((sum, w) => sum + Number(w.indirimtutari), 0) ?? 0,
+                    itemsByFisno.get(fisno)?.reduce((sum, w) => sum + Number(w.indirimtutari), 0) ??
+                      0,
                   )
                 }}
               </template>
               <template #[`item.toplamtutar`]="{ item: { fisno } }">
                 {{
                   formatToLocale(
-                    itemsByFisno
-                      .get(fisno)
-                      ?.reduce((sum, w) => sum + Number(w.toplamtutar), 0) ?? 0,
+                    itemsByFisno.get(fisno)?.reduce((sum, w) => sum + Number(w.toplamtutar), 0) ??
+                      0,
                   )
                 }}
               </template>

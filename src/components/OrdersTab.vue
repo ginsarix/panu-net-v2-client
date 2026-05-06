@@ -144,9 +144,20 @@ const forwardOrders = async () => {
     (fisno) => itemsByFisno.value.get(fisno) ?? [],
   );
 
+  const formattedOrderItems = orderItems.map((o) => ({
+    ...o,
+    tutari: formatToLocale(o.tutari),
+    toplamtutar: formatToLocale(o.toplamtutar),
+    miktar: formatToLocale(o.miktar),
+    _cdate: formatDateTime(o._cdate),
+  }));
+
   forwarding.value = true;
   try {
-    await forwardsOrdersToUsers({ orders: orderItems, userIds: selectedUsersToForward.value });
+    await forwardsOrdersToUsers({
+      orders: formattedOrderItems,
+      userIds: selectedUsersToForward.value,
+    });
     forwardingDialog.value = false;
     snackbarText.value = 'Siparişler başarıyla iletildi.';
     snackbar.value = true;
