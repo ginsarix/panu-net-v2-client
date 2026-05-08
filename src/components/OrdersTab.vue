@@ -19,6 +19,13 @@ import { formatDateTime, formatToLocale } from '@/utils/formatting';
 import ExportAsExcel from './ExportAsExcel.vue';
 import GixUserSelector from './GixUserSelector.vue';
 
+const props = withDefaults(defineProps<{
+  storageKey?: string;
+  defaultDepo?: string;
+}>(), {
+  storageKey: 'orders',
+});
+
 const { mobile } = storeToRefs(useDisplayStore());
 
 const ordersStore = useOrdersStore();
@@ -83,7 +90,29 @@ const itemsDataTableHeaders = ref<DataTableHeaders[]>([
   { title: 'Birim', key: 'anabirimi', toggled: true, sortable: true },
 ]);
 
-useColumnVisibility('orders', dataTableHeaders);
+useColumnVisibility(props.storageKey, dataTableHeaders);
+
+const depoFilterKey = `${props.storageKey}-depo-filter`;
+const depoFilter = ref(
+  props.defaultDepo !== undefined
+    ? (localStorage.getItem(depoFilterKey) ?? props.defaultDepo)
+    : null,
+);
+
+if (props.defaultDepo !== undefined) {
+  watch(depoFilter, (val) => {
+    localStorage.setItem(depoFilterKey, val ?? '');
+  });
+}
+
+const normalize = (s: string) => s.toLowerCase().trim();
+
+const depoFilteredOrders = computed(() => {
+  if (depoFilter.value === null) return orderUniques.value;
+  const n = normalize(depoFilter.value);
+  if (!n) return orderUniques.value;
+  return orderUniques.value.filter((o) => normalize(o.depo ?? '').includes(n));
+});
 
 const forwardingDialog = ref(false);
 
@@ -107,7 +136,7 @@ const updateUsersInSelectedCompany = async () => {
 };
 
 const openForwardingDialog = async () => {
-  if (!usersInSelectedCompany.value?.length) updateUsersInSelectedCompany(); // intentionally fire-and-forget so that dialog doesnt wait for the users to load before opening
+  if (!usersInSelectedCompany.value?.length) void updateUsersInSelectedCompany(); // intentionally fire-and-forget so that dialog doesnt wait for the users to load before opening
 
   forwardingDialog.value = true;
 };
@@ -123,12 +152,12 @@ const forwardingOptions = ref<{ title: string; value: ForwardingOptionsValues }[
 const selectedForwardingOption = ref<ForwardingOptionsValues>(null);
 
 const forwardingFilteredOrders = computed(() => {
-  if (selectedForwardingOption.value === null) return orderUniques.value;
+  if (selectedForwardingOption.value === null) return depoFilteredOrders.value;
 
   const apiDispatchValues = { dispatched: 't', undispatched: 'f' } as const;
   const apiDispatchValue = apiDispatchValues[selectedForwardingOption.value];
 
-  return orderUniques.value.filter((o) => o.tamamisevkedildi === apiDispatchValue);
+  return depoFilteredOrders.value.filter((o) => o.tamamisevkedildi === apiDispatchValue);
 });
 
 const selectedOrderFisNosToForward = ref<string[]>(
@@ -175,7 +204,7 @@ const forwardOrders = async () => {
 
 <template>
   <v-data-table
-    :items="orderUniques"
+    :items="depoFilteredOrders"
     :loading
     class="rounded-lg elevation-0 border"
     no-data-text="Sipariş bulunamadı."
@@ -194,6 +223,19 @@ const forwardOrders = async () => {
           <v-icon color="medium-emphasis" icon="mdi-text" size="x-small" start />
           Siparişler
         </v-toolbar-title>
+
+        <v-text-field
+          v-if="defaultDepo !== undefined"
+          label="Depo"
+          v-model="depoFilter"
+          rounded="lg"
+          density="compact"
+          variant="outlined"
+          min-width="130px"
+          max-width="200px"
+          class="mt-5 mr-3"
+          clearable
+        />
 
         <v-btn
           @click="openForwardingDialog"

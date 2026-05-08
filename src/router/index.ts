@@ -24,6 +24,7 @@ const TaskTrackingView = () => import('@/views/TaskTrackingView.vue');
 const HomeView = () => import('@/views/HomeView.vue');
 const ReportsView = () => import('@/views/ReportsView.vue');
 const WorkHoursTab = () => import('@/components/WorkHoursTab.vue');
+const OrdersView = () => import('@/views/OrdersView.vue');
 const OrdersTab = () => import('@/components/OrdersTab.vue');
 const WaybillsTab = () => import('@/components/WaybillsTab.vue');
 const SupportTab = () => import('@/components/SupportTab.vue');
@@ -138,8 +139,27 @@ const router = createRouter({
     },
     {
       path: '/orders',
-      component: OrdersTab,
-      meta: { requiredPageRole: 'ORDERS_VIEW' },
+      component: OrdersView,
+      children: [
+        {
+          path: '',
+          component: OrdersTab,
+          props: { storageKey: 'orders', defaultDepo: '' },
+          meta: { requiredPageRole: 'ORDERS_VIEW' },
+        },
+        {
+          path: 'b2b',
+          component: OrdersTab,
+          props: { storageKey: 'orders-b2b', defaultDepo: 'b2b' },
+          meta: { requiredPageRole: 'ORDERS_VIEW' },
+        },
+        {
+          path: 'b2c',
+          component: OrdersTab,
+          props: { storageKey: 'orders-b2c', defaultDepo: 'b2c' },
+          meta: { requiredPageRole: 'ORDERS_VIEW' },
+        },
+      ],
     },
     {
       path: '/waybills',

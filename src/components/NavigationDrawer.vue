@@ -166,14 +166,38 @@ watch(
         />
       </v-list-group>
 
-      <v-list-item
-        v-if="hasPageRole('ORDERS_VIEW')"
-        rounded="xl"
-        prepend-icon="mdi-receipt-text"
-        title="Siparişler"
-        to="/orders"
-        @click="mobile ? $emit('update:rail', true) : null"
-      />
+      <v-list-group v-if="hasPageRole('ORDERS_VIEW')" value="Orders">
+        <template #activator="{ props }">
+          <v-list-item
+            v-bind="props"
+            rounded="xl"
+            prepend-icon="mdi-receipt-text"
+            title="Siparişler"
+            to="/orders"
+            @click="mobile ? $emit('update:rail', true) : null"
+          />
+        </template>
+        <!-- Vuetify auto-opens a group when a child item's `to` matches the current
+             route via provide/inject, regardless of DOM visibility. This sentinel is
+             active on /orders (and non-exactly on sub-routes), which means Vuetify
+             opens the group when navigating to the parent route — where neither the
+             B2B nor B2C item would be active on their own. -->
+        <v-list-item v-show="false" to="/orders" tabindex="-1" aria-hidden="true" />
+        <v-list-item
+          rounded="xl"
+          prepend-icon="mdi-domain"
+          title="B2B"
+          to="/orders/b2b"
+          @click="mobile ? $emit('update:rail', true) : null"
+        />
+        <v-list-item
+          rounded="xl"
+          prepend-icon="mdi-account"
+          title="B2C"
+          to="/orders/b2c"
+          @click="mobile ? $emit('update:rail', true) : null"
+        />
+      </v-list-group>
 
       <v-list-item
         v-if="hasPageRole('WORK_HOURS_VIEW')"
