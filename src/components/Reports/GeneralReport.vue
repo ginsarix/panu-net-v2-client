@@ -616,7 +616,7 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
       <v-col cols="12" sm="5" md="4">
         <v-date-input
           v-model="startDateFilter"
-          :display-format="(date: Date) => format(date, 'dd.MM.yyyy')"
+          :display-format="(date) => format(date as string | number | Date, 'dd.MM.yyyy')"
           :error-messages="!startDateFilter ? ['Zorunlu alan'] : []"
           label="Başlama tarihi"
           placeholder="gg.AA.yyyy"
@@ -628,7 +628,7 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
       <v-col cols="12" sm="5" md="4">
         <v-date-input
           v-model="endDateFilter"
-          :display-format="(date: Date) => format(date, 'dd.MM.yyyy')"
+          :display-format="(date) => format(date as string | number | Date, 'dd.MM.yyyy')"
           :error-messages="dateErrorMessage ? [dateErrorMessage] : []"
           label="Bitiş tarihi"
           placeholder="gg.AA.yyyy"
