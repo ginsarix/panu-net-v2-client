@@ -3,7 +3,7 @@ import { TRPCClientError } from '@trpc/client';
 import { addDays, format, isBefore, isEqual } from 'date-fns';
 import { AnimatePresence, motion } from 'motion-v';
 import { storeToRefs } from 'pinia';
-import { computed, defineAsyncComponent, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { VDateInput } from 'vuetify/labs/VDateInput';
 
 import { useColumnFilters } from '@/composables/useColumnFilters';
@@ -16,10 +16,9 @@ import { uniqueBy } from '@/utils/array';
 import { buildGroupedSumChartData } from '@/utils/chart';
 import { formatToLocale } from '@/utils/formatting';
 
+import GixBarChart from '../GixBarChart.vue';
+import GixChart from '../GixChart.vue';
 import GixTogglerMenu from '../GixTogglerMenu.vue';
-
-const GixChart = defineAsyncComponent(() => import('../GixChart.vue'));
-const GixBarChart = defineAsyncComponent(() => import('../GixBarChart.vue'));
 
 const { mobile, xs } = storeToRefs(useDisplayStore());
 
@@ -125,6 +124,13 @@ const bankReceiptsFiltersTogglerItems = ref([
   { key: 'ACLS', title: 'Açılış Fişi', toggled: true },
 ]);
 
+const checkEntryFiltersTogglerItems = ref([
+  { key: 'CEK_KND', title: 'Kendi Çekimiz', toggled: true },
+  { key: 'CEK_MST', title: 'Müşteri Çeki', toggled: true },
+  { key: 'SNT_KND', title: 'Kendi Senedimiz', toggled: true },
+  { key: 'SNT_MST', title: 'Müşteri Senedi', toggled: true },
+]);
+
 // get toggled keys from filter items
 const getToggledKeys = (items: { key: string; toggled: boolean }[]) =>
   items.filter((item) => item.toggled).map((item) => item.key);
@@ -154,6 +160,12 @@ const filteredBankReceipts = computed(() => {
   return generalReport.value.bankReceipts.result.filter((b) => toggledKeys.includes(b.turu));
 });
 
+const filteredCheckEntries = computed(() => {
+  if (!generalReport.value?.checkEntries) return [];
+  const toggledKeys = getToggledKeys(checkEntryFiltersTogglerItems.value);
+  return generalReport.value.checkEntries.result.filter((ce) => toggledKeys.includes(ce.turu));
+});
+
 // toggle filtered raw data for chart
 const filteredWaybillsRaw = computed(() => {
   if (!generalReport.value?.waybills) return [];
@@ -179,10 +191,17 @@ const filteredBankReceiptsRaw = computed(() => {
   return generalReport.value.bankReceipts.result.filter((b) => toggledKeys.includes(b.turu));
 });
 
+const filteredCheckEntriesRaw = computed(() => {
+  if (!generalReport.value?.checkEntries) return [];
+  const toggledKeys = getToggledKeys(checkEntryFiltersTogglerItems.value);
+  return generalReport.value.checkEntries.result.filter((ce) => toggledKeys.includes(ce.turu));
+});
+
 useColumnFilters('waybills', waybillFiltersTogglerItems);
 useColumnFilters('invoices', invoiceFiltersTogglerItems);
 useColumnFilters('material-receipts', materialReceiptsFiltersTogglerItems);
 useColumnFilters('bank-receipts', bankReceiptsFiltersTogglerItems);
+useColumnFilters('check-entries', checkEntryFiltersTogglerItems);
 
 const cashAccountMovements = ref<Awaited<ReturnType<typeof getCashAccountMovements>>>();
 
@@ -423,7 +442,8 @@ const cashAccountsDataTableHeaders = ref<DataTableHeaders[]>([
 ]);
 
 const cashAccountChartData = computed(() => {
-  if (!generalReport.value || !generalReport.value.cashAccounts) {
+  const cashAccounts = generalReport.value?.cashAccounts;
+  if (!cashAccounts) {
     return { legendData: [], seriesData: [] };
   }
 
@@ -431,7 +451,7 @@ const cashAccountChartData = computed(() => {
     adi?: string;
     bakiye?: string | number;
   }>(
-    generalReport.value.cashAccounts,
+    cashAccounts,
     (c) => c.adi,
     (c) => c.bakiye,
   );
@@ -507,15 +527,31 @@ const includedMaterialReceiptsDataTableHeaders = computed(() =>
 
 const checkEntriesDataTableHeaders = ref<DataTableHeaders[]>([
   { title: 'Bordro No', key: 'bordrono', toggled: true, sortable: true },
+  { title: 'Borçlu', key: 'borclu', toggled: true, sortable: true },
+  { title: 'Banka Adı', key: 'bankadi', toggled: true, sortable: true },
+  { title: 'Açıklama', key: 'aciklama', toggled: true, sortable: false },
+  { title: 'Türü', key: 'turu_txt', toggled: true, sortable: true },
   { title: 'Tutar', key: 'tutar', toggled: true, sortable: true },
   { title: 'Döviz', key: 'doviz', toggled: true, sortable: true },
   { title: 'Vade', key: 'vade', toggled: true, sortable: true },
   { title: 'Cirolu', key: 'cirolu', toggled: true, sortable: true },
-  { title: 'Açıklama', key: 'aciklama', toggled: true, sortable: false },
-  { title: 'Banka Adı', key: 'bankadi', toggled: true, sortable: true },
-  { title: 'Borçlu', key: 'borclu', toggled: true, sortable: true },
   { title: 'Oluşturulma Tarihi', key: '_cdate', toggled: true, sortable: true },
 ]);
+
+const checkEntriesChartData = computed(() => {
+  if (!filteredCheckEntriesRaw.value.length) {
+    return { legendData: [], seriesData: [] };
+  }
+
+  return buildGroupedSumChartData<{
+    turu_txt?: string;
+    tutar?: string | number;
+  }>(
+    filteredCheckEntriesRaw.value,
+    (c) => c.turu_txt,
+    (c) => c.tutar,
+  );
+});
 
 const includedCheckEntriesDataTableHeaders = computed(() =>
   checkEntriesDataTableHeaders.value.filter((header) => header.toggled),
@@ -528,6 +564,7 @@ const showInvoiceChart = ref(false);
 const showBankReceiptsChart = ref(false);
 const showMaterialReceiptsChart = ref(false);
 const showCashAccountChart = ref(false);
+const showCheckEntriesChart = ref(false);
 
 // scroll navigation
 const showScrollNav = computed(() => generalReport.value && !loading.value);
@@ -770,8 +807,9 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
           </div>
         </v-card-title>
 
-        <v-expand-transition v-show="showWaybillChart">
+        <v-expand-transition>
           <GixChart
+            v-if="showWaybillChart"
             seriesName="Toplam Tutar"
             :seriesData="waybillChartData.seriesData"
             :data-formatter="formatToLocale"
@@ -928,8 +966,9 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
           </div>
         </v-card-title>
 
-        <v-expand-transition v-show="showInvoiceChart">
+        <v-expand-transition>
           <GixChart
+            v-if="showInvoiceChart"
             seriesName="Toplam Tutar"
             :seriesData="invoiceChartData.seriesData"
             :data-formatter="formatToLocale"
@@ -1084,8 +1123,8 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
           </div>
         </v-card-title>
 
-        <v-expand-transition v-show="showBankReceiptsChart">
-          <div>
+        <v-expand-transition>
+          <div v-if="showBankReceiptsChart">
             <div :class="mobile.value ? 'd-flex flex-column' : 'd-flex'">
               <GixChart
                 title="Alacak"
@@ -1228,8 +1267,9 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
           </div>
         </v-card-title>
 
-        <v-expand-transition v-show="showMaterialReceiptsChart">
+        <v-expand-transition>
           <GixChart
+            v-if="showMaterialReceiptsChart"
             :legendData="materialReceiptsChartData.legendData"
             seriesName="Toplam Tutar"
             :seriesData="materialReceiptsChartData.seriesData"
@@ -1313,24 +1353,56 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
               <div>
                 <div class="text-subtitle-1 text-sm-h6 font-weight-bold">Çek Girişleri</div>
                 <div class="text-caption text-medium-emphasis">
-                  {{ generalReport.checkEntries.result?.length || 0 }} adet çek girişi
+                  {{ filteredCheckEntries.length || 0 }} adet çek girişi
                 </div>
               </div>
             </div>
             <v-spacer class="d-none d-sm-flex" />
             <div class="d-flex flex-wrap gap-2 w-100 w-sm-auto justify-end">
               <GixTogglerMenu
+                menu-activator-btn-text="Türler"
+                menu-activator-btn-class="rounded-lg border"
+                menu-activator-btn-icon="mdi-filter"
+                v-model:toggle-items="checkEntryFiltersTogglerItems"
+              />
+
+              <GixTogglerMenu
+                class="ms-3"
                 menu-activator-btn-text="Kolonlar"
                 menu-activator-btn-class="rounded-lg border"
                 menu-activator-btn-icon="mdi-filter-variant"
                 v-model:toggle-items="checkEntriesDataTableHeaders"
               />
+
+              <v-btn
+                :prepend-icon="!xs.value ? 'mdi-chart-bar' : undefined"
+                :icon="xs.value ? 'mdi-chart-bar' : undefined"
+                variant="text"
+                rounded="lg"
+                class="ms-3 text-none"
+                :text="!xs.value ? 'Tür Bazlı Grafik' : undefined"
+                :append-icon="showCheckEntriesChart ? 'mdi-chevron-up' : 'mdi-chevron-down'"
+                :size="xs.value ? 'small' : undefined"
+                border
+                @click="showCheckEntriesChart = !showCheckEntriesChart"
+              />
             </div>
           </div>
         </v-card-title>
 
+        <v-expand-transition>
+          <GixChart
+            v-if="showCheckEntriesChart"
+            seriesName="Toplam Tutar"
+            :seriesData="checkEntriesChartData.seriesData"
+            :data-formatter="formatToLocale"
+            currency="TL"
+            height="55vh"
+          />
+        </v-expand-transition>
+
         <v-data-table
-          :items="generalReport.checkEntries.result"
+          :items="filteredCheckEntries"
           class="rounded-b-lg"
           no-data-text="Çek girişi bulunamadı."
           items-per-page-text="Sayfa başı çek girişi"
@@ -1398,8 +1470,9 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
           </div>
         </v-card-title>
 
-        <v-expand-transition v-show="showCashAccountChart">
+        <v-expand-transition>
           <GixChart
+            v-if="showCashAccountChart"
             :legendData="cashAccountChartData.legendData"
             seriesName="Bakiye"
             :seriesData="cashAccountChartData.seriesData"
@@ -1494,8 +1567,9 @@ useColumnVisibility('cash-accounts', cashAccountsDataTableHeaders);
                             />
                           </div>
                         </v-card-title>
-                        <v-expand-transition v-show="isCashAccountMovementsGraphOpen(item._key)">
+                        <v-expand-transition>
                           <GixBarChart
+                            v-if="isCashAccountMovementsGraphOpen(item._key)"
                             :axis-data="getCashAccountMovementsChartData(item._key).axisData"
                             :bar-series-data="
                               getCashAccountMovementsChartData(item._key).barSeriesData
