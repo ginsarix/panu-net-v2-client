@@ -282,6 +282,13 @@ watch(
           to="/management/modules"
           @click="mobile ? $emit('update:rail', true) : null"
         />
+        <v-list-item
+          rounded="xl"
+          prepend-icon="mdi-clipboard-text-clock"
+          title="Olay Kayıtları"
+          to="/management/event-log"
+          @click="mobile ? $emit('update:rail', true) : null"
+        />
       </v-list-group>
 
       <v-list-group v-if="hasPageRole('REPORT_VIEW')" value="Reports">

@@ -29,6 +29,7 @@ const OrdersTab = () => import('@/components/OrdersTab.vue');
 const WaybillsTab = () => import('@/components/WaybillsTab.vue');
 const SupportTab = () => import('@/components/SupportTab.vue');
 const TicketPage = () => import('@/components/TicketPage.vue');
+const EventLogTab = () => import('@/components/Management/EventLogTab.vue');
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -112,6 +113,10 @@ const router = createRouter({
         {
           path: 'modules',
           component: HomeView,
+        },
+        {
+          path: 'event-log',
+          component: EventLogTab,
         },
       ],
       meta: { role: 'admin' },
