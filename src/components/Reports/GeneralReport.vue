@@ -11,6 +11,7 @@ import { useColumnVisibility } from '@/composables/useColumnVisibility';
 import { useCompanyPeriodWatcher } from '@/composables/useCompanyPeriodWatcher';
 import { getCashAccountMovements, getGeneralReport } from '@/services/api/reports';
 import { useDisplayStore } from '@/stores/display';
+import { useSnackbarStore } from '@/stores/snackbar';
 import type { DataTableHeaders } from '@/types/data-table-headers';
 import { uniqueBy } from '@/utils/array';
 import { buildGroupedSumChartData } from '@/utils/chart';
@@ -21,6 +22,9 @@ import GixChart from '../GixChart.vue';
 import GixTogglerMenu from '../GixTogglerMenu.vue';
 
 const { mobile, xs } = storeToRefs(useDisplayStore());
+
+const snackbarStore = useSnackbarStore();
+const { snackbar, snackbarError, snackbarText } = storeToRefs(snackbarStore);
 
 type GeneralReportReturnType = Awaited<ReturnType<typeof getGeneralReport>>;
 
@@ -75,8 +79,6 @@ const materialReceiptItemsByFisno = computed(() => {
   }
   return map;
 });
-
-//
 
 const waybillFiltersTogglerItems = ref([
   { key: '1', title: 'Mal Alım', toggled: true },
@@ -211,11 +213,21 @@ const loadCashAccountMovements = async (cashAccountKey: string) => {
   if (cashAccountMovements.value?.some((c) => c.cashAccountKey === cashAccountKey)) return;
 
   cashAccountMovementsLoadingStates.value[cashAccountKey] = true;
+  try {
+    const newCashAccountMovements = await getCashAccountMovements(cashAccountKey);
+    cashAccountMovements.value = [
+      ...(cashAccountMovements.value ?? []),
+      ...newCashAccountMovements,
+    ];
+  } catch (error) {
+    console.error(error);
 
-  const newCashAccountMovements = await getCashAccountMovements(cashAccountKey);
-  cashAccountMovements.value = [...(cashAccountMovements.value ?? []), ...newCashAccountMovements];
-
-  cashAccountMovementsLoadingStates.value[cashAccountKey] = false;
+    snackbarText.value = 'Hareketleri getirirken bir hata ile karşılaşıldı';
+    snackbarError.value = true;
+    snackbar.value = true;
+  } finally {
+    cashAccountMovementsLoadingStates.value[cashAccountKey] = false;
+  }
 };
 
 const cashAccountMovementsGraphStates = ref<Record<string, boolean>>({});

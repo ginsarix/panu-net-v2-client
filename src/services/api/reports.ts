@@ -1,14 +1,6 @@
-import { formatDateTime, mapCashAccountMovementTypes } from '@/utils/formatting';
+import { formatCdates, mapCashAccountMovementTypes } from '@/utils/formatting';
 
 import { trpc } from '../trpc';
-
-const formatCdates = <T extends { _cdate?: string }>(arr: T[]) => {
-  arr.forEach((obj) => {
-    if (obj._cdate) {
-      obj._cdate = formatDateTime(obj._cdate) as string;
-    }
-  });
-};
 
 export const getGeneralReport = async (
   filters: Parameters<typeof trpc.report.getGeneralReport.query>[0],

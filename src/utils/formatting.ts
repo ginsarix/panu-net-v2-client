@@ -16,6 +16,14 @@ export const formatToLocale = (value: string | number | undefined): string => {
   });
 };
 
+export const formatCdates = <T extends { _cdate?: string }>(arr: T[]) => {
+  arr.forEach((obj) => {
+    if (obj._cdate) {
+      obj._cdate = formatDateTime(obj._cdate) as string;
+    }
+  });
+};
+
 const cashAccountMovementTypes = {
   TAH: 'Cari Hesap Tahsilat',
   ODM: 'Cari Hesap Ödeme',
