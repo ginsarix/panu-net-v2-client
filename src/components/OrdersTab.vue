@@ -19,12 +19,15 @@ import { formatDateTime, formatToLocale } from '@/utils/formatting';
 import ExportAsExcel from './ExportAsExcel.vue';
 import GixUserSelector from './GixUserSelector.vue';
 
-const props = withDefaults(defineProps<{
-  storageKey?: string;
-  defaultDepo?: string;
-}>(), {
-  storageKey: 'orders',
-});
+const props = withDefaults(
+  defineProps<{
+    storageKey?: string;
+    defaultDepo?: string;
+  }>(),
+  {
+    storageKey: 'orders',
+  },
+);
 
 const { mobile } = storeToRefs(useDisplayStore());
 
@@ -72,6 +75,7 @@ const dataTableHeaders = ref<DataTableHeaders[]>([
   { title: 'Toplam Tutar', key: 'toplamtutar', toggled: true, sortable: true },
   { title: 'Onay', key: 'onay', toggled: true, sortable: true },
   { title: 'Not', key: 'note', toggled: true, sortable: true },
+  { title: 'Açıklama', key: 'aciklama', toggled: true, sortable: true },
   { title: 'Tamamı Sevk Edildi', key: 'tamamisevkedildi', toggled: true, sortable: true },
   { title: 'Oluşturulma Tarihi', key: '_cdate', toggled: true, sortable: true },
 ]);
