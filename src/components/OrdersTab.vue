@@ -259,7 +259,18 @@ const forwardOrders = async () => {
         <ExportAsExcel
           class="me-5"
           :disabled="loading"
-          :items="orders"
+          :items="
+            orders.map((o) => ({
+              fisno: o.fisno,
+              unvan: o.unvan,
+              toplamtutar: o.toplamtutar,
+              onay: o.onay,
+              note: o.note,
+              aciklama: o.aciklama,
+              tamamisevkedildi: o.tamamisevkedildi === 't' ? 'Evet' : 'Hayır',
+              _cdate: o._cdate,
+            }))
+          "
           filename="siparisler"
           :headers="[includedDataTableHeaders.map((header) => header.title)]"
         />
